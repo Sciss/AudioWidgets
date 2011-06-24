@@ -26,14 +26,14 @@
 package de.sciss.gui.j
 
 import java.awt.{EventQueue, BorderLayout}
-import javax.swing.{Timer, JFrame, WindowConstants}
+import javax.swing.{BorderFactory, JFrame, JPanel, Timer, WindowConstants}
 import java.awt.event.{WindowEvent, WindowAdapter, ActionEvent, ActionListener}
 
 object AudioWidgets extends App with Runnable {
    val name          = "AudioWidgets"
    val version       = 0.10
    val copyright     = "(C)opyright 2011 Hanns Holger Rutz"
-   var isSnapshot    = false
+   val isSnapshot    = true
 
    EventQueue.invokeLater( this )
 
@@ -47,7 +47,10 @@ object AudioWidgets extends App with Runnable {
       val cp   = f.getContentPane
       val m    = new PeakMeter
       m.ticks  = 60
-      cp.add( m, BorderLayout.WEST )
+      val p    = new JPanel( new BorderLayout() )
+      p.setBorder( BorderFactory.createEmptyBorder( 20, 20, 20, 20 ))
+      p.add( m, BorderLayout.WEST )
+      cp.add( p, BorderLayout.CENTER )
       f.pack()
       f.setLocationRelativeTo( null )
       f.setDefaultCloseOperation( WindowConstants.EXIT_ON_CLOSE )
@@ -59,7 +62,7 @@ object AudioWidgets extends App with Runnable {
          def actionPerformed( e: ActionEvent ) {
             peak = math.max( 0f, math.min( 1f, peak + math.pow( rnd.nextFloat() * 0.5, 2 ).toFloat * (if( rnd.nextBoolean() ) 1 else -1) ))
             rms  = math.max( 0f, math.min( peak, rms * 0.98f + (rnd.nextFloat() * 0.02f * (if( rnd.nextBoolean() ) 1 else -1) )))
-            m.setPeakAndRMS( peak, rms )
+            m.update( peak, rms )
          }
       })
       f.addWindowListener( new WindowAdapter {

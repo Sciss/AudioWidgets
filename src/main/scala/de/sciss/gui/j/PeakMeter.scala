@@ -30,6 +30,30 @@ import javax.swing.{BorderFactory, JComponent}
 import java.awt.image.BufferedImage
 import java.awt.{Color, Rectangle, TexturePaint, Graphics2D, Graphics, Container, EventQueue, Adjustable, Paint, Dimension, Insets}
 
+trait PeakMeterLike {
+   def clearHold() : Unit
+   def clearMeter() : Unit
+   def dispose(): Unit
+   def holdDecibels : Float
+   def holdDuration : Int
+   def holdDuration_=( millis: Int ) : Unit
+   def holdPainted : Boolean
+   def holdPainted_=( b: Boolean ): Unit
+//   def orientation : Int
+//   def orientation_=( orient: Int ): Unit
+   def peak : Float
+   def peak_=( value: Float ) : Unit
+   def peakDecibels : Float
+   var refreshParent : Boolean
+   def rms : Float
+   def rms_=( value: Float ) : Unit
+   def rmsPainted : Boolean
+   def rmsPainted_=( b: Boolean ) : Unit
+   def ticks : Int
+   def ticks_= (num: Int): Unit
+   def update( peak: Float, rms: Float = rms, time: Long = System.currentTimeMillis ) : Boolean
+}
+
 /**
  *	A level (volume) meter GUI component. The component
  *	is a vertical bar displaying a green-to-reddish bar
@@ -221,13 +245,14 @@ object PeakMeter {
       } else -1f
    }
 }
-class PeakMeter( orient: Int = Adjustable.VERTICAL ) extends JComponent /* with PeakMeterView */ {
+
+class PeakMeter( orient: Int = Adjustable.VERTICAL ) extends JComponent with PeakMeterLike /* with PeakMeterView */ {
    import PeakMeter._
 
    private var holdDurationVar	      = DEFAULT_HOLD_DUR   // milliseconds peak hold
 
-   private var	peak                    = 0f
-   private var rms                     = 0f
+   private var	peakVar                 = 0f
+   private var rmsVar                  = 0f
    private var hold                    = 0f
    private var peakToPaint             = 0f
    private var rmsToPaint              = 0f
@@ -297,14 +322,14 @@ class PeakMeter( orient: Int = Adjustable.VERTICAL ) extends JComponent /* with 
 
    // ------------- PeakMeterView interface -------------
 
-   def numChannels = 1
-
-   def meterUpdate( peakRMSPairs: Array[ Float ], offset: Int, time: Long ) : Boolean = {
-      val offset2 = offset + 1
-      if( offset2 < peakRMSPairs.length ) {
-         setPeakAndRMS( peakRMSPairs( offset ), peakRMSPairs( offset2 ), time )
-      } else false
-   }
+//   def numChannels = 1
+//
+//   def meterUpdate( peakRMSPairs: Array[ Float ], offset: Int, time: Long ) : Boolean = {
+//      val offset2 = offset + 1
+//      if( offset2 < peakRMSPairs.length ) {
+//         setPeakAndRMS( peakRMSPairs( offset ), peakRMSPairs( offset2 ), time )
+//      } else false
+//   }
 
    /**
     *	Decides whether the peak indicator should be
@@ -349,8 +374,8 @@ class PeakMeter( orient: Int = Adjustable.VERTICAL ) extends JComponent /* with 
       val len1	   = if( vertical ) h1 else w1
       val rlen1	= (len1 - 1) & ~1
 
-      peak			= -160f
-      rms		   = -160f
+      peakVar			= -160f
+      rmsVar		   = -160f
       hold			= -160f
       peakToPaint	= -160f
       rmsToPaint	= -160f
@@ -423,8 +448,14 @@ class PeakMeter( orient: Int = Adjustable.VERTICAL ) extends JComponent /* with 
       setPreferredSize( prefDim )
    }
 
-   def peakDecibels : Float = if( peak <= -160f ) Float.NegativeInfinity else peak
+   def peakDecibels : Float = if( peakVar <= -160f ) Float.NegativeInfinity else peakVar
    def holdDecibels : Float = if( hold <= -160f ) Float.NegativeInfinity else hold
+
+   def peak : Float = peakVar
+   def peak_=( value: Float ) : Unit = update( value, rmsVar, System.currentTimeMillis )
+
+   def rms : Float = rmsVar
+   def rms_=( value: Float ) : Unit = update( peakVar, value, System.currentTimeMillis )
 
    /**
     *	Updates the meter. This will call the component's paint
@@ -457,37 +488,37 @@ class PeakMeter( orient: Int = Adjustable.VERTICAL ) extends JComponent /* with 
     *
     *	@synchronization	this method is thread safe
     */
-   def setPeakAndRMS( newPeak: Float, newRMS: Float = rms, time: Long = System.currentTimeMillis ) : Boolean = {
+   def update( newPeak: Float, newRMS: Float, time: Long ) : Boolean = {
       if( !EventQueue.isDispatchThread ) throw new IllegalMonitorStateException()
 
       val newPeak0 = (math.log( newPeak ) * logPeakCorr).toFloat
-      peak = if( newPeak0 >= peak ) {
+      peakVar = if( newPeak0 >= peakVar ) {
          newPeak0
       } else {
          // 20 dB in 1500 ms bzw. 40 dB in 2500 ms
-         math.max( newPeak0, peak - (time - lastUpdate) * (if( peak > -20f ) 0.013333333333333f else 0.016f) )
+         math.max( newPeak0, peakVar - (time - lastUpdate) * (if( peakVar > -20f ) 0.013333333333333f else 0.016f) )
       }
-      peakToPaint	= math.max( peakToPaint, peak )
+      peakToPaint	= math.max( peakToPaint, peakVar )
       peakNorm 	= paintToNorm( peakToPaint )
 
       if( rmsPaintedVar ) {
          val newRMS0 = (math.log( newRMS ) * logRMSCorr).toFloat
-         rms = if( newRMS0 > rms ) {
+         rmsVar = if( newRMS0 > rmsVar ) {
             newRMS0
          } else {
-            math.max( newRMS0, rms - (time - lastUpdate) * (if( rms > -20f ) 0.013333333333333f else 0.016f) )
+            math.max( newRMS0, rmsVar - (time - lastUpdate) * (if( rmsVar > -20f ) 0.013333333333333f else 0.016f) )
          }
-         rmsToPaint	= math.max( rmsToPaint, rms )
+         rmsToPaint	= math.max( rmsToPaint, rmsVar )
          rmsNorm		= paintToNorm( rmsToPaint )
       }
 
       val result = if( holdPaintedVar ) {
-         if( peak >= hold ) {
-            hold     = peak
+         if( peakVar >= hold ) {
+            hold     = peakVar
             holdEnd  = time + holdDurationVar
          } else if( time > holdEnd ) {
-            if( peak > hold ) {
-               hold	= peak
+            if( peakVar > hold ) {
+               hold	= peakVar
             } else {
                hold += (if( hold > -20f ) 0.013333333333333f else 0.016f) * (lastUpdate - time)
             }
