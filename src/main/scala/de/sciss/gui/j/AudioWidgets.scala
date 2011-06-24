@@ -28,6 +28,7 @@ package de.sciss.gui.j
 import java.awt.{EventQueue, BorderLayout}
 import javax.swing.{BorderFactory, JFrame, JPanel, Timer, WindowConstants}
 import java.awt.event.{WindowEvent, WindowAdapter, ActionEvent, ActionListener}
+import collection.immutable.{IndexedSeq => IIdxSeq}
 
 object AudioWidgets extends App with Runnable {
    val name          = "AudioWidgets"
@@ -43,11 +44,13 @@ object AudioWidgets extends App with Runnable {
    }
 
    def run() {
-      val f    = new JFrame( name )
-      val cp   = f.getContentPane
-      val m    = new PeakMeter
-      m.ticks  = 60
-      val p    = new JPanel( new BorderLayout() )
+      val f             = new JFrame( name )
+      val cp            = f.getContentPane
+      val m             = new PeakMeterPanel
+      m.numChannels     = 1
+      m.hasCaption      = true
+      m.borderVisible   = true
+      val p             = new JPanel( new BorderLayout() )
       p.setBorder( BorderFactory.createEmptyBorder( 20, 20, 20, 20 ))
       p.add( m, BorderLayout.WEST )
       cp.add( p, BorderLayout.CENTER )
@@ -62,7 +65,7 @@ object AudioWidgets extends App with Runnable {
          def actionPerformed( e: ActionEvent ) {
             peak = math.max( 0f, math.min( 1f, peak + math.pow( rnd.nextFloat() * 0.5, 2 ).toFloat * (if( rnd.nextBoolean() ) 1 else -1) ))
             rms  = math.max( 0f, math.min( peak, rms * 0.98f + (rnd.nextFloat() * 0.02f * (if( rnd.nextBoolean() ) 1 else -1) )))
-            m.update( peak, rms )
+            m.update( IIdxSeq( peak, rms ))
          }
       })
       f.addWindowListener( new WindowAdapter {
