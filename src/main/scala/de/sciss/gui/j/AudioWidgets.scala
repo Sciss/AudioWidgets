@@ -46,7 +46,7 @@ object AudioWidgets extends App with Runnable {
    def run() {
       val f             = new JFrame( name )
       val cp            = f.getContentPane
-      val m             = new PeakMeterPanel
+      val m             = new PeakMeter()
       m.numChannels     = 1
       m.hasCaption      = true
       m.borderVisible   = true
