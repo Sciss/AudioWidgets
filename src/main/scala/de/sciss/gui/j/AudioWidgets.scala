@@ -25,10 +25,10 @@
 
 package de.sciss.gui.j
 
-import java.awt.{EventQueue, BorderLayout}
-import javax.swing.{BorderFactory, JFrame, JPanel, Timer, WindowConstants}
 import java.awt.event.{WindowEvent, WindowAdapter, ActionEvent, ActionListener}
 import collection.immutable.{IndexedSeq => IIdxSeq}
+import javax.swing.{Box, JLabel, BorderFactory, JFrame, JPanel, Timer, WindowConstants}
+import java.awt.{Color, GridLayout, EventQueue, BorderLayout}
 
 object AudioWidgets extends App with Runnable {
    val name          = "AudioWidgets"
@@ -45,14 +45,37 @@ object AudioWidgets extends App with Runnable {
 
    def run() {
       val f             = new JFrame( name )
+      f.getRootPane.putClientProperty( "apple.awt.brushMetalLook", java.lang.Boolean.TRUE )
       val cp            = f.getContentPane
+      val p             = new JPanel( new BorderLayout() )
+      p.setBorder( BorderFactory.createEmptyBorder( 20, 20, 20, 20 ))
+
       val m             = new PeakMeter()
       m.numChannels     = 1
       m.hasCaption      = true
       m.borderVisible   = true
-      val p             = new JPanel( new BorderLayout() )
-      p.setBorder( BorderFactory.createEmptyBorder( 20, 20, 20, 20 ))
+
+      val lcdColors     = IndexedSeq(
+         (Some( Color.darkGray /* new Color( 0x40, 0x40, 0x40 ) */), None),
+         (Some( Color.white ), Some( new Color( 15, 42, 64 ))),
+         (Some( Color.darkGray ), Some( Color.lightGray )),
+         (Some( Color.lightGray), Some( Color.darkGray)))
+      val lcdGrid       = new JPanel( new GridLayout( lcdColors.size, 1, 0, 4 ))
+      lcdColors.zipWithIndex.foreach { case ((fg, bg), idx) =>
+         val lcd        = new LCDPanel
+         bg.foreach( lcd.setBackground( _ ))
+         val lb         = new JLabel( "00:00:0" + idx )
+         lb.putClientProperty( "JComponent.sizeVariant", "small" )
+         fg.foreach( lb.setForeground( _ ))
+         lcd.add( lb )
+         lcdGrid.add( lcd )
+      }
       p.add( m, BorderLayout.WEST )
+      p.add( Box.createHorizontalStrut( 20 ), BorderLayout.CENTER )
+      val p2            = new JPanel( new BorderLayout() )
+      p2.add( lcdGrid, BorderLayout.NORTH )
+
+      p.add( p2, BorderLayout.EAST )
       cp.add( p, BorderLayout.CENTER )
       f.pack()
       f.setLocationRelativeTo( null )
