@@ -62,7 +62,7 @@ object AudioWidgets extends App with Runnable {
 //         (Some( new Color( 0xE0, 0xE0, 0xE0 )), Some( Color.darkGray )),
          (Some( new Color( 60, 30, 20 )), Some( new Color( 200, 100, 100 ))),
          (Some( new Color( 0xE0, 0xE0, 0xE0 )), Some( new Color( 0x20, 0x20, 0x20 ))))
-      val lcdGrid       = new JPanel( new GridLayout( lcdColors.size, 1, 0, 4 ))
+      val lcdGrid       = new JPanel( new GridLayout( lcdColors.size, 1, 0, 6 ))
       val lb1 = lcdColors.zipWithIndex.map({ case ((fg, bg), idx) =>
          val lcd        = new LCDPanel
          bg.foreach( lcd.setBackground( _ ))
@@ -99,8 +99,8 @@ object AudioWidgets extends App with Runnable {
          def actionPerformed( e: ActionEvent ) {
             cnt += 1
             val secs    = cnt % 60
-            val mins    = (secs / 60) % 60
-            val hours   = (secs / 3600) % 100
+            val mins    = (cnt / 60) % 60
+            val hours   = (cnt / 3600) % 100
             lb1.setText( (hours + 100).toString.substring( 1 ) + ":" +
                          (mins + 100).toString.substring( 1 ) + ":" +
                          (secs + 100).toString.substring( 1 ))
