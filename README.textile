@@ -21,6 +21,7 @@ h3. components
 The following components are available:
 
 * @PeakMeter@ -- A dual peak and RMS meter suitable for audio signals
+* @LCDPanel@ -- A JPanel with bevel border and glossy background color
 
 The API docs are currently the only source of documentation. The sbt @run@ target shows the available widgets.
 

@@ -27,7 +27,7 @@ package de.sciss.gui.j
 
 import javax.swing.JPanel
 import java.beans.{PropertyChangeEvent, PropertyChangeListener}
-import java.awt.{BasicStroke, RenderingHints, Graphics2D, LinearGradientPaint, Insets, Color, Graphics}
+import java.awt.{Rectangle, BasicStroke, RenderingHints, Graphics2D, LinearGradientPaint, Insets, Color, Graphics}
 
 /**
  * Unfinished!
@@ -53,6 +53,7 @@ class LCDPanel extends JPanel {
    private var colrBotSh : Color = null
    private var recentHeight      = -1
    private val in                = new Insets( 0, 0, 0, 0 )
+   private val rClip             = new Rectangle()
    private var gradInner : LinearGradientPaint = null
    private var gradOuterL : LinearGradientPaint = null
    private var gradOuterR : LinearGradientPaint = null
@@ -173,7 +174,7 @@ class LCDPanel extends JPanel {
       in.bottom -= inV
       in.right -= inH
       val h = getHeight - (in.top + in.bottom)
-      val hh = h >> 1
+      val hh = (h >> 1) + 1
       val w = getWidth - (in.left + in.right)
       val w1 = math.max( 0, w - 2 )
       val x2 = math.max( 0, w - 4 )
@@ -183,30 +184,51 @@ class LCDPanel extends JPanel {
 
       val atOrig = g2.getTransform
       g2.translate( in.left, in.top )
-      g2.setPaint( gradInner )
-      g2.fillRect( 1, 2, w1, h - 4 )
-//      g2.fillRect( 1, 1, w1, h - 2 )
+//      g2.setPaint( gradInner )
+//      g2.fillRect( 1, 2, w1, h - 4 )
+////      g2.fillRect( 1, 1, w1, h - 2 )
 
       val clpOrig = g2.getClip
+      g2.getClipBounds( rClip )
+      // avoid drawing antialiased rounded gradients, if possible :)
+      val drawL = rClip.x < 3
+      val drawR = rClip.x + rClip.width > x3
       val aaOrig = g2.getRenderingHint( RenderingHints.KEY_ANTIALIASING )
       g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON )
 
-      g2.clipRect( 0, 0, 3, h - 2 )
-      g2.setPaint( gradInnerL )
-      g2.drawRoundRect( 1, 1, 6, h, 4, 4 )
-      g2.setClip( clpOrig )
-      g2.clipRect( 0, 0, 3, h )
-      g2.setPaint( gradOuterL )
-      g2.drawRoundRect( 0, 0, 6, h, 4, 4 )
-      g2.setClip( clpOrig )
-      g2.clipRect( w - 3, 0, 3, hh )
-      g2.setPaint( gradInnerR )
-      g2.drawRoundRect( w - 8, 1, 6, h, 4, 4 )
-      g2.setClip( clpOrig )
-      g2.clipRect( w - 3, 0, 3, h )
-      g2.setPaint( gradOuterR )
-      g2.drawRoundRect( w - 7, 0, 6, h, 4, 4 )
-      g2.setClip( clpOrig )
+//println( "L? " + drawL + " - R? " + drawR )
+
+      if( drawL ) {
+         g2.clipRect( 0, 0, 3, h )
+         g2.setPaint( gradOuterL )
+//      g2.drawRoundRect( 0, 0, 6, h, 4, 4 )
+         g2.fillRoundRect( 0, 0, 6, h, 4, 4 )
+         g2.setClip( clpOrig )
+      }
+      if( drawR ) {
+         g2.clipRect( w - 3, 0, 3, h )
+         g2.setPaint( gradOuterR )
+//      g2.drawRoundRect( w - 7, 0, 6, h, 4, 4 )
+         g2.fillRoundRect( w - 6, 0, 6, h, 4, 4 )
+         g2.setClip( clpOrig )
+      }
+
+      g2.setPaint( gradInner )
+      g2.fillRect( 1, 2, w1, h - 4 )
+
+      if( drawL ) {
+         g2.clipRect( 0, 0, 3, h - 2 )
+         g2.setPaint( gradInnerL )
+         g2.drawRoundRect( 1, 1, 6, h, 4, 4 )
+         g2.setClip( clpOrig )
+      }
+      if( drawR ) {
+         g2.clipRect( w - 3, 0, 3, hh )
+         g2.setPaint( gradInnerR )
+         g2.drawRoundRect( w - 8, 1, 6, h, 4, 4 )
+         g2.setClip( clpOrig )
+      }
+
       g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING, aaOrig )
 
       g2.setColor( colrTop )
@@ -216,7 +238,8 @@ class LCDPanel extends JPanel {
       g2.setColor( colrBotSh )
       g2.drawLine( 2, h - 2, x3, h - 2 )
       g2.setColor( colrBot )
-      g2.drawLine( 2, h - 1, x3, h - 1 )
+//      g2.drawLine( 2, h - 1, x3, h - 1 )
+      g2.drawLine( 1, h - 1, w1, h - 1 )
 
       g2.setTransform( atOrig )
    }
