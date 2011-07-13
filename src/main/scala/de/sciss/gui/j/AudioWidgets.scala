@@ -57,11 +57,13 @@ object AudioWidgets extends App with Runnable {
 
       val lcdColors     = IndexedSeq(
          (Some( Color.darkGray /* new Color( 0x40, 0x40, 0x40 ) */), None),
-         (Some( Color.white ), Some( new Color( 15, 42, 64 ))),
+         (Some( new Color( 205, 232, 254 )), Some( new Color( 15, 42, 64 ))),
          (Some( Color.darkGray ), Some( Color.lightGray )),
-         (Some( Color.lightGray), Some( Color.darkGray)))
+//         (Some( new Color( 0xE0, 0xE0, 0xE0 )), Some( Color.darkGray )),
+         (Some( new Color( 60, 30, 20 )), Some( new Color( 200, 100, 100 ))),
+         (Some( new Color( 0xE0, 0xE0, 0xE0 )), Some( new Color( 0x20, 0x20, 0x20 ))))
       val lcdGrid       = new JPanel( new GridLayout( lcdColors.size, 1, 0, 4 ))
-      lcdColors.zipWithIndex.foreach { case ((fg, bg), idx) =>
+      val lb1 = lcdColors.zipWithIndex.map({ case ((fg, bg), idx) =>
          val lcd        = new LCDPanel
          bg.foreach( lcd.setBackground( _ ))
          val lb         = new JLabel( "00:00:0" + idx )
@@ -69,7 +71,8 @@ object AudioWidgets extends App with Runnable {
          fg.foreach( lb.setForeground( _ ))
          lcd.add( lb )
          lcdGrid.add( lcd )
-      }
+         lb
+      }).head
       p.add( m, BorderLayout.WEST )
       p.add( Box.createHorizontalStrut( 20 ), BorderLayout.CENTER )
       val p2            = new JPanel( new BorderLayout() )
@@ -91,12 +94,24 @@ object AudioWidgets extends App with Runnable {
             m.update( IIdxSeq( peak, rms ))
          }
       })
+      val t2  = new Timer( 1000, new ActionListener {
+         var cnt  = 0
+         def actionPerformed( e: ActionEvent ) {
+            cnt += 1
+            val secs    = cnt % 60
+            val mins    = (secs / 60) % 60
+            val hours   = (secs / 3600) % 100
+            lb1.setText( (hours + 100).toString.substring( 1 ) + ":" +
+                         (mins + 100).toString.substring( 1 ) + ":" +
+                         (secs + 100).toString.substring( 1 ))
+         }
+      })
       f.addWindowListener( new WindowAdapter {
          override def windowOpened( e: WindowEvent ) {
-            t.start()
+            t.start(); t2.start()
          }
          override def windowClosing( e: WindowEvent ) {
-            t.stop()
+            t.stop(); t2.stop()
          }
       })
 

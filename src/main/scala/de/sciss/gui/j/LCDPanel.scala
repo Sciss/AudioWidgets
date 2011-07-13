@@ -75,20 +75,44 @@ class LCDPanel extends JPanel {
       insets
    }
 
-   private def mixColor( hueOffset: Float, satFactor: Float, briFactor: Float ) =
+//   private def mixColor( hueOffset: Float, satFactor: Float, briFactor: Float ) =
+//      Color.getHSBColor( hue + hueOffset,
+//                         math.max( 0f, math.min( 1f, sat * satFactor )),
+//                         math.max( 0f, math.min( 1f, bri * briFactor )))
+
+   private def mixColor2( hueOffset: Float, satOffset: Float, briOffset: Float ) =
       Color.getHSBColor( hue + hueOffset,
-                         math.max( 0f, math.min( 1f, sat * satFactor )),
-                         math.max( 0f, math.min( 1f, bri * briFactor )))
+                         math.max( 0f, math.min( 1f, sat + satOffset )),
+                         math.max( 0f, math.min( 1f, bri + briOffset )))
+
+   private def mixColor3( hueOffset: Float, satOffset: Float, briWeight: Float, c1: Color, c2: Color ) = {
+      val arr  = Color.RGBtoHSB( c1.getRed, c1.getGreen, c1.getBlue, null )
+      val b1   = arr( 2 )
+      Color.RGBtoHSB( c2.getRed, c2.getGreen, c2.getBlue, arr )
+      val b2   = arr( 2 )
+      Color.getHSBColor( hue + hueOffset,
+                         math.max( 0f, math.min( 1f, sat + satOffset )),
+                         (1f - briWeight) * b1 + briWeight * b2 )
+   }
 
    private def recalcColors() {
-      gradInnerColrs( 0 )  = mixColor( 0.006f, 0.737f, 1.019f )
-      gradInnerColrs( 1 )  = mixColor( 0f,     0.737f, 1.043f )
-      gradInnerColrs( 2 )  = mixColor( 0f,     0.895f, 1.019f )
-      gradInnerColrs( 3 )  = mixColor( 0f,     1.105f, 0.981f )
-      gradInnerColrs( 4 )  = mixColor( 0f,     0.684f, 1.056f )
-      colrTop              = mixColor( 0.006f, 0.632f, 0.398f )
-      colrTopSh            = mixColor( 0f,     1.737f, 0.795f )
-      colrBotSh            = mixColor( 0f,     0.684f, 0.932f )
+//      gradInnerColrs( 0 )  = mixColor( 0.006f, 0.737f, 1.019f )
+//      gradInnerColrs( 1 )  = mixColor( 0f,     0.737f, 1.043f )
+//      gradInnerColrs( 2 )  = mixColor( 0f,     0.895f, 1.019f )
+//      gradInnerColrs( 3 )  = mixColor( 0f,     1.105f, 0.981f )
+//      gradInnerColrs( 4 )  = mixColor( 0f,     0.684f, 1.056f )
+//      colrTop              = mixColor( 0.006f, 0.632f, 0.398f )
+//      colrTopSh            = mixColor( 0f,     1.737f, 0.795f )
+//      colrBotSh            = mixColor( 0f,     0.684f, 0.932f )
+      gradInnerColrs( 0 )  = mixColor2( 0.006f, -0.05f,  0.015f )
+      gradInnerColrs( 1 )  = mixColor2( 0f,     -0.05f,  0.035f )
+      gradInnerColrs( 2 )  = mixColor2( 0f,     -0.02f,  0.015f )
+      gradInnerColrs( 3 )  = mixColor2( 0f,      0.02f, -0.015f )
+      gradInnerColrs( 4 )  = mixColor2( 0f,     -0.06f,  0.045f )
+      colrTop              = mixColor2( 0.006f, -0.07f, -0.485f )
+//      colrTopSh            = mixColor2( 0f,      0.14f, -0.165f )
+      colrTopSh            = mixColor3( 0f,      0.14f, 0.64f, colrTop, gradInnerColrs( 0 ))
+      colrBotSh            = mixColor2( 0f,     -0.06f, -0.055f )
    }
 
    private def recalcGradients( h: Int ) {
