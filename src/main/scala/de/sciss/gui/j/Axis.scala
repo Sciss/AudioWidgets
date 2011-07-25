@@ -33,6 +33,28 @@ import annotation.switch
 import java.awt.{Font, Paint, Color, Dimension, FontMetrics, Graphics, Graphics2D, Rectangle, RenderingHints, TexturePaint}
 import javax.swing.{UIManager, SwingConstants, JComponent}
 
+trait AxisLike {
+   def fixedBounds : Boolean
+   def fixedBounds_= (b: Boolean): Unit
+//   def format : Format
+//   def format_= (f: Format): Unit
+   def inverted : Boolean
+   def inverted_= (b: Boolean): Unit
+   def maximum : Double
+   def maximum_= (value: Double): Unit
+   def minimum : Double
+   def minimum_= (value: Double): Unit
+}
+
+trait AxisCompanion {
+   sealed trait Format
+   object Format {
+      case object Decimal extends Format
+      case object Integer extends Format
+      final case class Time( hours: Boolean = false, millis: Boolean = true ) extends Format
+   }
+}
+
 /**
  *  A GUI element for displaying
  *  the timeline's axis (ruler)
@@ -45,7 +67,7 @@ import javax.swing.{UIManager, SwingConstants, JComponent}
  *	@todo		new label width calculation not performed in logarithmic mode
  *	@todo    detect font property changes
  */
-object Axis {
+object Axis extends AxisCompanion {
  	private val DECIMAL_RASTER	   = Array( 100000000L, 10000000L, 1000000L, 100000L, 10000L, 1000L, 100L, 10L, 1L )
 	private val INTEGERS_RASTER	= Array( 100000000L, 10000000L, 1000000L, 100000L, 10000L, 1000L )
 	private val TIME_RASTER		   = Array( 60000000L, 6000000L, 600000L, 60000L, 10000L, 1000L, 100L, 10L, 1L )
@@ -79,16 +101,16 @@ object Axis {
 
    private class Label( val name: String, val pos: Int )
 
-   sealed trait Format
-   object Format {
-      case object Decimal extends Format
-      case object Integer extends Format
-      final case class Time( hours: Boolean = false, millis: Boolean = true ) extends Format
-   }
+//   sealed trait Format
+//   object Format {
+//      case object Decimal extends Format
+//      case object Integer extends Format
+//      final case class Time( hours: Boolean = false, millis: Boolean = true ) extends Format
+//   }
 }
 
 class Axis( orient: Int = SwingConstants.HORIZONTAL )
-extends JComponent {
+extends JComponent with AxisLike {
    import Axis._
    import SwingConstants.{HORIZONTAL, VERTICAL}
 
