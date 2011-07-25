@@ -78,8 +78,15 @@ object AudioWidgets extends App with Runnable {
       val p2            = new JPanel( new BorderLayout() )
       p2.add( lcdGrid, BorderLayout.NORTH )
 
+      val axis       = new Axis
+      axis.format    = Axis.Format.Time()
+      axis.minimum   = 0.0
+      axis.maximum   = 34.56
+
       p.add( p2, BorderLayout.EAST )
       cp.add( p, BorderLayout.CENTER )
+      cp.add( axis, BorderLayout.NORTH )
+
       f.pack()
       f.setLocationRelativeTo( null )
       f.setDefaultCloseOperation( WindowConstants.EXIT_ON_CLOSE )
