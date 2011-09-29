@@ -141,10 +141,10 @@ class PeakMeter( orient: Int = SwingConstants.VERTICAL ) extends JPanel with Pea
          ticksVar = num
          if( caption != null ) {
             caption.ticks = num
-            var ch = 0; while( ch < meters.length ) {
-               meters( ch ).ticks = num
-            ch += 1 }
          }
+         var ch = 0; while( ch < meters.length ) {
+            meters( ch ).ticks = num
+         ch += 1 }
       }
    }
    def ticks : Int = ticksVar
@@ -332,7 +332,7 @@ class PeakMeter( orient: Int = SwingConstants.VERTICAL ) extends JPanel with Pea
 			} else {
 				m.setBorder( b2 )
 			}
-			m.ticks           = if( caption != null ) ticksVar else 0
+			m.ticks           = ticksVar // if( caption != null ) ticksVar else 0
 			add( m )
          newMeters( ch )   = m
 		ch += 1 }

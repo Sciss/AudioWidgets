@@ -270,7 +270,7 @@ class PeakMeterBar( orient: Int = SwingConstants.VERTICAL ) extends JComponent w
 
    var refreshParent                   = false
 
-   private var ticksVar		            = 0
+   private var ticksVar		            = 101 // 0
    private var vertical = {
       val res = orient == VERTICAL
       if( !res && orient != HORIZONTAL ) throw new IllegalArgumentException( orient.toString )
