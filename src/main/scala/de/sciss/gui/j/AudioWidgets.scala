@@ -34,7 +34,7 @@ object AudioWidgets extends App with Runnable {
    val name          = "AudioWidgets"
    val version       = 0.10
    val copyright     = "(C)opyright 2011 Hanns Holger Rutz"
-   val isSnapshot    = true
+   val isSnapshot    = false
 
    EventQueue.invokeLater( this )
 

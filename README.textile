@@ -8,7 +8,7 @@ Note that there is a separate project to wrap this library into components suita
 
 h3. requirements / installation
 
-AudioWidgets currently compiles against Scala 2.9.0 and requires Java 1.6. The repository contains a project file for Intellij IDEA 10 CE, and project files for sbt. Targets for sbt:
+AudioWidgets currently compiles against Scala 2.9.1and requires Java 1.6. The repository contains a project file for Intellij IDEA 10 CE, and project files for xsbt (sbt 0.11). Targets for sbt:
 
 * @clean@
 * @compile@

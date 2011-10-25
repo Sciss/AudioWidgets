@@ -6,9 +6,17 @@ organization := "de.sciss"
 
 scalaVersion := "2.9.1"
 
+retrieveManaged := true
+
+scalacOptions ++= Seq( "-deprecation", "-unchecked" )
+
 // ---- publishing ----
 
-publishTo := Some(ScalaToolsReleases)
+publishTo <<= version { (v: String) =>
+   Some( "Scala Tools Nexus" at "http://nexus.scala-tools.org/content/repositories/".+(
+      if( v.endsWith( "-SNAPSHOT")) "snapshots/" else "releases/"
+   ))
+}
 
 pomExtra :=
 <licenses>
