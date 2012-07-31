@@ -12,7 +12,7 @@ AudioWidgets currently compiles against Scala 2.9.2 and requires Java 1.6.
 
 To use the library in your project:
 
-    "de.sciss" %% "audiowidgets" % "0.11"
+    "de.sciss" %% "audiowidgets" % "0.12-SNAPSHOT"
 
 ### creating an IntelliJ IDEA project
 
