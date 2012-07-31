@@ -61,49 +61,49 @@ object TransportTests extends App with Runnable {
          g2.setTransform( atOrig )
       }
 
-      def playShape( sz: Float = 20f, xoff: Float = 0f, yoff: Float = 0f ) : Shape = {
+      def playShape( scale: Float = 1f, xoff: Float = 4f, yoff: Float = 0f ) : Shape = {
          val gp = new GeneralPath()
-         gp.moveTo( xoff, yoff )
-         gp.lineTo( xoff + sz * 0.75f, yoff + sz * 0.5f )
-         gp.lineTo( xoff, yoff + sz )
-//         gp.closePath()
-//         gp.quadTo( xoff + sz * 0.125f, yoff + sz * 0.5f, xoff, yoff )
-//         gp.lineTo( xoff + sz * 0.25f, yoff + sz * 0.5f )
+         val sx = scale * xoff
+         val sy = scale * yoff
+         gp.moveTo( sx, sy )
+         gp.lineTo( sx + scale * 15f, sy + scale * 10f )
+         gp.lineTo( sx, sy + scale * 20f )
          gp.closePath()
          gp
       }
 
-      def ffwdShape( sz: Float = 20f ) : Shape = {
-         val play = playShape( sz * 0.7f, yoff = sz * 0.15f )
-         val p2   = AffineTransform.getTranslateInstance( sz * 0.575f, 0 ).createTransformedShape( play )
+      def ffwdShape( scale: Float = 1f, xoff: Float = 0f, yoff: Float = 3f ) : Shape = {
+         val play = playShape( scale * 0.7f, xoff = xoff / 0.7f, yoff = yoff / 0.7f )
+         val p2   = AffineTransform.getTranslateInstance( scale * 11.5f, 0 ).createTransformedShape( play )
          val res  = new Area( play )
          res.add( new Area( p2 ))
          res
       }
 
-      def beginShape( sz: Float = 20f ) : Shape = {
-         val end = endShape( sz )
+      def beginShape( scale: Float = 1f, xoff: Float = 4f, yoff: Float = 3f ) : Shape = {
+         val end = endShape( scale, xoff = 0f, yoff = yoff )
          val at = AffineTransform.getScaleInstance( -1.0, 1.0 )
-         at.translate( -end.getBounds2D.getWidth, 0 )
+         at.translate( -(end.getBounds2D.getWidth + scale * xoff), 0 )
          at.createTransformedShape( end )
       }
 
-      def endShape( sz: Float = 20f ) : Shape = {
-         val play = playShape( sz * 0.7f, yoff = sz * 0.15f )
+      def endShape( scale: Float = 1f, xoff: Float = 4f, yoff: Float = 3f ) : Shape = {
+         val play = playShape( scale * 0.7f, xoff = xoff, yoff = /* scale * */ yoff / 0.7f )
          val res  = new Area( play )
-         val ba   = new Rectangle2D.Float( sz * 0.575f, sz * 0.15f, sz * 0.15f, sz * 0.7f )
+         val ba   = new Rectangle2D.Float( scale * (11.5f + xoff), scale * yoff, scale * 3f, scale * 14f )
          res.add( new Area( ba ))
          res
       }
 
-      def rwdShape( sz: Float = 20f ) : Shape = {
-         val ffwd = ffwdShape( sz )
+      def rwdShape( scale: Float = 1f, xoff: Float = 0f, yoff: Float = 3f ) : Shape = {
+         val ffwd = ffwdShape( scale, xoff = xoff, yoff = yoff )
          val at = AffineTransform.getScaleInstance( -1.0, 1.0 )
          at.translate( -ffwd.getBounds2D.getWidth, 0 )
          at.createTransformedShape( ffwd )
       }
 
-      def stopShape( sz: Float = 20f ) : Shape = new Rectangle2D.Float( 0f, sz * 0.1f, sz * 0.8f, sz * 0.8f )
+      def stopShape( scale: Float = 1f, xoff: Float = 3f, yoff: Float = 2f ) : Shape =
+         new Rectangle2D.Float( scale * xoff, scale * yoff, scale * 16f, scale * 16f )
 
       def pauseShape( sz: Float = 20f ) : Shape = {
          val res = new Area( new Rectangle2D.Float(  0f, sz * 0.1f, sz * 0.3f, sz * 0.8f ))
@@ -111,18 +111,20 @@ object TransportTests extends App with Runnable {
          res
       }
 
-      def recShape( sz: Float = 20f ) : Shape = new Ellipse2D.Float( 0f, sz * 0.1f, sz * 0.8f, sz * 0.8f )
+      def recShape( scale: Float = 1f, xoff: Float = 3f, yoff: Float = 2f ) : Shape =
+         new Ellipse2D.Float( scale * xoff, scale * yoff, scale * 16f, scale * 16f )
 
       def loopShape1 : Shape = {
          val res = new Area( new RoundRectangle2D.Float( 0f, 4f, 26f, 14f, 10f, 10f ))
          res.subtract( new Area( new RoundRectangle2D.Float( 3f, 7f, 20f, 8f, 8f, 8f )))
          res.subtract( new Area( new Rectangle2D.Float( 9f, 0f, 10f, 10f )))
-         val play = playShape( 10f, 9f, 0.5f )
+         val play = playShape( 0.5f, xoff = 9f, yoff = 0.5f )
          res.add( new Area( play ))
          res
       }
 
-      def loopShape( sz: Float = 20f ) : Shape = {
+      def loopShape( scale: Float = 1f ) : Shape = {
+         val sz = 20f * scale
          val res = new Area( new RoundRectangle2D.Float( 0f, sz * 0.2f, sz * 1.1f, sz * 0.7f, sz * 0.5f, sz * 0.5f ))
          res.subtract( new Area( new RoundRectangle2D.Float( sz * 0.15f, sz * 0.35f, sz * 0.8f, sz * 0.4f, sz * 0.4f, sz * 0.4f )))
          val gp = new GeneralPath()
@@ -133,7 +135,7 @@ object TransportTests extends App with Runnable {
          gp.lineTo( sz * 1.1f, sz * 0.9f )
          gp.closePath()
          res.subtract( new Area( gp ))
-         val play = playShape( sz * 0.5f, sz * 0.45f, sz * 0.025f )
+         val play = playShape( scale * 0.5f, /* scale * */ 9f, /* scale * */ 0.5f )
 //         val play = {
 //            val gp = new GeneralPath()
 //            gp.moveTo( 12f, 4f )
@@ -193,7 +195,7 @@ object TransportTests extends App with Runnable {
 
       but( "first", beginShape( 18 ), -1 )
       but( "middle", playShape( 14 ))
-      but( "last",   stopShape( 14 ))
+      but( "last",   stopShape( 0.7f ))
 
       val cp = f.getContentPane
       cp.add( p, BorderLayout.NORTH )
