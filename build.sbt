@@ -1,6 +1,6 @@
 name := "AudioWidgets"
 
-version := "0.11"
+version := "0.12-SNAPSHOT"
 
 organization := "de.sciss"
 
@@ -10,7 +10,9 @@ homepage := Some( url( "https://github.com/Sciss/AudioWidgets" ))
 
 licenses := Seq( "GPL v2+" -> url( "http://www.gnu.org/licenses/gpl-2.0.txt" ))
 
-scalaVersion := "2.10.0-M6"
+scalaVersion := "2.9.2"
+
+crossScalaVersions := Seq( "2.10.0-M6", "2.9.2" )
 
 retrieveManaged := true
 
