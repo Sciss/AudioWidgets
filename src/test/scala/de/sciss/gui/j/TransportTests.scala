@@ -14,7 +14,7 @@ object TransportTests extends App with Runnable {
       val p = new JComponent {
          setPreferredSize( new Dimension( 260, 70 ))
          override def paintComponent( g: Graphics ) {
-            import TransportIcon.{paint => pnt, _}
+            import Transport.{paint => pnt, _}
             val g2 = g.asInstanceOf[ Graphics2D ]
             g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON )
 
@@ -29,26 +29,34 @@ object TransportTests extends App with Runnable {
          }
       }
 
-      val sq = IndexedSeq( TransportIcon.GoToBegin, TransportIcon.Rewind, TransportIcon.Play, TransportIcon.Stop,
-         TransportIcon.FastForward, TransportIcon.GoToEnd, TransportIcon.Loop )
+      val sq = IndexedSeq( Transport.GoToBegin, Transport.Rewind, Transport.Play, Transport.Stop,
+         Transport.FastForward, Transport.GoToEnd, Transport.Loop )
 
       val butP = new JPanel( new BorderLayout() )
-      def mkStrip( scheme: TransportIcon.ColorScheme, layPos: String ) {
-         val strip = TransportIcon.makeButtonStrip( sq, scheme )
-         strip.buttons.foreach { b =>
-            b.addActionListener( new ActionListener {
-               def actionPerformed( e: ActionEvent ) {
-                  strip.iconType( b ).foreach { tp =>
-                     f.setTitle( tp.toString )
-                     if( tp == TransportIcon.Loop ) b.setSelected( !b.isSelected )
-                  }
+      def mkStrip( scheme: Transport.ColorScheme, layPos: String ) {
+         lazy val act = sq.map { e =>
+            e {
+               f.setTitle( e.toString )
+               if( e == Transport.Loop ) strip.button( e ).foreach { b =>
+                  b.setSelected( !b.isSelected )
                }
-            })
+            }
          }
+         lazy val strip: JComponent with Transport.ButtonStrip = Transport.makeButtonStrip( act, scheme )
+//         strip.buttons.foreach { b =>
+//            b.addActionListener( new ActionListener {
+//               def actionPerformed( e: ActionEvent ) {
+//                  strip.element( b ).foreach { tp =>
+//                     f.setTitle( tp.toString )
+//                     if( tp == Transport.Loop ) b.setSelected( !b.isSelected )
+//                  }
+//               }
+//            })
+//         }
          butP.add( strip, layPos )
       }
-      mkStrip( TransportIcon.DarkScheme,  BorderLayout.NORTH )
-      mkStrip( TransportIcon.LightScheme, BorderLayout.SOUTH )
+      mkStrip( Transport.DarkScheme,  BorderLayout.NORTH )
+      mkStrip( Transport.LightScheme, BorderLayout.SOUTH )
 
       val cp = f.getContentPane
       cp.add( p, BorderLayout.NORTH )
