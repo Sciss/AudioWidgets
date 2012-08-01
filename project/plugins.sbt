@@ -7,4 +7,4 @@ resolvers += Resolver.url( "sbt-plugin-releases", url( "http://scalasbt.artifact
 
 addSbtPlugin( "me.lessis" % "ls-sbt" % "0.1.1" )
 
-addSbtPlugin( "com.jsuereth" % "xsbt-gpg-plugin" % "0.6" )
+// addSbtPlugin( "com.jsuereth" % "xsbt-gpg-plugin" % "0.6" )

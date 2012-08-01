@@ -32,25 +32,52 @@ import javax.swing.{AbstractAction, Icon, JComponent, JButton, AbstractButton, B
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import java.awt.event.ActionEvent
 
-object Transport {
+trait TransportCompanion {
+   // ---- abstract types and methods ----
+
+   type ComponentType
+   type AbstractButtonType <: ComponentType
+   type Action <: ActionLike
+
+   protected def makeAction( icn: IconImpl, fun: => Unit ) : Action
+   def makeButtonStrip( actions: Seq[ ActionElement ], scheme: ColorScheme = DarkScheme ) : ComponentType with ButtonStrip
+
+   // ---- implemented ----
+
    sealed trait ColorScheme {
-      private[Transport] def shadowPaint: Paint
-      private[Transport] def outlinePaint: Paint
-      private[Transport] def fillPaint( scale: Float ): Paint
+      private[j] def shadowPaint: Paint
+      private[j] def outlinePaint: Paint
+      private[j] def fillPaint( scale: Float ): Paint
    }
    case object LightScheme extends ColorScheme {
-      private[Transport] def fillPaint( scale: Float ): Paint = new LinearGradientPaint( 0f, 0f, 0f, scale * 19f, Array( 0f, 0.25f, 1f ),
+      private[j] def fillPaint( scale: Float ): Paint = new LinearGradientPaint( 0f, 0f, 0f, scale * 19f, Array( 0f, 0.25f, 1f ),
          Array( new Color( 0xE8, 0xE8, 0xE8 ), new Color( 0xFF, 0xFF, 0xFF ), new Color( 0xF0, 0xF0, 0xF0 ))
       )
-      private[Transport] val shadowPaint: Paint = new Color( 0, 0, 0, 0x50 )
-      private[Transport] val outlinePaint: Paint = new Color( 0, 0, 0, 0xC0 )
+      private[j] val shadowPaint: Paint = new Color( 0, 0, 0, 0x50 )
+      private[j] val outlinePaint: Paint = new Color( 0, 0, 0, 0xC0 )
    }
    case object DarkScheme extends ColorScheme {
-      private[Transport] def fillPaint( scale: Float ): Paint = new LinearGradientPaint( 0f, 0f, 0f, scale * 19f, Array( 0f, 0.25f, 1f ),
+      private[j] def fillPaint( scale: Float ): Paint = new LinearGradientPaint( 0f, 0f, 0f, scale * 19f, Array( 0f, 0.25f, 1f ),
          Array( new Color( 0x28, 0x28, 0x28 ), new Color( 0x00, 0x00, 0x00 ), new Color( 0x20, 0x20, 0x20 ))
       )
-      private[Transport] val shadowPaint: Paint = new Color( 0xFF, 0xFF, 0xFF, 0x50 )
-      private[Transport] val outlinePaint: Paint = Color.white
+      private[j] val shadowPaint: Paint = new Color( 0xFF, 0xFF, 0xFF, 0x50 )
+      private[j] val outlinePaint: Paint = Color.white
+   }
+
+   protected final class IconImpl( val element: Element, val scale: Float, scheme: ColorScheme )
+   extends Icon {
+      private val inShape: Shape = element.shape( scale )
+      private val outShape: Shape = calcOutShape( inShape )
+
+      def getIconWidth  = math.ceil( 24 * scale ).toInt
+      def getIconHeight = math.ceil( 22 * scale ).toInt
+
+      def paintIcon( c: Component, g: Graphics, x: Int, y: Int ) {
+         val g2 = g.asInstanceOf[ Graphics2D ]
+         g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON )
+         g2.setRenderingHint( RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE )
+         paintImpl( g2, inShape, outShape, x, y, scale, scheme )
+      }
    }
 
    sealed trait Element {
@@ -65,12 +92,57 @@ object Transport {
       def shape( scale: Float = 1f, xoff: Float = defaultXOffset, yoff: Float = defaultYOffset ) : Shape
    }
 
+   sealed trait ActionElement {
+      def element: Element
+      def apply( scale: Float = 1f, colorScheme: ColorScheme = DarkScheme ) : Action
+   }
+
    private final class ActionElementImpl( val element: Element, fun: => Unit )
    extends ActionElement {
       def apply( scale: Float, colorScheme: ColorScheme ) : Action = {
          val icn = new IconImpl( element, scale, colorScheme )
-         new Impl( icn, fun )
+         makeAction( icn, fun )
       }
+   }
+
+   private val strk        = new BasicStroke( 1f )
+   private val shadowYOff  = 1f
+
+   sealed trait ActionLike /* extends javax.swing.Action */ {
+      def icon: Icon
+      def element: Element
+      def scale: Float
+   }
+
+   def paint( g: Graphics2D, iconType: Element, x: Float = 0f, y: Float = 0f, scale: Float = 1f, colorScheme: ColorScheme = DarkScheme ) {
+      val x1         = iconType.defaultXOffset * scale
+      val y1         = iconType.defaultYOffset * scale
+//         val x1 = x
+//         val y1 = y
+      val inShape    = iconType.shape( scale, x1, y1 )
+      val outShape   = calcOutShape( inShape )
+      paintImpl( g, inShape, outShape, x - x1, y - y1, scale, colorScheme )
+   }
+
+   private def calcOutShape( inShape: Shape ) : Shape = {
+      val out = new Area( strk.createStrokedShape( inShape ))
+      out.add( new Area( inShape ))
+      out
+   }
+
+   private def paintImpl( g2: Graphics2D, inShape: Shape, outShape: Shape, x: Float, y: Float, scale: Float, scheme: ColorScheme ) {
+//            g2.setColor( Color.red )
+//            g2.fillRect( x.toInt, y.toInt, math.ceil(24 * scale).toInt, math.ceil(22 * scale).toInt )
+         val atOrig  = g2.getTransform
+         g2.translate( x + 1, y + 1 + shadowYOff )
+         g2.setPaint( scheme.shadowPaint )
+         g2.fill( outShape )
+         g2.translate( 0, -shadowYOff )
+         g2.setPaint( scheme.outlinePaint )
+         g2.fill( outShape )
+         g2.setPaint( scheme.fillPaint( scale ))
+         g2.fill( inShape )
+         g2.setTransform( atOrig )
    }
 
    case object Play extends Element {
@@ -187,12 +259,26 @@ object Transport {
    private val segmentLast    = "last"
    private val segmentOnly    = "only"
 
-   private final class ButtonStripImpl( actions: Seq[ Action ], scheme: ColorScheme )
-   extends Box( BoxLayout.X_AXIS ) with ButtonStrip {
+   trait ButtonStrip {
+      def buttons: Seq[ AbstractButtonType ]
+      def button( iconType: Element ) : Option[ AbstractButtonType ]
+      def elements: Seq[ Element ]
+      def element( button: AbstractButtonType ) : Option[ Element ]
+   }
+
+   protected trait ButtonStripImpl extends ButtonStrip {
+      protected def actions: Seq[ Action ]
+      protected def scheme: ColorScheme
+
+//      protected def add( c: ComponentType ) : Unit
+      protected def makeButton( pos: String, action: Action ) : AbstractButtonType
+
+      protected def addButtons( seq: IIdxSeq[ AbstractButtonType ]) : Unit
+
       private val (buttonSeq, buttonMap, elementMap) = {
-         var bMap = Map.empty[ Element, AbstractButton ]
-         var tMap = Map.empty[ AbstractButton, Action ]
-         var sq   = IIdxSeq.empty[ AbstractButton ]
+         var bMap = Map.empty[ Element, AbstractButtonType ]
+         var tMap = Map.empty[ AbstractButtonType, Action ]
+         var sq   = IIdxSeq.empty[ AbstractButtonType ]
          val it = actions.iterator
          if( it.hasNext ) {
             val n1   = it.next()
@@ -213,14 +299,31 @@ object Transport {
          (sq, bMap, tMap)
       }
 
-      buttonSeq.foreach( add )
+      addButtons( buttonSeq )
 
-      def buttons: Seq[ AbstractButton ] = buttonSeq
-      def button( element: Element ) : Option[ AbstractButton ] = buttonMap.get( element )
-      def elements: Seq[ Element ] = actions.map( _.element )
-      def element( button: AbstractButton ) : Option[ Element ] = elementMap.get( button ).map( _.element )
+      final def buttons: Seq[ AbstractButtonType ] = buttonSeq
+      final def button( element: Element ) : Option[ AbstractButtonType ] = buttonMap.get( element )
+      final def elements: Seq[ Element ] = actions.map( _.element )
+      final def element( button: AbstractButtonType ) : Option[ Element ] = elementMap.get( button ).map( _.element )
 
-      private def makeButton( pos: String = "only", action: Action ) : JButton = {
+      override def toString = "ButtonStrip"
+   }
+}
+
+object Transport extends TransportCompanion {
+   type AbstractButtonType = AbstractButton
+   type ComponentType      = JComponent
+   type Action             = javax.swing.Action with ActionLike
+
+   protected def makeAction( icn: IconImpl, fun: => Unit ) : Action = new ActionImpl( icn, fun )
+
+   private final class JButtonStripImpl( protected val actions: Seq[ Action ], protected val scheme: ColorScheme )
+   extends Box( BoxLayout.X_AXIS ) with ButtonStripImpl {
+      protected def addButtons( seq: IIdxSeq[ AbstractButton ]) {
+         seq.foreach( add )
+      }
+
+      protected def makeButton( pos: String, action: Action ) : AbstractButton = {
          val b = new JButton( action )
          b.setFocusable( false )
          b.putClientProperty( "JButton.buttonType", "segmentedCapsule" )   // "segmented" "segmentedRoundRect" "segmentedCapsule" "segmentedTextured" "segmentedGradient"
@@ -229,94 +332,14 @@ object Transport {
 //         b.setPreferredSize( new Dimension( 50, 50 ))
          b
       }
-
-      override def toString = "ButtonStrip"
    }
 
    def makeButtonStrip( actions: Seq[ ActionElement ], scheme: ColorScheme = DarkScheme ) : JComponent with ButtonStrip = {
       val a = actions.map( _.apply( 0.8f, scheme ))
-      new ButtonStripImpl( a, scheme )
+      new JButtonStripImpl( a, scheme )
    }
 
-   private val strk        = new BasicStroke( 1f )
-   private val shadowYOff  = 1f
-
-   trait ButtonStrip {
-      def buttons: Seq[ AbstractButton ]
-      def button( iconType: Element ) : Option[ AbstractButton ]
-      def elements: Seq[ Element ]
-      def element( button: AbstractButton ) : Option[ Element ]
-   }
-
-//      val pntFill1    = new LinearGradientPaint( 0f, 0f, 0f, 19f, Array( 0f, 0.45f, 0.55f, 1f ),
-//         Array( new Color( 0xF0, 0xF0, 0xF0 ), new Color( 0xFF, 0xFF, 0xFF ), new Color( 0xE8, 0xE8, 0xE8 ),
-//                new Color( 0xFF, 0xFF, 0xFF ))
-//      )
-//
-//      val colrFill   = new Color( 0xFF, 0xFF, 0xFF )
-
-//      val pntFill2    = new LinearGradientPaint( 0f, 0f, 0f, 19f, Array( 0f, 0.25f, 1f ),
-//         Array( new Color( 0xFF, 0xFF, 0xFF ), new Color( 0xF0, 0xF0, 0xF0 ), new Color( 0xFF, 0xFF, 0xFF ))
-//      )
-
-
-//      def loopShape1 : Shape = {
-//         val res = new Area( new RoundRectangle2D.Float( 0f, 4f, 26f, 14f, 10f, 10f ))
-//         res.subtract( new Area( new RoundRectangle2D.Float( 3f, 7f, 20f, 8f, 8f, 8f )))
-//         res.subtract( new Area( new Rectangle2D.Float( 9f, 0f, 10f, 10f )))
-//         val play = playShape( 0.5f, xoff = 9f, yoff = 0.5f )
-//         res.add( new Area( play ))
-//         res
-//      }
-
-   def paint( g: Graphics2D, iconType: Element, x: Float = 0f, y: Float = 0f, scale: Float = 1f, colorScheme: ColorScheme = DarkScheme ) {
-      val x1         = iconType.defaultXOffset * scale
-      val y1         = iconType.defaultYOffset * scale
-//         val x1 = x
-//         val y1 = y
-      val inShape    = iconType.shape( scale, x1, y1 )
-      val outShape   = calcOutShape( inShape )
-      paintImpl( g, inShape, outShape, x - x1, y - y1, scale, colorScheme )
-   }
-
-   private def calcOutShape( inShape: Shape ) : Shape = {
-      val out = new Area( strk.createStrokedShape( inShape ))
-      out.add( new Area( inShape ))
-      out
-   }
-
-   private def paintImpl( g2: Graphics2D, inShape: Shape, outShape: Shape, x: Float, y: Float, scale: Float, scheme: ColorScheme ) {
-//            g2.setColor( Color.red )
-//            g2.fillRect( x.toInt, y.toInt, math.ceil(24 * scale).toInt, math.ceil(22 * scale).toInt )
-         val atOrig  = g2.getTransform
-         g2.translate( x + 1, y + 1 + shadowYOff )
-         g2.setPaint( scheme.shadowPaint )
-         g2.fill( outShape )
-         g2.translate( 0, -shadowYOff )
-         g2.setPaint( scheme.outlinePaint )
-         g2.fill( outShape )
-         g2.setPaint( scheme.fillPaint( scale ))
-         g2.fill( inShape )
-         g2.setTransform( atOrig )
-   }
-
-   private final class IconImpl( val element: Element, val scale: Float, scheme: ColorScheme )
-   extends Icon {
-      private val inShape: Shape = element.shape( scale )
-      private val outShape: Shape = calcOutShape( inShape )
-
-      def getIconWidth  = math.ceil( 24 * scale ).toInt
-      def getIconHeight = math.ceil( 22 * scale ).toInt
-
-      def paintIcon( c: Component, g: Graphics, x: Int, y: Int ) {
-         val g2 = g.asInstanceOf[ Graphics2D ]
-         g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON )
-         g2.setRenderingHint( RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE )
-         paintImpl( g2, inShape, outShape, x, y, scale, scheme )
-      }
-   }
-
-   private final class Impl( icn: IconImpl, fun: => Unit ) extends AbstractAction( null, icn ) with Action {
+   private final class ActionImpl( icn: IconImpl, fun: => Unit ) extends AbstractAction( null, icn ) with ActionLike {
       def icon: Icon = icn
       def element: Element = icn.element
       def scale: Float = icn.scale
@@ -324,16 +347,5 @@ object Transport {
       def actionPerformed( e: ActionEvent) {
          fun
       }
-   }
-
-   sealed trait ActionElement {
-      def element: Element
-      def apply( scale: Float = 1f, colorScheme: ColorScheme = DarkScheme ) : Action
-   }
-
-   sealed trait Action extends javax.swing.Action {
-      def icon: Icon
-      def element: Element
-      def scale: Float
    }
 }
