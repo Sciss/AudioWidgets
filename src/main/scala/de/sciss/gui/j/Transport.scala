@@ -108,7 +108,7 @@ trait TransportCompanion {
    private val strk        = new BasicStroke( 1f )
    private val shadowYOff  = 1f
 
-   sealed trait ActionLike /* extends javax.swing.Action */ {
+   trait ActionLike /* extends javax.swing.Action */ {
       def icon: Icon
       def element: Element
       def scale: Float

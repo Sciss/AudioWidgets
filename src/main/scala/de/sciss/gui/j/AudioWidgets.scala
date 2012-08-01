@@ -27,14 +27,14 @@ package de.sciss.gui.j
 
 import java.awt.event.{WindowEvent, WindowAdapter, ActionEvent, ActionListener}
 import collection.immutable.{IndexedSeq => IIdxSeq}
-import javax.swing.{Box, JLabel, BorderFactory, JFrame, JPanel, Timer, WindowConstants}
+import javax.swing.{JComponent, Box, JLabel, BorderFactory, JFrame, JPanel, Timer, WindowConstants}
 import java.awt.{Color, GridLayout, EventQueue, BorderLayout}
 
 object AudioWidgets extends App with Runnable {
    val name          = "AudioWidgets"
    val version       = 0.12
    val copyright     = "(C)opyright 2011-2012 Hanns Holger Rutz"
-   val isSnapshot    = true
+   val isSnapshot    = false
 
    EventQueue.invokeLater( this )
 
@@ -83,9 +83,17 @@ object AudioWidgets extends App with Runnable {
       axis.minimum   = 0.0
       axis.maximum   = 34.56
 
+      lazy val trnspActions = Seq(
+         Transport.GoToBegin, Transport.Play, Transport.Stop, Transport.GoToEnd, Transport.Loop ).map {
+         case l @ Transport.Loop => l.apply { trnsp.button( l ).foreach( b => b.setSelected( !b.isSelected ))}
+         case e => e.apply {}
+      }
+      lazy val trnsp: JComponent with Transport.ButtonStrip = Transport.makeButtonStrip( trnspActions )
+
       p.add( p2, BorderLayout.EAST )
       cp.add( p, BorderLayout.CENTER )
       cp.add( axis, BorderLayout.NORTH )
+      cp.add( trnsp, BorderLayout.SOUTH )
 
       f.pack()
       f.setLocationRelativeTo( null )
