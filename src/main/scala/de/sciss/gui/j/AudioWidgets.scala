@@ -32,7 +32,7 @@ import java.awt.{Color, GridLayout, EventQueue, BorderLayout}
 
 object AudioWidgets extends App with Runnable {
    val name          = "AudioWidgets"
-   val version       = 0.12
+   val version       = 0.13
    val copyright     = "(C)opyright 2011-2012 Hanns Holger Rutz"
    val isSnapshot    = false
 
