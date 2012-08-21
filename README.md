@@ -12,7 +12,9 @@ AudioWidgets currently compiles against Scala 2.9.2 and requires Java 1.6.
 
 To use the library in your project:
 
-    "de.sciss" %% "audiowidgets" % "0.13"
+    "de.sciss" %% "audiowidgets" % "1.0.+"
+
+To view a demo of the widgets: `sbt test:run`.
 
 ### creating an IntelliJ IDEA project
 
@@ -22,10 +24,7 @@ If you want to develop the library, you can set up an IntelliJ IDEA project, usi
     
     addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.0.0")
 
-Then to create the IDEA project, run the following two commands from the xsbt shell:
-
-    > set ideaProjectName := "AudioWidgets"
-    > gen-idea
+Then to create the IDEA project, run `sbt gen-idea`.
 
 ### components
 
