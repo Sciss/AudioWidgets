@@ -26,11 +26,11 @@
 package de.sciss.gui.j
 
 import java.awt.geom.{ GeneralPath, AffineTransform }
-import java.awt.image.{ BufferedImage }
-import java.text.{ MessageFormat }
-import java.util.{ Locale }
+import java.awt.image.BufferedImage
+import java.text.MessageFormat
+import java.util.Locale
 import annotation.switch
-import java.awt.{Font, Paint, Color, Dimension, FontMetrics, Graphics, Graphics2D, Rectangle, RenderingHints, TexturePaint}
+import java.awt.{Font, Color, Dimension, FontMetrics, Graphics, Graphics2D, Rectangle, RenderingHints, TexturePaint}
 import javax.swing.{UIManager, SwingConstants, JComponent}
 
 trait AxisLike {
@@ -68,36 +68,36 @@ trait AxisCompanion {
  *	@todo    detect font property changes
  */
 object Axis extends AxisCompanion {
- 	private val DECIMAL_RASTER	   = Array( 100000000L, 10000000L, 1000000L, 100000L, 10000L, 1000L, 100L, 10L, 1L )
-	private val INTEGERS_RASTER	= Array( 100000000L, 10000000L, 1000000L, 100000L, 10000L, 1000L )
-	private val TIME_RASTER		   = Array( 60000000L, 6000000L, 600000L, 60000L, 10000L, 1000L, 100L, 10L, 1L )
-	private val MIN_LABSPC		   = 16
+ 	private final val DECIMAL_RASTER	   = Array( 100000000L, 10000000L, 1000000L, 100000L, 10000L, 1000L, 100L, 10L, 1L )
+	private final val INTEGERS_RASTER	= Array( 100000000L, 10000000L, 1000000L, 100000L, 10000L, 1000L )
+	private final val TIME_RASTER		   = Array( 60000000L, 6000000L, 600000L, 60000L, 10000L, 1000L, 100L, 10L, 1L )
+	private /* final */ val MIN_LABSPC		   = 16  // TODO: make final in binary incompatible next version
 
 	// the following are used for Number to String conversion using MessageFormat
-	private val msgNormalPtrn = Array(
+	private final val msgNormalPtrn = Array(
       "{0,number,0}",
 		"{0,number,0.0}",
 		"{0,number,0.00}",
 		"{0,number,0.000}"
    )
-   private val msgTimePtrn	= Array(
+   private final val msgTimePtrn	= Array(
       "{0,number,integer}:{1,number,00}",
 		"{0,number,integer}:{1,number,00.0}",
 		"{0,number,integer}:{1,number,00.00}",
 		"{0,number,integer}:{1,number,00.000}"
    )
-   private val msgTimeHoursPtrn	= Array(
+   private final val msgTimeHoursPtrn	= Array(
       "{0,number,integer}:{1,number,00}:{2,number,00}",
 		"{0,number,integer}:{1,number,00}:{2,number,00.0}",
 		"{0,number,integer}:{1,number,00}:{2,number,00.00}",
 		"{0,number,integer}:{1,number,00}:{2,number,00.000}"
    )
 
-	private val pntBarGradientPixels = Array( 0xFFB8B8B8, 0xFFC0C0C0, 0xFFC8C8C8, 0xFFD3D3D3,
+	private final val pntBarGradientPixels = Array( 0xFFB8B8B8, 0xFFC0C0C0, 0xFFC8C8C8, 0xFFD3D3D3,
 									  0xFFDBDBDB, 0xFFE4E4E4, 0xFFEBEBEB, 0xFFF1F1F1,
 									  0xFFF6F6F6, 0xFFFAFAFA, 0xFFFBFBFB, 0xFFFCFCFC,
 									  0xFFF9F9F9, 0xFFF4F4F4, 0xFFEFEFEF )
-	private val barExtent		= pntBarGradientPixels.length
+	private final val barExtent		= pntBarGradientPixels.length
 
    private class Label( val name: String, val pos: Int )
 

@@ -20,9 +20,7 @@ To view a demo of the widgets: `sbt test:run`.
 
 If you want to develop the library, you can set up an IntelliJ IDEA project, using the sbt-idea plugin yet. Have the following contents in `~/.sbt/plugins/build.sbt`:
 
-    resolvers += "sbt-idea-repo" at "http://mpeltonen.github.com/maven/"
-    
-    addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.0.0")
+    addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.1.0")
 
 Then to create the IDEA project, run `sbt gen-idea`.
 
@@ -30,8 +28,10 @@ Then to create the IDEA project, run `sbt gen-idea`.
 
 The following components are available:
 
- - `PeakMeter` -- A dual peak and RMS meter suitable for audio signals
+ - `Axis` -- A general horizontal or vertical axis component
  - `LCDPanel` -- A JPanel with bevel border and glossy background color
+ - `PeakMeter` -- A dual peak and RMS meter suitable for audio signals
+ - `Transport` -- A tool bar for transport controls
 
 The API docs are currently the only source of documentation. The sbt `run` target shows the available widgets.
 

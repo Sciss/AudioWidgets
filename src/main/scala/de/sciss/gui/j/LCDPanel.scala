@@ -27,40 +27,40 @@ package de.sciss.gui.j
 
 import javax.swing.JPanel
 import java.beans.{PropertyChangeEvent, PropertyChangeListener}
-import java.awt.{Rectangle, BasicStroke, RenderingHints, Graphics2D, LinearGradientPaint, Insets, Color, Graphics}
+import java.awt.{Rectangle, RenderingHints, Graphics2D, LinearGradientPaint, Insets, Color, Graphics}
 
 /**
  * Unfinished!
  */
 class LCDPanel extends JPanel {
-   private var hue = 0.194f
-   private var sat = 0.190f
-   private var bri = 0.805f
+   private final var hue = 0.194f
+   private final var sat = 0.190f
+   private final var bri = 0.805f
 
-   private val gradInnerColr     = new Array[ Color ]( 5 )
-   private val gradInnerFrac     = Array( 0f, -1f, 0.5f, -1f, 1f )
-   private val gradOuterLColr    = new Array[ Color ]( 3 )
-   private val gradOuterLFrac    = Array( 0f, -1f, 1f )
-   private val gradOuterRColr    = new Array[ Color ]( 3 )
-   private val gradOuterRFrac    = Array( 0f, -1f, 1f )
-   private val gradInnerLColr    = new Array[ Color ]( 2 )
-   private val gradInnerLFrac    = Array( 0f, 1f )
-   private val gradInnerRColr    = new Array[ Color ]( 2 )
-   private val gradInnerRFrac    = Array( 0f, 0.5f )
-   private var colrTop : Color   = null
-   private var colrTopSh : Color = null
-   private val colrBot           = new Color( 0xFF, 0xFF, 0xFF, 0x7F )
-   private var colrBotSh : Color = null
-   private var recentHeight      = -1
-   private val in                = new Insets( 0, 0, 0, 0 )
-   private val rClip             = new Rectangle()
-   private var gradInner : LinearGradientPaint = null
-   private var gradOuterL : LinearGradientPaint = null
-   private var gradOuterR : LinearGradientPaint = null
-   private var gradInnerL : LinearGradientPaint = null
-   private var gradInnerR : LinearGradientPaint = null
-   private val inH   = 2
-   private val inV   = 0 // 1
+   private final val gradInnerColr     = new Array[ Color ]( 5 )
+   private final val gradInnerFrac     = Array( 0f, -1f, 0.5f, -1f, 1f )
+   private final val gradOuterLColr    = new Array[ Color ]( 3 )
+   private final val gradOuterLFrac    = Array( 0f, -1f, 1f )
+   private final val gradOuterRColr    = new Array[ Color ]( 3 )
+   private final val gradOuterRFrac    = Array( 0f, -1f, 1f )
+   private final val gradInnerLColr    = new Array[ Color ]( 2 )
+   private final val gradInnerLFrac    = Array( 0f, 1f )
+   private final val gradInnerRColr    = new Array[ Color ]( 2 )
+   private final val gradInnerRFrac    = Array( 0f, 0.5f )
+   private final var colrTop : Color   = null
+   private final var colrTopSh : Color = null
+   private final val colrBot           = new Color( 0xFF, 0xFF, 0xFF, 0x7F )
+   private final var colrBotSh : Color = null
+   private final var recentHeight      = -1
+   private final val in                = new Insets( 0, 0, 0, 0 )
+   private final val rClip             = new Rectangle()
+   private final var gradInner : LinearGradientPaint = null
+   private final var gradOuterL : LinearGradientPaint = null
+   private final var gradOuterR : LinearGradientPaint = null
+   private final var gradInnerL : LinearGradientPaint = null
+   private final var gradInnerR : LinearGradientPaint = null
+   private final val inH   = 2
+   private final val inV   = 0 // 1
 //   private val strkSh = new BasicStroke( 2f )
 
    setBackground( Color.getHSBColor( hue, sat, bri ))

@@ -78,30 +78,30 @@ trait PeakMeterLike {
 }
 
 object PeakMeter {
-   val DefaultHoldDuration = 2500
+   /* final */ val DefaultHoldDuration = 2500   // TODO: make final in binary incompatible next version
 }
 class PeakMeter( orient: Int = SwingConstants.VERTICAL ) extends JPanel with PeakMeterLike /* with PeakMeterView */ {
    import PeakMeter._
    import SwingConstants._
 
-   private var holdDurationVar	            = DefaultHoldDuration   // milliseconds peak hold
-	protected var meters			               = new Array[ PeakMeterBar ]( 0 )
+   private final var holdDurationVar	      = DefaultHoldDuration   // milliseconds peak hold
+	protected var meters			         = new Array[ PeakMeterBar ]( 0 )
 	protected var caption: PeakMeterCaption   = null
-	private var captionPositionVar	         = LEFT
-	private var captionAlign	               = RIGHT
-	private var captionVisibleVar	            = true
-	private var captionLabelsVar	            = true
-	private var numChannelsVar		            = 0
-	private var borderVisibleVar			      = false
+	private final var captionPositionVar	         = LEFT
+	private final var captionAlign	               = RIGHT
+	private final var captionVisibleVar	            = true
+	private final var captionLabelsVar	            = true
+	private final var numChannelsVar		            = 0
+	private final var borderVisibleVar			      = false
 
-	private var rmsPaintedVar		            = true
-	private var holdPaintedVar		            = true
+	private final var rmsPaintedVar		            = true
+	private final var holdPaintedVar		            = true
 
-	private var orientVar			            = VERTICAL
-	private var vertical		                  = true
+	private final var orientVar			            = VERTICAL
+	private final var vertical		                  = true
 
-   private val ins                           = new Insets( 0, 0, 0, 0 )
-   private var ticksVar		                  = 101
+   private final val ins                           = new Insets( 0, 0, 0, 0 )
+   private final var ticksVar		                  = 101
 
    setLayout( new BoxLayout( this, BoxLayout.X_AXIS ))
 

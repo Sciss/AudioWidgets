@@ -1,10 +1,7 @@
 package de.sciss.gui.j
 
-import java.awt.{Paint, BorderLayout, Dimension, Component, LinearGradientPaint, RenderingHints, Color, BasicStroke, Shape, Graphics2D, Graphics, EventQueue}
-import javax.swing.{BoxLayout, AbstractButton, JComponent, JButton, Icon, Box, WindowConstants, JPanel, JFrame}
-import java.awt.geom.{RoundRectangle2D, Ellipse2D, AffineTransform, Rectangle2D, Area, GeneralPath}
-import collection.immutable.{IndexedSeq => IIdxSeq}
-import java.awt.event.{ActionListener, ActionEvent}
+import java.awt.{BorderLayout, Dimension, RenderingHints, Graphics2D, Graphics, EventQueue}
+import javax.swing.{JComponent, WindowConstants, JPanel, JFrame}
 
 object TransportTests extends App with Runnable {
    EventQueue.invokeLater( this )
@@ -24,7 +21,7 @@ object TransportTests extends App with Runnable {
                      pnt( g2, icn, 10 + icn.defaultXOffset + (idx * 30), yoff + icn.defaultYOffset, 1f, scheme )
                }
             }
-            gaga( DarkScheme, 10 )
+            gaga( DarkScheme,  10 )
             gaga( LightScheme, 40 )
          }
       }

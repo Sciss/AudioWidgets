@@ -56,8 +56,7 @@ class PeakMeterCaption( orient: Int = SwingConstants.VERTICAL ) extends JCompone
 	
 	private var ascentVar            = 0
    private var descentVar           = 0
-   private var labW                 = 0
-	
+
 	private var ticksVar			      = 0
 	
 	private var vertical             = orient == VERTICAL
@@ -107,7 +106,8 @@ class PeakMeterCaption( orient: Int = SwingConstants.VERTICAL ) extends JCompone
 	def descent : Int = descentVar
 
 	private def recalcPrefSize() {
-		val insets = getInsets()
+		val insets  = getInsets()
+      var labW	   = 0
 
 		if( paintLabelsVar ) {
 			val fnt	= getFont
@@ -120,7 +120,6 @@ class PeakMeterCaption( orient: Int = SwingConstants.VERTICAL ) extends JCompone
                getDefaultScreenDevice.getDefaultConfiguration
 			}
 			val frc  = new FontRenderContext( gc.getNormalizingTransform, true, true )
-			var labW	= 0
 			var labH	= 0f
 			var i = 0; while( i < LABELS.length ) {
 				val b = fnt.createGlyphVector( frc, LABELS( i )).getLogicalBounds
@@ -135,9 +134,10 @@ class PeakMeterCaption( orient: Int = SwingConstants.VERTICAL ) extends JCompone
 			ascentVar	= 0
 			descentVar	= 0
 		}
-		
+
 		val d = new Dimension( labW + (if( hAlign == CENTER ) 12 else 5) + insets.left + insets.right,
-		                       if( ticksVar <= 0 ) getPreferredSize().height else (ticksVar * 2 - 1 + insets.top + insets.bottom) )
+		                       if( ticksVar <= 0 ) getPreferredSize.height else (ticksVar * 2 - 1 + insets.top + insets.bottom) )
+
 		setPreferredSize( d )
 		setMinimumSize( new Dimension( d.width, 2 + insets.top + insets.bottom ))
 		setMaximumSize( new Dimension( d.width, getMaximumSize.height ))
@@ -221,8 +221,8 @@ class PeakMeterCaption( orient: Int = SwingConstants.VERTICAL ) extends JCompone
                }
 				i += 1 }
 			j += 1 }
-			shpMajorTicks	= at.createTransformedShape( gpMajT );
-			shpMinorTicks	= at.createTransformedShape( gpMinT );
+			shpMajorTicks	= at.createTransformedShape( gpMajT )
+			shpMinorTicks	= at.createTransformedShape( gpMinT )
 			
 			// ------------ recalculate labels ------------
 			if( paintLabelsVar ) {

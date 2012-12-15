@@ -28,7 +28,7 @@ package de.sciss.gui.j
 import java.beans.{PropertyChangeListener, PropertyChangeEvent}
 import javax.swing.{BorderFactory, JComponent, SwingConstants}
 import java.awt.image.BufferedImage
-import java.awt.{Color, Rectangle, TexturePaint, Graphics2D, Graphics, Container, EventQueue, Paint, Dimension, Insets}
+import java.awt.{Color, Rectangle, TexturePaint, Graphics2D, Graphics, Container, Paint, Dimension, Insets}
 
 /**
  *	A level (volume) meter GUI component. The component
@@ -43,24 +43,24 @@ import java.awt.{Color, Rectangle, TexturePaint, Graphics2D, Graphics, Container
  *	@todo	add optional horizontal orientation
  */
 object PeakMeterBar {
-   private val logPeakCorr		   = 20.0 / math.log( 10 )
-   private val logRMSCorr		   = 10.0 / math.log( 10 )
+   private final val logPeakCorr		   = 20.0 / math.log( 10 )
+   private final val logRMSCorr		   = 10.0 / math.log( 10 )
 
-   private val bgPixels		= Array( 0xFF000000, 0xFF343434, 0xFF484848, 0xFF5C5C5C, 0xFF5C5C5C,
+   private final val bgPixels		= Array( 0xFF000000, 0xFF343434, 0xFF484848, 0xFF5C5C5C, 0xFF5C5C5C,
                                     0xFF5C5C5C, 0xFF5C5C5C, 0xFF5C5C5C, 0xFF484848, 0xFF343434,
                                     0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000,
                                     0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000 )
 
-   private val rmsTopColor = Array( 0x000068, 0x5537B9, 0x764EE5, 0x9062E8, 0x8B63E8,
+   private final val rmsTopColor = Array( 0x000068, 0x5537B9, 0x764EE5, 0x9062E8, 0x8B63E8,
                                     0x8360E8, 0x7C60E8, 0x8876EB, 0x594CB4, 0x403A63 )
 
-   private val rmsBotColor	= Array( 0x000068, 0x2F4BB6, 0x4367E2, 0x577FE5, 0x577AE5,
+   private final val rmsBotColor	= Array( 0x000068, 0x2F4BB6, 0x4367E2, 0x577FE5, 0x577AE5,
                                     0x5874E6, 0x596FE6, 0x6B7AEA, 0x4851B1, 0x393D62 )
 
-   private val peakTopColor= Array( 0x000000, 0xB72929, 0xFF3C3C, 0xFF6B6B, 0xFF6B6B,
+   private final val peakTopColor= Array( 0x000000, 0xB72929, 0xFF3C3C, 0xFF6B6B, 0xFF6B6B,
                                     0xFF6B6B, 0xFF6B6B, 0xFFA7A7, 0xFF3C3C, 0xB72929 )
 
-   private val peakBotColor= Array( 0x000000, 0x008E00, 0x00C800, 0x02FF02, 0x02FF02,
+   private final val peakBotColor= Array( 0x000000, 0x008E00, 0x00C800, 0x02FF02, 0x02FF02,
                                     0x02FF02, 0x02FF02, 0x68FF68, 0x00C800, 0x008E00 )
 
    private def widenPixV( src: Array[ Int ], srcBrdth: Int, dstBrdth: Int, len: Int ) : Array[ Int ] = {
@@ -227,51 +227,51 @@ class PeakMeterBar( orient: Int = SwingConstants.VERTICAL ) extends JComponent w
    import PeakMeterBar._
    import SwingConstants._
 
-   private var holdDurationVar	      = PeakMeter.DefaultHoldDuration   // milliseconds peak hold
+   private final var holdDurationVar	      = PeakMeter.DefaultHoldDuration   // milliseconds peak hold
 
-   private val ninf                    = Float.NegativeInfinity
-   private var	peakDB                  = ninf
-   private var rmsDB                   = ninf
-   private var	peakLin                 = 0f
-   private var rmsLin                  = 0f
-   private var holdDB                  = ninf
-   private var holdLin                 = 0f
-   private var peakToPaint             = 0f
-   private var rmsToPaint              = 0f
-   private var holdToPaint             = 0f
-   private var peakNorm                = 0f
-   private var rmsNorm                 = 0f
-   private var holdNorm                = 0f
+   private final val ninf                    = Float.NegativeInfinity
+   private final var	peakDB                  = ninf
+   private final var rmsDB                   = ninf
+   private final var	peakLin                 = 0f
+   private final var rmsLin                  = 0f
+   private final var holdDB                  = ninf
+   private final var holdLin                 = 0f
+   private final var peakToPaint             = 0f
+   private final var rmsToPaint              = 0f
+   private final var holdToPaint             = 0f
+   private final var peakNorm                = 0f
+   private final var rmsNorm                 = 0f
+   private final var holdNorm                = 0f
 
-   private var recentLength	         = 0
-   private var recentBreadth	         = 0
-   private var calcedLength	         = -1			// recentHeight snapshot in recalcPaint()
-   private var calcedBreadth	         = -1			// recentWidth snapshot in recalcPaint()
-   private var lastUpdate		         = currentTime
-   private var holdEnd                 = 0L
+   private final var recentLength	         = 0
+   private final var recentBreadth	         = 0
+   private final var calcedLength	         = -1			// recentHeight snapshot in recalcPaint()
+   private final var calcedBreadth	         = -1			// recentWidth snapshot in recalcPaint()
+   private final var lastUpdate		         = currentTime
+   private final var holdEnd                 = 0L
 
-   private var holdPaintedVar		      = true
-   private var rmsPaintedVar		      = true
+   private final var holdPaintedVar		      = true
+   private final var rmsPaintedVar		      = true
 
-   private var pntBg: Paint			   = null
-   private var imgBg: BufferedImage    = null
-   private var imgRMS: BufferedImage   = null
-   private var imgPeak: BufferedImage  = null
+   private final var pntBg: Paint			   = null
+   private final var imgBg: BufferedImage    = null
+   private final var imgRMS: BufferedImage   = null
+   private final var imgPeak: BufferedImage  = null
 
-   private val ins                     = new Insets( 0, 0, 0, 0 )
+   private final val ins                     = new Insets( 0, 0, 0, 0 )
 
-   private var holdPixPos              = 0
-   private var peakPixPos              = 0
-   private var rmsPixPos               = 0
+   private final var holdPixPos              = 0
+   private final var peakPixPos              = 0
+   private final var rmsPixPos               = 0
 
-   private var peakPixPosP	            = 0
-   private var rmsPixPosP	            = 0
-   private var holdPixPosP	            = 0
+   private final var peakPixPosP	            = 0
+   private final var rmsPixPosP	            = 0
+   private final var holdPixPosP	            = 0
 
    var refreshParent                   = false
 
-   private var ticksVar		            = 101 // 0
-   private var vertical = {
+   private final var ticksVar		            = 101 // 0
+   private final var vertical = {
       val res = orient == VERTICAL
       if( !res && orient != HORIZONTAL ) throw new IllegalArgumentException( orient.toString )
       res
@@ -317,7 +317,7 @@ class PeakMeterBar( orient: Int = SwingConstants.VERTICAL ) extends JComponent w
     *	Decides whether the peak indicator should be
     *	painted or not. By default the indicator is painted.
     *
-    *	@param	onOff	<code>true</code> to have the indicator painted,
+    *	@param	b	<code>true</code> to have the indicator painted,
     *					<code>false</code> to switch it off
     */
    def holdPainted_=( b: Boolean ) {
@@ -332,7 +332,7 @@ class PeakMeterBar( orient: Int = SwingConstants.VERTICAL ) extends JComponent w
     *	Decides whether the blue RMS bar should be
     *	painted or not. By default the bar is painted.
     *
-    *	@param	onOff	<code>true</code> to have the RMS values painted,
+    *	@param	b	<code>true</code> to have the RMS values painted,
     *					<code>false</code> to switch them off
     */
    def rmsPainted_=( b: Boolean ) {
@@ -483,8 +483,8 @@ class PeakMeterBar( orient: Int = SwingConstants.VERTICAL ) extends JComponent w
     *	delay of around 4.5 seconds. Accounting for jitter due to GUI slowdown, in ths case it should be
     *	safe to stop meter updates five seconds after the audio engine stopped.
     *
-    *	@param	peak	peak amplitude (linear) between zero and one.
-    *	@param	rms		mean-square amplitude (linear). note : despite the name,
+    *	@param	newPeak	peak amplitude (linear) between zero and one.
+    *	@param	newRMS		mean-square amplitude (linear). note : despite the name,
     *					this is considered mean-square, not root-mean-square. this
     *					method does the appropriate conversion on the fly!
     */
@@ -643,7 +643,7 @@ class PeakMeterBar( orient: Int = SwingConstants.VERTICAL ) extends JComponent w
             val pix = if( imgBrdth == 10 ) {
                bgPixels
             } else {
-               widenPixV( bgPixels, 10, imgBrdth, 2 );
+               widenPixV( bgPixels, 10, imgBrdth, 2 )
             }
             imgBg = new BufferedImage( imgBrdth, 2, BufferedImage.TYPE_INT_ARGB )
             imgBg.setRGB( 0, 0, imgBrdth, 2, pix, 0, imgBrdth )

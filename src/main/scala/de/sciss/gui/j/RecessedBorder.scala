@@ -30,23 +30,23 @@ import java.awt.{RenderingHints, BasicStroke, Color, Component, Graphics, Graphi
 import java.awt.geom.{Rectangle2D, Area, RoundRectangle2D}
 
 object RecessedBorder {
-   private val diameter	   = 4
-   private val colrDark		= new Color( 0x00, 0x00, 0x00, 0x88 )
-   private val colrLight	= new Color( 0xFF, 0xFF, 0xFF, 0xD8 )
-   private val strkOutline	= new BasicStroke( 1.0f )
-   private val strkInline	= new BasicStroke( 2.0f )
-   private val insets      = new Insets( 3, 3, 4, 4 )
+   private /* final */ val diameter = 4   // TODO: make final in binary incompatible next version
+   private final val colrDark		= new Color( 0x00, 0x00, 0x00, 0x88 )
+   private final val colrLight	= new Color( 0xFF, 0xFF, 0xFF, 0xD8 )
+   private final val strkOutline	= new BasicStroke( 1.0f )
+   private final val strkInline	= new BasicStroke( 2.0f )
+   private final val insets      = new Insets( 3, 3, 4, 4 )
 }
 class RecessedBorder( c: Color = Color.black ) extends AbstractBorder {
    import RecessedBorder._
 
-	private var colorVar          = c
-	private var shpBg: Shape      = null
-   private var shpInline: Shape  = null
-   private var shpOutline: Shape = null
+	private final var colorVar          = c
+	private final var shpBg: Shape      = null
+   private final var shpInline: Shape  = null
+   private final var shpOutline: Shape = null
 
-	private var recentWidth		= -1
-	private var recentHeight	= -1
+	private final var recentWidth		= -1
+	private final var recentHeight	= -1
 
 	def color_=( value: Color ) {
       colorVar = value
@@ -76,12 +76,12 @@ class RecessedBorder( c: Color = Color.black ) extends AbstractBorder {
 			a.subtract( new Area( new Rectangle2D.Float( insets.left, insets.top,
 				width - insets.left - insets.right, height - insets.top - insets.bottom )))
 
-			shpOutline		= strkOutline.createStrokedShape( r2 );
-			shpInline		= strkInline.createStrokedShape( r2 );
-			shpBg			   = a;
+			shpOutline		= strkOutline.createStrokedShape( r2 )
+			shpInline		= strkInline.createStrokedShape( r2 )
+			shpBg			   = a
 
-			recentWidth		= width;
-			recentHeight	= height;
+			recentWidth		= width
+			recentHeight	= height
 		}
 
 		g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON )
