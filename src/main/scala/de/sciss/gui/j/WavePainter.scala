@@ -10,15 +10,19 @@ object WavePainter {
 //      def availableFrames: Int
 //   }
 
-   def sampleAndHold : OneLayer = new SHImpl
+   def sampleAndHold : OneLayer  = new SHImpl
+   def linear        : OneLayer  = new LinearImpl
 
-   private final class SHImpl extends OneLayer {
-      var color: Paint = Color.black
+   private trait OneLayerImpl extends OneLayer {
+      final var color: Paint = Color.black
 
-      private var strkVar   : Stroke = new BasicStroke( 1f )
-      private var strkVarUp : Stroke = new BasicStroke( 16f )
-      def stroke : Stroke = strkVar
-      def stroke_=( value: Stroke ) {
+      final val zoomX = new ZoomImpl
+      final val zoomY = new ZoomImpl
+
+      final protected var strkVar   : Stroke = new BasicStroke( 1f )
+      final protected var strkVarUp : Stroke = new BasicStroke( 16f )
+      final def stroke : Stroke = strkVar
+      final def stroke_=( value: Stroke ) {
          strkVar = value
          strkVarUp = value match {
             case bs: BasicStroke =>
@@ -26,9 +30,10 @@ object WavePainter {
             case _ => value
          }
       }
+   }
 
-      val zoomX = new ZoomImpl
-      val zoomY = new ZoomImpl
+   private final class SHImpl extends OneLayerImpl {
+      override def toString = "WavePainter.sampleAndHold@" + hashCode().toHexString
 
       def paint( g: Graphics2D, data: Array[ Float ], dataOffset: Int, dataLength: Int ) {
          val polySize   = dataLength << 1
@@ -55,6 +60,31 @@ object WavePainter {
          g.drawPolyline( polyX, polyY, polySize )
          g.setTransform( atOrig )
 //         g.scale( 16.0, 16.0 )
+      }
+   }
+
+   private final class LinearImpl extends OneLayerImpl {
+      override def toString = "WavePainter.linear@" + hashCode().toHexString
+
+      def paint( g: Graphics2D, data: Array[ Float ], dataOffset: Int, dataLength: Int ) {
+         val polyX      = new Array[ Int ]( dataLength )
+         val polyY      = new Array[ Int ]( dataLength )
+
+         var di = dataOffset; var i = 0; while( i < dataLength ) {
+            val x = zoomX( i )
+            val y = zoomY( data( di ))
+            polyX( i ) = x
+            polyY( i ) = y
+            i  += 1
+            di += 1
+         }
+
+         val atOrig = g.getTransform
+         g.scale( 0.0625, 0.0625 )
+         g.setPaint( color )
+         g.setStroke( strkVarUp )
+         g.drawPolyline( polyX, polyY, dataLength )
+         g.setTransform( atOrig )
       }
    }
 
