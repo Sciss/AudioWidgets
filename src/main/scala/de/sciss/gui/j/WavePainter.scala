@@ -12,12 +12,15 @@ object WavePainter {
 
    def sampleAndHold : OneLayer  = new SHImpl
    def linear        : OneLayer  = new LinearImpl
+   def peakRMS       : PeakRMS   = new PeakRMSImpl
 
-   private trait OneLayerImpl extends OneLayer {
-      final var color: Paint = Color.black
-
+   private trait BasicImpl extends WavePainter {
       final val zoomX = new ZoomImpl
       final val zoomY = new ZoomImpl
+   }
+
+   private trait OneLayerImpl extends BasicImpl with OneLayer {
+      final var color: Paint = Color.black
 
       final protected var strkVar   : Stroke = new BasicStroke( 1f )
       final protected var strkVarUp : Stroke = new BasicStroke( 16f )
@@ -88,6 +91,48 @@ object WavePainter {
       }
    }
 
+   private final class PeakRMSImpl extends BasicImpl with PeakRMS {
+      var peakColor: Paint = Color.gray
+      var rmsColor: Paint  = Color.black
+
+      def paint( g: Graphics2D, data: Array[ Float ], dataOffset: Int, dataLength: Int ) {
+         val polySize   = dataLength * 2 // / 3
+         val peakPolyX  = new Array[ Int ]( polySize )
+         val peakPolyY  = new Array[ Int ]( polySize )
+         val rmsPolyX   = new Array[ Int ]( polySize )
+         val rmsPolyY   = new Array[ Int ]( polySize )
+
+         var i = 0; var j = dataOffset * 3; var k = polySize - 1; while( i < dataLength ) {
+            val x					= zoomX( i )
+            peakPolyX( i )    = x
+            peakPolyX( k )		= x
+            rmsPolyX( i )     = x
+            rmsPolyX( k )     = x
+            val peakP         = data( j )
+            j += 1
+            val peakN         = data( j )
+            j += 1
+            peakPolyY( i )	   = zoomY( peakP ) + 8 // 2
+            peakPolyY( k )		= zoomY( peakN ) - 8 // 2
+            // peakC = (peakP + peakN) / 2;
+            val rms           = math.sqrt( data( j )).toFloat
+            j += 1
+            rmsPolyY( i )     = zoomY( math.min( peakP,  rms ))
+            rmsPolyY( k )		= zoomY( math.max( peakN, -rms ))
+            i += 1
+            k -= 1
+         }
+
+         val atOrig = g.getTransform
+         g.scale( 0.0625, 0.0625 )
+         g.setPaint( peakColor )
+         g.fillPolygon( peakPolyX, peakPolyY, polySize )
+         g.setPaint( rmsColor )
+         g.fillPolygon( rmsPolyX, rmsPolyY, polySize )
+         g.setTransform( atOrig )
+      }
+   }
+
    private final class ZoomImpl extends Zoom {
       private var srcLoVar = 0.0
       private var srcHiVar = 1.0
@@ -146,9 +191,48 @@ object WavePainter {
 //      }
    }
 
+   private final case class PCMToPeakRMSDecimator( factor: Int ) extends Decimator {
+      override def toString = "WavePainter.Decimator.pcmToPeakRMS(" + factor + ")"
+
+      def decimate( in: Array[ Float ], inOffset: Int, out: Array[ Float ], outOffset: Int, outLength: Int ) {
+         var j = outOffset * 3; val stop = j + (outLength * 3); var k = 0
+         while( j < stop ) {
+            val f = in( k )
+            k += 1
+            var f1 = f
+            var f2 = f
+            var f3 = f * f
+            var m = 1; while( m < factor ) {
+               val g = in( k )
+               k += 1
+               if( g > f1 ) f1 = g
+               if( g < f2 ) f2 = g
+               f3 += g * g
+            m += 1 }
+            out( j ) = f1  // positive halfwave peak
+            j += 1
+            out( j ) = f2  // negative halfwave peak
+            j += 1
+            out( j )       // fullwave mean square
+            j += 1
+         }
+      }
+   }
+
    trait OneLayer extends WavePainter {
       def color: Paint
       def color_=( value: Paint ) : Unit
+
+      def stroke : Stroke
+      def stroke_=( value: Stroke ) : Unit
+   }
+
+   trait PeakRMS extends WavePainter {
+      def peakColor: Paint
+      def peakColor_=( value: Paint ) : Unit
+
+      def rmsColor: Paint
+      def rmsColor_=( value: Paint ) : Unit
    }
 
    trait Zoom {
@@ -166,6 +250,14 @@ object WavePainter {
 
 //      def logarithmic : Boolean
 //      def logarithmic_=( value: Boolean ) : Unit
+   }
+
+   object Decimator {
+      def pcmToPeakRMS( factor: Int ) : Decimator = new PCMToPeakRMSDecimator( factor )
+   }
+   trait Decimator {
+      def factor: Int
+      def decimate( in: Array[ Float ], inOffset: Int, out: Array[ Float ], outOffset: Int, outLength: Int ) : Unit
    }
 }
 trait WavePainter {
