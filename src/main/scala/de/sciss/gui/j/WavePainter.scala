@@ -191,11 +191,44 @@ object WavePainter {
 //      }
    }
 
+   private final case class PeakRMSDecimator( factor: Int ) extends Decimator {
+      override def toString = "WavePainter.Decimator.peakRMS(" + factor + ")"
+
+      def decimate( in: Array[ Float ], inOffset: Int, out: Array[ Float ], outOffset: Int, outLength: Int ) {
+         var j = outOffset * 3; val stop = j + (outLength * 3); var k = inOffset * 3
+         while( j < stop ) {
+            var f1 = in( k )
+            k += 1
+            var f2 = in( k )
+            k += 1
+            var f3 = in( k )
+            k += 1
+            var m = 1; while( m < factor ) {
+               val f5 = in( k )
+               k += 1
+               if( f5 > f1 ) f1 = f5
+               val f6 = in( k )
+               k += 1
+               if( f6 < f2 ) f2 = f6
+               f3 += in( k )
+               k += 1
+               m += 1
+            }
+            out( j ) = f1
+            j += 1
+            out( j ) = f2
+            j += 1
+            out( j ) = f3 / factor
+            j += 1
+         }
+      }
+   }
+
    private final case class PCMToPeakRMSDecimator( factor: Int ) extends Decimator {
       override def toString = "WavePainter.Decimator.pcmToPeakRMS(" + factor + ")"
 
       def decimate( in: Array[ Float ], inOffset: Int, out: Array[ Float ], outOffset: Int, outLength: Int ) {
-         var j = outOffset * 3; val stop = j + (outLength * 3); var k = 0
+         var j = outOffset * 3; val stop = j + (outLength * 3); var k = inOffset
          while( j < stop ) {
             val f = in( k )
             k += 1
@@ -209,11 +242,11 @@ object WavePainter {
                if( g < f2 ) f2 = g
                f3 += g * g
             m += 1 }
-            out( j ) = f1  // positive halfwave peak
+            out( j ) = f1           // positive halfwave peak
             j += 1
-            out( j ) = f2  // negative halfwave peak
+            out( j ) = f2           // negative halfwave peak
             j += 1
-            out( j )       // fullwave mean square
+            out( j ) = f3 / factor  // fullwave mean square
             j += 1
          }
       }
@@ -254,6 +287,7 @@ object WavePainter {
 
    object Decimator {
       def pcmToPeakRMS( factor: Int ) : Decimator = new PCMToPeakRMSDecimator( factor )
+      def peakRMS(      factor: Int ) : Decimator = new PeakRMSDecimator( factor )
    }
    trait Decimator {
       def factor: Int

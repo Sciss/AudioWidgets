@@ -11,17 +11,33 @@ object WaveTests extends App with Runnable {
       val dataLen    = 128 // 64
       val freq       = 2 * math.Pi / (dataLen - 1)
       val dataFull   = Array.tabulate( dataLen ) { i => math.sin( i * freq ).toFloat }
-      val dataDecim  = {
-         val factor  = 32 // 16
-         val fullLen = dataLen * factor
+
+      def sincDecim( over: Int ) = {
+         val factor  = 256 // 32 // 16
+         val dl2     = dataLen * over
+         val fullLen = dl2 * factor
          val halfLen = fullLen / 2
+         var a0 = math.random
          val full    = Array.tabulate( fullLen ) { i =>
             val j = i - halfLen
-            val k = j * freq * 8/factor
-            (math.sin( k ) / k).toFloat
+            val k = j * freq * 4/(factor * over)
+            val s = math.sin( k ) / k
+            val r = math.random
+            a0    = a0 * 0.96 + r * 0.04
+            (s * a0).toFloat
          }
-         val res = new Array[ Float ]( dataLen * 3 )
-         WavePainter.Decimator.pcmToPeakRMS( factor ).decimate( full, 0, res, 0, dataLen )
+         val res = new Array[ Float ]( dl2 * 3 )
+         WavePainter.Decimator.pcmToPeakRMS( factor ).decimate( full, 0, res, 0, dl2 )
+         res
+      }
+
+      val dataDecim  = sincDecim( 1 )
+      val dataDecim2 = {
+         val factor  = 256
+         val first   = sincDecim( factor )
+//         val fl      = first.length
+         val res     = new Array[ Float ]( first.length / factor )
+         WavePainter.Decimator.peakRMS( factor ).decimate( first, 0, res, 0, res.length / 3 )
          res
       }
 
@@ -29,7 +45,7 @@ object WaveTests extends App with Runnable {
       val pntLin     = WavePainter.linear
       val pntPeakRMS = WavePainter.peakRMS
 
-      val pntAll  = pntLin :: pntSH :: pntPeakRMS :: Nil
+      val pntAll  = pntLin :: pntSH :: pntPeakRMS :: pntPeakRMS :: Nil
 
 //      pnt.zoomX.sourceLow  = 0
 
@@ -68,12 +84,17 @@ object WaveTests extends App with Runnable {
       }
 
       val panel = new JPanel( new FlowLayout() )
-      val ggPnt   = new JComboBox( Array[ AnyRef ]( "Linear", "Sample+Hold", "Peak+RMS" ))
+      val ggPnt   = new JComboBox( Array[ AnyRef ]( "Linear", "Sample+Hold", "Peak+RMS 1", "Peak+RMS 2" ))
       panel.add( ggPnt )
       ggPnt.addActionListener( new ActionListener {
          def actionPerformed( e: ActionEvent ) {
-            pnt   = pntAll( ggPnt.getSelectedIndex )
-            data  = if( pnt == pntPeakRMS ) dataDecim else dataFull
+            val idx = ggPnt.getSelectedIndex
+            pnt      = pntAll( idx )
+            data     = if( pnt == pntPeakRMS ) {
+               if( idx == 2 ) dataDecim else dataDecim2
+            } else {
+               dataFull
+            }
             p.repaint()
          }
       })
