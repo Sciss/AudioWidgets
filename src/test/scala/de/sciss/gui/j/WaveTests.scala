@@ -1,11 +1,16 @@
 package de.sciss.gui.j
 
-import java.awt.{FlowLayout, Color, BorderLayout, RenderingHints, Graphics2D, Graphics, Dimension, EventQueue}
-import javax.swing.{JComboBox, JPanel, WindowConstants, JFrame, JComponent}
-import java.awt.event.{ActionListener, ActionEvent, ItemEvent, ItemListener}
+import java.awt.{GridLayout, Rectangle, FlowLayout, Color, BorderLayout, RenderingHints, Graphics2D, Graphics, Dimension, EventQueue}
+import javax.swing.{SwingConstants, JSlider, JComboBox, JPanel, WindowConstants, JFrame, JComponent}
+import java.awt.event.{ActionListener, ActionEvent}
+import de.sciss.gui.j.WavePainter.MultiResolution
+import collection.immutable.{IndexedSeq => IIdxSeq}
+import javax.swing.event.{ChangeEvent, ChangeListener}
 
 object WaveTests extends App with Runnable {
    EventQueue.invokeLater( this )
+
+   private def ??? = sys.error( "TODO" )
 
    def run() {
       val dataLen    = 128 // 64
@@ -67,8 +72,8 @@ object WaveTests extends App with Runnable {
       var pnt: WavePainter       = pntLin
       var data: Array[ Float ]   = dataFull
 
-      val p = new JComponent {
-         setPreferredSize( new Dimension( 260, 140 ))
+      abstract class SimpleView extends JComponent {
+         setPreferredSize( new Dimension( 260, 180 ))
          override def paintComponent( g: Graphics ) {
             val g2 = g.asInstanceOf[ Graphics2D ]
             g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING,   RenderingHints.VALUE_ANTIALIAS_ON )
@@ -77,9 +82,17 @@ object WaveTests extends App with Runnable {
             val w = getWidth
             val h = getHeight
             g2.fillRect( 0, 0, w, h )
+            paint( g2, w, h )
+         }
+
+         protected def paint( g: Graphics2D, width: Int, height: Int ) : Unit
+      }
+
+      val view1 = new SimpleView {
+         def paint( g: Graphics2D, w: Int, h: Int ) {
             pnt.zoomX.targetHigh = w
             pnt.zoomY.targetLow  = h - 1
-            pnt.paint( g2, data, 0, dataLen )
+            pnt.paint( g, data, 0, dataLen )
          }
       }
 
@@ -95,14 +108,92 @@ object WaveTests extends App with Runnable {
             } else {
                dataFull
             }
-            p.repaint()
+            view1.repaint()
          }
       })
 
+      val mSrc = new MultiResolution.Source with MultiResolution.Reader {
+         def numChannels : Int = 1
+         def numFrames : Long = dataLen
+
+         def readers : IIdxSeq[ MultiResolution.Reader ] = IIdxSeq( this )
+
+         def decimationFactor : Int = 1
+
+         def available( srcOff: Long, len: Int ) : IIdxSeq[ Int ] = IIdxSeq( 0, len )
+
+         def read( buf: Array[ Array[ Float ]], bufOff: Int, srcOff: Long, len : Int ) : Boolean = {
+            val bch = buf( 0 )
+            val r = new util.Random( 0L )
+            var i = bufOff; val stop = i + len; while( i < stop ) {
+               bch( i ) = r.nextFloat() * 2 - 1
+            i += 1}
+            true
+         }
+      }
+      lazy val multi = WavePainter.MultiResolution( mSrc, place )
+      multi.peakColor   = Color.gray
+      multi.rmsColor    = Color.white
+
+      lazy val ggZoomX = new JSlider( SwingConstants.HORIZONTAL, 0, 1000, 0 )
+      ggZoomX.setPaintTicks( true )
+      ggZoomX.putClientProperty( "JComponent.sizeVariant", "small" )
+      lazy val refreshL: ChangeListener = new ChangeListener {
+         def stateChanged( e: ChangeEvent ) {
+            view2.repaint()
+         }
+      }
+      ggZoomX.addChangeListener( refreshL )
+      lazy val ggZoomY = new JSlider( SwingConstants.VERTICAL,   0, 1000, 500 )
+      ggZoomY.setInverted( true )
+      ggZoomY.setPaintTicks( true )
+      ggZoomY.putClientProperty( "JComponent.sizeVariant", "small" )
+      ggZoomY.addChangeListener( refreshL )
+
+      implicit def richDouble( x: Double ) = new RichDouble( x )
+      final class RichDouble( x: Double ) {
+         def linlin( srcLo: Double, srcHi: Double, dstLo: Double, dstHi: Double ) =
+            (x - srcLo) / (srcHi - srcLo) * (dstHi - dstLo) + dstLo
+
+         def linexp( srcLo: Double, srcHi: Double, dstLo: Double, dstHi: Double) =
+            math.pow( dstHi / dstLo, (x- srcLo) / (srcHi - srcLo) ) * dstLo
+      }
+
+      lazy val view2 = new SimpleView {
+         def paint( g: Graphics2D, w: Int, h: Int ) {
+            val vz = ggZoomY.getValue.linexp( 0, 1000, 1.0/8, 8.0 )
+            val hz = ggZoomX.getValue.linexp( 0, 1000, 1.0, 1.0/200 )
+            multi.zoomX.sourceHigh  = dataLen * hz
+            multi.zoomX.targetHigh  = w
+            multi.zoomY.sourceLow   = -1 * vz
+            multi.zoomY.sourceHigh  = 1 * vz
+            multi.zoomY.targetLow   = h - 1
+            multi.zoomY.targetHigh  = 0
+            multi.paint( g )
+         }
+      }
+      lazy val place: MultiResolution.ChannelPlacement = new MultiResolution.ChannelPlacement {
+         def rectangleForChannel( ch: Int, r: Rectangle ) {
+            view2.getBounds( r ) // single channel
+         }
+      }
+
       val f    = new JFrame()
       val cp   = f.getContentPane
-      cp.add( p, BorderLayout.CENTER )
-      cp.add( panel, BorderLayout.NORTH )
+
+      val p1 = new JPanel( new BorderLayout() )
+      p1.add( view1, BorderLayout.CENTER )
+      p1.add( panel, BorderLayout.NORTH  )
+
+      val p2 = new JPanel( new BorderLayout() )
+      p2.add( view2, BorderLayout.CENTER )
+      p2.add( ggZoomX, BorderLayout.SOUTH )
+      p2.add( ggZoomY, BorderLayout.EAST )
+
+      val p3 = new JPanel( new GridLayout( 2, 1 ))
+      p3.add( p1 )
+      p3.add( p2 )
+      cp.add( p3, BorderLayout.CENTER  )
 
       f.setLocationRelativeTo( null )
       f.pack()
