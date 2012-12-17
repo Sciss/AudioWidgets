@@ -1,7 +1,7 @@
 package de.sciss.gui.j
 
 import java.awt.{GridLayout, Rectangle, FlowLayout, Color, BorderLayout, RenderingHints, Graphics2D, Graphics, Dimension, EventQueue}
-import javax.swing.{SwingConstants, JSlider, JComboBox, JPanel, WindowConstants, JFrame, JComponent}
+import javax.swing.{JLabel, Box, SwingConstants, JSlider, JComboBox, JPanel, WindowConstants, JFrame, JComponent}
 import java.awt.event.{ActionListener, ActionEvent}
 import de.sciss.gui.j.WavePainter.MultiResolution
 import collection.immutable.{IndexedSeq => IIdxSeq}
@@ -172,15 +172,28 @@ object WaveTests extends App with Runnable {
       multi.peakColor   = Color.gray
       multi.rmsColor    = Color.white
 
-      lazy val ggZoomX = new JSlider( SwingConstants.HORIZONTAL, 0, 1000, 0 )
-      ggZoomX.setPaintTicks( true )
-      ggZoomX.putClientProperty( "JComponent.sizeVariant", "small" )
       lazy val refreshL: ChangeListener = new ChangeListener {
          def stateChanged( e: ChangeEvent ) {
+            if( e.getSource == ggStart ) {
+               if( ggStop.getValue <= ggStart.getValue ) {
+                  ggStop.setValue( ggStart.getValue + 1 )
+               }
+            } else if( e.getSource == ggStop ) {
+               if( ggStart.getValue >= ggStop.getValue ) {
+                  ggStart.setValue( ggStop.getValue - 1 )
+               }
+            }
             view2.repaint()
          }
       }
-      ggZoomX.addChangeListener( refreshL )
+      lazy val ggStart = new JSlider( SwingConstants.HORIZONTAL, 0, 999, 0 )
+      ggStart.setPaintTicks( true )
+      ggStart.putClientProperty( "JComponent.sizeVariant", "small" )
+      ggStart.addChangeListener( refreshL )
+      lazy val ggStop = new JSlider( SwingConstants.HORIZONTAL, 1, 1000, 1000 )
+      ggStop.setPaintTicks( true )
+      ggStop.putClientProperty( "JComponent.sizeVariant", "small" )
+      ggStop.addChangeListener( refreshL )
       lazy val ggZoomY = new JSlider( SwingConstants.VERTICAL, 0, 1000, 500 )
       ggZoomY.setInverted( true )
       ggZoomY.setPaintTicks( true )
@@ -199,9 +212,11 @@ object WaveTests extends App with Runnable {
       lazy val view2 = new SimpleView {
          def paint( g: Graphics2D, w: Int, h: Int ) {
             val vz = ggZoomY.getValue.linexp( 0, 1000, 1.0/8, 8.0 )
-            val hz = ggZoomX.getValue.linexp( 0, 1000, 1.0, 1.0/800 )
-            multi.startFrame        = 0L
-            multi.stopFrame         = (multiSize * hz).toLong
+//            val hz = ggZoomX.getValue.linexp( 0, 1000, 1.0, 1.0/800 )
+            val startFrame = ggStart.getValue.linlin( 0, 1000, 0, multiSize ).toLong
+            val stopFrame  = ggStop.getValue.linlin(  0, 1000, 0, multiSize ).toLong
+            multi.startFrame        = startFrame   // 0L
+            multi.stopFrame         = stopFrame    // (multiSize * hz).toLong
             multi.magLow            = -1 * vz
             multi.magHigh           = 1 * vz
             multi.paint( g )
@@ -222,8 +237,14 @@ object WaveTests extends App with Runnable {
 
       val p2 = new JPanel( new BorderLayout() )
       p2.add( view2, BorderLayout.CENTER )
-      p2.add( ggZoomX, BorderLayout.SOUTH )
+      val p4 = Box.createHorizontalBox()
+      val p5 = Box.createVerticalBox()
+      p5.add( ggStart )
+      p5.add( ggStop )
+      p4.add( p5 )
+      p4.add( Box.createHorizontalStrut( ggZoomY.getPreferredSize.width ))
       p2.add( ggZoomY, BorderLayout.EAST )
+      p2.add( p4, BorderLayout.SOUTH )
 
       val p3 = new JPanel( new GridLayout( 2, 1 ))
       p3.add( p1 )

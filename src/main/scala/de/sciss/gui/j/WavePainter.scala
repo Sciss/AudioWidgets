@@ -452,7 +452,7 @@ object WavePainter {
             return
          }
 
-         val sh        = (numPixels >> 2) > numFrames
+//         val sh        = (numPixels >> 2) > numFrames
          val dispDecim = numFrames.toDouble / numPixels
          var i    = 0
          while( i < numReaders && readers( i ).decimationFactor < dispDecim ) i += 1
