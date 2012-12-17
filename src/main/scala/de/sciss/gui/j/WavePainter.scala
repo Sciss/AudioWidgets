@@ -93,7 +93,7 @@ object WavePainter {
    }
 
    private final class PeakRMSImpl extends HasZoomImpl with PeakRMS with HasPeakRMSImpl {
-      final def tupleSize = 3
+      def tupleSize = 3
 
       def paint( g: Graphics2D, data: Array[ Float ], dataOffset: Int, dataLength: Int ) {
          val polySize   = dataLength * 2 // / 3
@@ -371,13 +371,13 @@ object WavePainter {
 
       def peakColor: Paint = pntDecim.peakColor
       def peakColor_=( value: Paint ) {
-         pntSH.color          = value
-         pntLin.color         = value
          pntDecim.peakColor   = value
       }
       def rmsColor: Paint = pntDecim.rmsColor
       def rmsColor_=( value: Paint ) {
-         pntDecim.rmsColor = value
+         pntSH.color          = value
+         pntLin.color         = value
+         pntDecim.rmsColor    = value
       }
 
       private def recalcDecim() {
@@ -411,11 +411,18 @@ object WavePainter {
          val decimStop  = (frameStopL + f - 1) / f
          decimFrames    = (decimStop - decimStart).toInt // math.ceil( numFrames / reader.decimationFactor ).toInt
 
+//         val floorTgtLo = zoomX( frameStart )
+//         val ceilTgtHi  = zoomX( frameStop )
+//         val zx         = pnt.zoomX
+//         zx.sourceLow   = frameStart
+//         zx.sourceHigh  = frameStop
+//         zx.targetLow   = floorTgtLo
+//         zx.targetHigh  = ceilTgtHi
          val floorTgtLo = zoomX( frameStart )
          val ceilTgtHi  = zoomX( frameStop )
          val zx         = pnt.zoomX
-         zx.sourceLow   = frameStart
-         zx.sourceHigh  = frameStop
+         zx.sourceLow   = frameStart / f
+         zx.sourceHigh  = frameStop / f
          zx.targetLow   = floorTgtLo
          zx.targetHigh  = ceilTgtHi
          if( pnt ne oldPnt ) setZoomY()
