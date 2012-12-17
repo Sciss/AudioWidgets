@@ -1,17 +1,9 @@
 package de.sciss.gui.j
 
 import java.awt.{Rectangle, Stroke, BasicStroke, Paint, Color, Graphics2D}
-import java.awt.geom.Rectangle2D
 import collection.immutable.{IndexedSeq => IIdxSeq}
 
 object WavePainter {
-//   trait Source {
-//      def buffer: Array[ Array[ Float ]]
-//      def numChannels: Int
-//      def bufferSize: Int
-//      def availableFrames: Int
-//   }
-
    def sampleAndHold : OneLayer  = new SHImpl
    def linear        : OneLayer  = new LinearImpl
    def peakRMS       : PeakRMS   = new PeakRMSImpl
@@ -119,7 +111,7 @@ object WavePainter {
             j += 1
             peakPolyY( i )	   = (zoomY( peakP ) * 16).toInt + 8 // 2
             peakPolyY( k )		= (zoomY( peakN ) * 16).toInt - 8 // 2
-            // peakC = (peakP + peakN) / 2;
+            // peakC = (peakP + peakN) / 2
             val rms           = math.sqrt( data( j )).toFloat
             j += 1
             rmsPolyY( i )     = (zoomY( math.min( peakP,  rms )) * 16).toInt
