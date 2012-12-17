@@ -112,24 +112,60 @@ object WaveTests extends App with Runnable {
          }
       })
 
-      val mSrc = new MultiResolution.Source with MultiResolution.Reader {
-         def numChannels : Int = 1
-         def numFrames : Long = dataLen
+      val multiSize  = 131072
+      val fullData   = {
+         val r       = new util.Random( 0L )
+         def iter()  = r.nextDouble() * 2 - 1
+         var a       = iter()
+         val freq    = 8 * 2 * math.Pi / (multiSize - 1)
+         Array.tabulate( multiSize ) { j =>
+            val i = iter()
+            a = a * 0.96 + i * 0.04
+            (a * math.sin( j * freq )).toFloat
+         }
+      }
 
-         def readers : IIdxSeq[ MultiResolution.Reader ] = IIdxSeq( this )
-
-         def decimationFactor : Int = 1
-
+      final class SimpleReader( data: Array[ Float ], val decimationFactor: Int ) extends MultiResolution.Reader {
+         private val isFull = decimationFactor == 1
          def available( srcOff: Long, len: Int ) : IIdxSeq[ Int ] = IIdxSeq( 0, len )
 
          def read( buf: Array[ Array[ Float ]], bufOff: Int, srcOff: Long, len : Int ) : Boolean = {
-            val bch = buf( 0 )
-            val r = new util.Random( 0L )
-            var i = bufOff; val stop = i + len; while( i < stop ) {
-               bch( i ) = r.nextFloat() * 2 - 1
-            i += 1}
+            val bch  = buf( 0 )
+            var i    = bufOff    // if( isFull ) bufOff else bufOff * 3
+            val stop = i + len   // (if( isFull ) len * 3 else len)
+            var j = 0; while( i < stop ) {
+               bch( i ) = data( j )
+            i += 1; j += 1 }
             true
          }
+      }
+
+      val fullReader    = new SimpleReader( fullData, 1 )
+      val decimData1    = new Array[ Float ]( multiSize / 32 * 3 )
+      WavePainter.Decimator.pcmToPeakRMS( 32 ).decimate( fullData, 0, decimData1, 0, multiSize / 32 )
+      val decim1Reader  = new SimpleReader( decimData1, 32 )
+      val decimData2    = new Array[ Float ]( multiSize / (32*32) * 3 )
+      WavePainter.Decimator.peakRMS( 32 ).decimate( decimData1, 0, decimData2, 0, multiSize / (32*32) )
+      val decim2Reader  = new SimpleReader( decimData2, 32*32 )
+
+      val mSrc = new MultiResolution.Source {
+         def numChannels : Int = 1
+         def numFrames : Long = multiSize
+
+         val readers : IIdxSeq[ MultiResolution.Reader ] = IIdxSeq( fullReader, decim1Reader, decim2Reader )
+
+//         def decimationFactor : Int = 1
+//
+//         def available( srcOff: Long, len: Int ) : IIdxSeq[ Int ] = IIdxSeq( 0, len )
+//
+//         def read( buf: Array[ Array[ Float ]], bufOff: Int, srcOff: Long, len : Int ) : Boolean = {
+//            val bch = buf( 0 )
+//            val r = new util.Random( 0L )
+//            var i = bufOff; val stop = i + len; while( i < stop ) {
+//               bch( i ) = r.nextFloat() * 2 - 1
+//            i += 1}
+//            true
+//         }
       }
       lazy val multi = WavePainter.MultiResolution( mSrc, place )
       multi.peakColor   = Color.gray
@@ -144,7 +180,7 @@ object WaveTests extends App with Runnable {
          }
       }
       ggZoomX.addChangeListener( refreshL )
-      lazy val ggZoomY = new JSlider( SwingConstants.VERTICAL,   0, 1000, 500 )
+      lazy val ggZoomY = new JSlider( SwingConstants.VERTICAL, 0, 1000, 500 )
       ggZoomY.setInverted( true )
       ggZoomY.setPaintTicks( true )
       ggZoomY.putClientProperty( "JComponent.sizeVariant", "small" )
@@ -163,7 +199,7 @@ object WaveTests extends App with Runnable {
          def paint( g: Graphics2D, w: Int, h: Int ) {
             val vz = ggZoomY.getValue.linexp( 0, 1000, 1.0/8, 8.0 )
             val hz = ggZoomX.getValue.linexp( 0, 1000, 1.0, 1.0/200 )
-            multi.zoomX.sourceHigh  = dataLen * hz
+            multi.zoomX.sourceHigh  = multiSize * hz
             multi.zoomX.targetHigh  = w
             multi.zoomY.sourceLow   = -1 * vz
             multi.zoomY.sourceHigh  = 1 * vz
