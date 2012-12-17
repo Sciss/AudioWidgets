@@ -1,7 +1,7 @@
 package de.sciss.gui.j
 
 import java.awt.{GridLayout, Rectangle, FlowLayout, Color, BorderLayout, RenderingHints, Graphics2D, Graphics, Dimension, EventQueue}
-import javax.swing.{JLabel, Box, SwingConstants, JSlider, JComboBox, JPanel, WindowConstants, JFrame, JComponent}
+import javax.swing.{Box, SwingConstants, JSlider, JComboBox, JPanel, WindowConstants, JFrame, JComponent}
 import java.awt.event.{ActionListener, ActionEvent}
 import de.sciss.gui.j.WavePainter.MultiResolution
 import collection.immutable.{IndexedSeq => IIdxSeq}
@@ -22,7 +22,7 @@ object WaveTests extends App with Runnable {
          val dl2     = dataLen * over
          val fullLen = dl2 * factor
          val halfLen = fullLen / 2
-         var a0 = math.random
+         var a0      = math.random
          val full    = Array.tabulate( fullLen ) { i =>
             val j = i - halfLen
             val k = j * freq * 4/(factor * over)
@@ -171,6 +171,7 @@ object WaveTests extends App with Runnable {
       }
       lazy val multi = WavePainter.MultiResolution( mSrc, place )
       multi.peakColor   = Color.gray
+//      multi.peakColor   = new java.awt.LinearGradientPaint( 0f, 0f, 0f, 3200f, Array( 0f, 0.25f, 0.75f, 1f ), Array( Color.red, Color.yellow, Color.yellow, Color.red ))
       multi.rmsColor    = Color.white
 
       lazy val refreshL: ChangeListener = new ChangeListener {
