@@ -453,8 +453,7 @@ object WavePainter {
          }
 
          val sh        = (numPixels >> 2) > numFrames
-//         val dispDecim = numFrames.toDouble / numPixels
-         val dispDecim = ((numFrames + numPixels - 1) / numPixels).toInt
+         val dispDecim = numFrames.toDouble / numPixels
          var i    = 0
          while( i < numReaders && readers( i ).decimationFactor < dispDecim ) i += 1
          i        = math.max( 0, i - 1 )
@@ -468,7 +467,7 @@ object WavePainter {
             return
          }
 
-         val fInline0   = math.max( 1, (dispDecim / fRead) /* .toInt */ )
+         val fInline0   = math.max( 1, math.ceil( dispDecim / fRead ).toInt )
          // tricky: current decimation algorithm assumes write head is slower than read head.
          // but in the case of PCMtoPeakRMS, this holds only for an inline decimation factor
          // of >= 3. thus, if reader is PCM, we use inline decimation only for factors >= 3
@@ -483,7 +482,7 @@ object WavePainter {
          } else {
             decimInline = Decimator.dummy
             pnt = if( decimTuples == 1 ) {
-               if( sh /* dispDecim <= 0.25 */ ) pntSH else pntLin
+               if( dispDecim <= 0.25 ) pntSH else pntLin
             } else {
                pntDecim
             }
