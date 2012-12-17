@@ -1,6 +1,8 @@
 package de.sciss.gui.j
 
-import java.awt.{Stroke, BasicStroke, Paint, Color, Graphics2D}
+import java.awt.{Rectangle, Stroke, BasicStroke, Paint, Color, Graphics2D}
+import java.awt.geom.Rectangle2D
+import collection.immutable.{IndexedSeq => IIdxSeq}
 
 object WavePainter {
 //   trait Source {
@@ -14,12 +16,12 @@ object WavePainter {
    def linear        : OneLayer  = new LinearImpl
    def peakRMS       : PeakRMS   = new PeakRMSImpl
 
-   private trait BasicImpl extends WavePainter {
+   private trait HasZoomImpl {
       final val zoomX = new ZoomImpl
       final val zoomY = new ZoomImpl
    }
 
-   private trait OneLayerImpl extends BasicImpl with OneLayer {
+   private trait OneLayerImpl extends HasZoomImpl with OneLayer {
       final var color: Paint = Color.black
 
       final protected var strkVar   : Stroke = new BasicStroke( 1f )
@@ -43,13 +45,13 @@ object WavePainter {
          val polyX      = new Array[ Int ]( polySize )
          val polyY      = new Array[ Int ]( polySize )
 
-         var di = dataOffset; var pi = 0; var i = 0; var x = zoomX( 0 ); while( i < dataLength ) {
-            val y = zoomY( data( di ))
+         var di = dataOffset; var pi = 0; var i = 0; var x = (zoomX( 0 ) * 16).toInt; while( i < dataLength ) {
+            val y = (zoomY( data( di )) * 16).toInt
             polyX( pi ) = x
             polyY( pi ) = y
             pi += 1
             i  += 1
-            x   = zoomX( i )
+            x   = (zoomX( i ) * 16).toInt
             polyX( pi ) = x
             polyY( pi ) = y
             pi += 1
@@ -74,8 +76,8 @@ object WavePainter {
          val polyY      = new Array[ Int ]( dataLength )
 
          var di = dataOffset; var i = 0; while( i < dataLength ) {
-            val x = zoomX( i )
-            val y = zoomY( data( di ))
+            val x = (zoomX( i ) * 16).toInt
+            val y = (zoomY( data( di )) * 16).toInt
             polyX( i ) = x
             polyY( i ) = y
             i  += 1
@@ -91,9 +93,12 @@ object WavePainter {
       }
    }
 
-   private final class PeakRMSImpl extends BasicImpl with PeakRMS {
+   private trait HasPeakRMSImpl {
       var peakColor: Paint = Color.gray
       var rmsColor: Paint  = Color.black
+   }
+
+   private final class PeakRMSImpl extends HasZoomImpl with PeakRMS with HasPeakRMSImpl {
 
       def paint( g: Graphics2D, data: Array[ Float ], dataOffset: Int, dataLength: Int ) {
          val polySize   = dataLength * 2 // / 3
@@ -103,7 +108,7 @@ object WavePainter {
          val rmsPolyY   = new Array[ Int ]( polySize )
 
          var i = 0; var j = dataOffset * 3; var k = polySize - 1; while( i < dataLength ) {
-            val x					= zoomX( i )
+            val x					= (zoomX( i ) * 16).toInt
             peakPolyX( i )    = x
             peakPolyX( k )		= x
             rmsPolyX( i )     = x
@@ -112,13 +117,13 @@ object WavePainter {
             j += 1
             val peakN         = data( j )
             j += 1
-            peakPolyY( i )	   = zoomY( peakP ) + 8 // 2
-            peakPolyY( k )		= zoomY( peakN ) - 8 // 2
+            peakPolyY( i )	   = (zoomY( peakP ) * 16).toInt + 8 // 2
+            peakPolyY( k )		= (zoomY( peakN ) * 16).toInt - 8 // 2
             // peakC = (peakP + peakN) / 2;
             val rms           = math.sqrt( data( j )).toFloat
             j += 1
-            rmsPolyY( i )     = zoomY( math.min( peakP,  rms ))
-            rmsPolyY( k )		= zoomY( math.max( peakN, -rms ))
+            rmsPolyY( i )     = (zoomY( math.min( peakP,  rms )) * 16).toInt
+            rmsPolyY( k )		= (zoomY( math.max( peakN, -rms )) * 16).toInt
             i += 1
             k -= 1
          }
@@ -139,9 +144,9 @@ object WavePainter {
       private var tgtLoVar = 0.0
       private var tgtHiVar = 1.0
 
-      private var preAdd   = 0.0f
-      private var scale    = 1.0f
-      private var postAdd  = 0.0f
+      private var preAdd   = 0.0
+      private var scale    = 1.0
+      private var postAdd  = 0.0
 
       private var invalid  = false
 
@@ -150,12 +155,13 @@ object WavePainter {
          invalid  = div == 0.0
          if( invalid )return
 
-         scale    = (((tgtHiVar - tgtLoVar) / div) * 16).toFloat
-         preAdd   = (-srcLoVar).toFloat
-         postAdd  = (tgtLoVar * 16).toFloat
+         scale    = ((tgtHiVar - tgtLoVar) / div) // * 16
+         preAdd   = -srcLoVar
+         postAdd  = tgtLoVar // * 16
       }
 
-      def apply( in: Float ) : Int = ((in + preAdd) * scale + postAdd).toInt
+      def apply( in: Double )    : Double = (in  + preAdd)  * scale + postAdd
+      def unapply( out: Double ) : Double = (out - postAdd) / scale - preAdd
 
       def sourceLow : Double = srcLoVar
       def sourceLow_=( value: Double ) {
@@ -260,7 +266,7 @@ object WavePainter {
       def stroke_=( value: Stroke ) : Unit
    }
 
-   trait PeakRMS extends WavePainter {
+   trait HasPeakRMS {
       def peakColor: Paint
       def peakColor_=( value: Paint ) : Unit
 
@@ -268,18 +274,25 @@ object WavePainter {
       def rmsColor_=( value: Paint ) : Unit
    }
 
+   trait PeakRMS extends WavePainter with HasPeakRMS
+
+   trait HasZoom {
+      def zoomX: WavePainter.Zoom
+      def zoomY: WavePainter.Zoom
+   }
+
    trait Zoom {
       def sourceLow: Double
-      def sourceLow_=( value: Double ) :Unit
+      def sourceLow_=( value: Double ) : Unit
 
       def sourceHigh: Double
-      def sourceHigh_=( value: Double ) :Unit
+      def sourceHigh_=( value: Double ) : Unit
 
       def targetLow: Double
-      def targetLow_=( value: Double ) :Unit
+      def targetLow_=( value: Double ) : Unit
 
       def targetHigh: Double
-      def targetHigh_=( value: Double ) :Unit
+      def targetHigh_=( value: Double ) : Unit
 
 //      def logarithmic : Boolean
 //      def logarithmic_=( value: Boolean ) : Unit
@@ -287,15 +300,113 @@ object WavePainter {
 
    object Decimator {
       def pcmToPeakRMS( factor: Int ) : Decimator = new PCMToPeakRMSDecimator( factor )
-      def peakRMS(      factor: Int ) : Decimator = new PeakRMSDecimator( factor )
+      def peakRMS(      factor: Int ) : Decimator = new PeakRMSDecimator(      factor )
    }
    trait Decimator {
       def factor: Int
       def decimate( in: Array[ Float ], inOffset: Int, out: Array[ Float ], outOffset: Int, outLength: Int ) : Unit
    }
+
+   object MultiResolution {
+      def apply( source: Source, placement: ChannelPlacement ) : MultiResolution =
+         new MultiResImpl( source, placement )
+
+      trait Reader {
+         def decimationFactor : Int
+         def available( sourceOffset: Long, length: Int ) : IIdxSeq[ Int ]
+         def read( buf: Array[ Array[ Float ]], bufOffset: Int, sourceOffset: Long, length: Int ) : Boolean
+      }
+
+      trait Source {
+         def numChannels : Int
+         def numFrames : Long
+         def readers : IIdxSeq[ Reader ]
+      }
+
+      trait ChannelPlacement {
+         def rectangleForChannel( ch: Int, result: Rectangle ) : Unit
+      }
+   }
+   trait MultiResolution extends HasZoom with HasPeakRMS {
+      def paint( g: Graphics2D ) : Unit
+   }
+
+   private final class MultiResImpl( source: MultiResolution.Source, placement: MultiResolution.ChannelPlacement )
+   extends MultiResolution with HasZoomImpl {
+      override def toString = "MultiResolution@" + hashCode().toHexString
+
+      private val readers     = source.readers.sortBy( _.decimationFactor )
+      private val numReaders  = readers.size
+      private val rect        = new Rectangle()
+
+      private var dispDecim   = 1.0
+      private var validZoom   = true
+
+      private val pntSH       = WavePainter.sampleAndHold
+      private val pntLin      = WavePainter.linear
+      private val pntDecim    = WavePainter.peakRMS
+
+      private var pnt : WavePainter = pntLin
+      private var reader            = readers.head
+      private var decimFrames       = 1
+
+      recalcDecim()
+
+      def peakColor: Paint = pntDecim.peakColor
+      def peakColor_=( value: Paint ) {
+         pntSH.color          = value
+         pntLin.color         = value
+         pntDecim.peakColor   = value
+      }
+      def rmsColor: Paint = pntDecim.rmsColor
+      def rmsColor_=( value: Paint ) {
+         pntDecim.rmsColor = value
+      }
+
+      private def recalcDecim() {
+         val numFrames  = zoomX.sourceHigh - zoomX.sourceLow
+         val numPixels  = zoomX.targetHigh - zoomX.targetLow
+         validZoom      = numFrames != 0 && numPixels != 0
+         if( !validZoom ) return
+         dispDecim      = numFrames / numPixels
+
+         var i    = 0
+         while( i < numReaders && readers( i ).decimationFactor < dispDecim ) i += 1
+         i        = math.max( 0, i - 1 )
+         reader   = readers( i )
+         pnt      = if( reader.decimationFactor == 1 ) {
+            if( dispDecim <= 0.25 ) pntSH else pntLin
+         } else {
+            pntDecim
+         }
+
+         decimFrames = math.ceil( numFrames / reader.decimationFactor ).toInt
+      }
+
+      def paint( g: Graphics2D ) {
+         if( !validZoom ) return
+         val clipOrig   = g.getClip
+         val atOrig     = g.getTransform
+         val numCh      = source.numChannels
+         val data       = Array.ofDim[ Float ]( numCh, decimFrames )
+         val dataLen    = sys.error( "TODO" )
+         var ch = 0; while( ch < numCh ) {
+            placement.rectangleForChannel( ch, rect )
+            try {
+               g.clipRect( rect.x, rect.y, rect.width, rect.height )
+               g.translate( rect.x, rect.y )
+               pnt.paint( g, data( ch ), 0, dataLen )
+               // ...
+
+            } finally {
+               g.setTransform( atOrig )
+               g.setClip( clipOrig )
+            }
+            sys.error( "TODO" )
+         ch += 1 }
+      }
+   }
 }
-trait WavePainter {
-   def zoomX: WavePainter.Zoom
-   def zoomY: WavePainter.Zoom
+trait WavePainter extends WavePainter.HasZoom {
    def paint( g: Graphics2D, data: Array[ Float ], dataOffset: Int, dataLength: Int ) : Unit
 }
