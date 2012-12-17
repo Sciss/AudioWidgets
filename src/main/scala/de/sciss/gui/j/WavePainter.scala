@@ -138,11 +138,38 @@ object WavePainter {
       }
    }
 
-   private final class ZoomImpl extends Zoom {
+   private trait ZoomImplLike extends Zoom {
       private var srcLoVar = 0.0
       private var srcHiVar = 1.0
       private var tgtLoVar = 0.0
       private var tgtHiVar = 1.0
+
+      final def apply( in: Double )    : Double = (in  + preAdd)  * scale + postAdd
+      final def unapply( out: Double ) : Double = (out - postAdd) / scale - preAdd
+
+      final def sourceLow : Double = srcLoVar
+      final def sourceLow_=( value: Double ) {
+         srcLoVar = value
+         recalc()
+      }
+
+      final def sourceHigh : Double = srcHiVar
+      final def sourceHigh_=( value: Double ) {
+         srcHiVar = value
+         recalc()
+      }
+
+      final def targetLow : Double = tgtLoVar
+      final def targetLow_=( value: Double ) {
+         tgtLoVar = value
+         recalc()
+      }
+
+      final def targetHigh : Double = tgtHiVar
+      final def targetHigh_=( value: Double ) {
+         tgtHiVar = value
+         recalc()
+      }
 
       private var preAdd   = 0.0
       private var scale    = 1.0
@@ -158,43 +185,15 @@ object WavePainter {
          scale    = ((tgtHiVar - tgtLoVar) / div) // * 16
          preAdd   = -srcLoVar
          postAdd  = tgtLoVar // * 16
+
+         didRecalc()
       }
 
-      def apply( in: Double )    : Double = (in  + preAdd)  * scale + postAdd
-      def unapply( out: Double ) : Double = (out - postAdd) / scale - preAdd
+      protected def didRecalc() : Unit
+   }
 
-      def sourceLow : Double = srcLoVar
-      def sourceLow_=( value: Double ) {
-         srcLoVar = value
-         recalc()
-      }
-
-      def sourceHigh : Double = srcHiVar
-      def sourceHigh_=( value: Double ) {
-         srcHiVar = value
-         recalc()
-      }
-
-      def targetLow : Double = tgtLoVar
-      def targetLow_=( value: Double ) {
-         tgtLoVar = value
-         recalc()
-      }
-
-      def targetHigh : Double = tgtHiVar
-      def targetHigh_=( value: Double ) {
-         tgtHiVar = value
-         recalc()
-      }
-
-//      def paint( g: Graphics2D, data: Array[ Float ], dataOffset: Int, dataLength: Int ) {
-//         if( invalid ) return
-//         val atOrig = g.getTransform
-//         g.scale( scaleX, scaleY )
-//         g.translate( minXVar, minYVar )
-//         peer.paint( g, data, dataOffset, dataLength )
-//         g.setTransform( atOrig )
-//      }
+   private final class ZoomImpl extends ZoomImplLike {
+      protected def didRecalc() {}
    }
 
    private final case class PeakRMSDecimator( factor: Int ) extends Decimator {
@@ -332,8 +331,28 @@ object WavePainter {
    }
 
    private final class MultiResImpl( source: MultiResolution.Source, placement: MultiResolution.ChannelPlacement )
-   extends MultiResolution with HasZoomImpl {
+   extends MultiResolution {
       override def toString = "MultiResolution@" + hashCode().toHexString
+
+      object zoomX extends ZoomImplLike {
+         protected def didRecalc() {
+            recalcDecim()
+         }
+      }
+      object zoomY extends ZoomImplLike {
+         protected def didRecalc() {
+            setZoomY()
+         }
+      }
+
+      private def setZoomY() {
+         import zoomY._
+         val zy         = pnt.zoomY
+         zy.sourceLow   = sourceLow
+         zy.sourceHigh  = sourceHigh
+         zy.targetLow   = targetLow
+         zy.targetHigh  = targetHigh
+      }
 
       private val readers     = source.readers.sortBy( _.decimationFactor )
       private val numReaders  = readers.size
@@ -348,6 +367,7 @@ object WavePainter {
 
       private var pnt : WavePainter = pntLin
       private var reader            = readers.head
+      private var decimStart        = 0L
       private var decimFrames       = 1
 
       recalcDecim()
@@ -374,13 +394,30 @@ object WavePainter {
          while( i < numReaders && readers( i ).decimationFactor < dispDecim ) i += 1
          i        = math.max( 0, i - 1 )
          reader   = readers( i )
-         pnt      = if( reader.decimationFactor == 1 ) {
+         val f    = reader.decimationFactor
+         val oldPnt = pnt
+         pnt      = if( f == 1 ) {
             if( dispDecim <= 0.25 ) pntSH else pntLin
          } else {
             pntDecim
          }
 
-         decimFrames = math.ceil( numFrames / reader.decimationFactor ).toInt
+         val frameStart = math.floor( zoomX.sourceLow  )
+         val frameStop  = math.ceil(  zoomX.sourceHigh )
+         val frameStartL= frameStart.toLong
+         val frameStopL = frameStop.toLong
+         decimStart     = frameStartL / f
+         val decimStop  = (frameStopL + f - 1) / f
+         decimFrames    = (decimStop - decimStart).toInt // math.ceil( numFrames / reader.decimationFactor ).toInt
+
+         val floorTgtLo = zoomX( frameStart )
+         val ceilTgtHi  = zoomX( frameStop )
+         val zx         = pnt.zoomX
+         zx.sourceLow   = frameStart
+         zx.sourceHigh  = frameStop
+         zx.targetLow   = floorTgtLo
+         zx.targetHigh  = ceilTgtHi
+         if( pnt ne oldPnt ) setZoomY()
       }
 
       def paint( g: Graphics2D ) {
@@ -389,20 +426,21 @@ object WavePainter {
          val atOrig     = g.getTransform
          val numCh      = source.numChannels
          val data       = Array.ofDim[ Float ]( numCh, decimFrames )
-         val dataLen    = sys.error( "TODO" )
+         val success    = reader.read( data, 0, decimStart, decimFrames )
+         if( !success ) return   // XXX TODO: paint busy rectangle
+
          var ch = 0; while( ch < numCh ) {
             placement.rectangleForChannel( ch, rect )
             try {
                g.clipRect( rect.x, rect.y, rect.width, rect.height )
                g.translate( rect.x, rect.y )
-               pnt.paint( g, data( ch ), 0, dataLen )
+               pnt.paint( g, data( ch ), 0, decimFrames )
                // ...
 
             } finally {
                g.setTransform( atOrig )
                g.setClip( clipOrig )
             }
-            sys.error( "TODO" )
          ch += 1 }
       }
    }
