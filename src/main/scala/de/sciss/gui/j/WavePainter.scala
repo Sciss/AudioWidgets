@@ -16,6 +16,8 @@ object WavePainter {
    private trait OneLayerImpl extends HasZoomImpl with OneLayer {
       final var color: Paint = Color.black
 
+      final def tupleSize = 1
+
       final protected var strkVar   : Stroke = new BasicStroke( 1f )
       final protected var strkVarUp : Stroke = new BasicStroke( 16f )
       final def stroke : Stroke = strkVar
@@ -91,6 +93,7 @@ object WavePainter {
    }
 
    private final class PeakRMSImpl extends HasZoomImpl with PeakRMS with HasPeakRMSImpl {
+      final def tupleSize = 3
 
       def paint( g: Graphics2D, data: Array[ Float ], dataOffset: Int, dataLength: Int ) {
          val polySize   = dataLength * 2 // / 3
@@ -304,6 +307,7 @@ object WavePainter {
 
       trait Reader {
          def decimationFactor : Int
+         def tupleSize : Int
          def available( sourceOffset: Long, length: Int ) : IIdxSeq[ Int ]
          def read( buf: Array[ Array[ Float ]], bufOffset: Int, sourceOffset: Long, length: Int ) : Boolean
       }
@@ -361,6 +365,7 @@ object WavePainter {
       private var reader            = readers.head
       private var decimStart        = 0L
       private var decimFrames       = 1
+      private var decimTuples       = 1
 
       recalcDecim()
 
@@ -388,10 +393,14 @@ object WavePainter {
          reader   = readers( i )
          val f    = reader.decimationFactor
          val oldPnt = pnt
-         pnt      = if( f == 1 ) {
+         decimTuples = reader.tupleSize
+         pnt      = if( decimTuples == 1 ) {
             if( dispDecim <= 0.25 ) pntSH else pntLin
-         } else {
+         } else if( decimTuples == 3 ) {
             pntDecim
+         } else {
+            validZoom = false
+            return
          }
 
          val frameStart = math.floor( zoomX.sourceLow  )
@@ -417,7 +426,7 @@ object WavePainter {
          val clipOrig   = g.getClip
          val atOrig     = g.getTransform
          val numCh      = source.numChannels
-         val data       = Array.ofDim[ Float ]( numCh, decimFrames )
+         val data       = Array.ofDim[ Float ]( numCh, decimFrames * decimTuples )
          val success    = reader.read( data, 0, decimStart, decimFrames )
          if( !success ) return   // XXX TODO: paint busy rectangle
 
@@ -438,5 +447,6 @@ object WavePainter {
    }
 }
 trait WavePainter extends WavePainter.HasZoom {
+   def tupleSize : Int
    def paint( g: Graphics2D, data: Array[ Float ], dataOffset: Int, dataLength: Int ) : Unit
 }

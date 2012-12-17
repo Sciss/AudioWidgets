@@ -121,12 +121,13 @@ object WaveTests extends App with Runnable {
          Array.tabulate( multiSize ) { j =>
             val i = iter()
             a = a * 0.96 + i * 0.04
-            (a * math.sin( j * freq )).toFloat
+            (a * math.cos( j * freq )).toFloat
          }
       }
 
       final class SimpleReader( data: Array[ Float ], val decimationFactor: Int ) extends MultiResolution.Reader {
          private val isFull = decimationFactor == 1
+         def tupleSize = if( isFull ) 1 else 3
          def available( srcOff: Long, len: Int ) : IIdxSeq[ Int ] = IIdxSeq( 0, len )
 
          def read( buf: Array[ Array[ Float ]], bufOff: Int, srcOff: Long, len : Int ) : Boolean = {
@@ -198,7 +199,7 @@ object WaveTests extends App with Runnable {
       lazy val view2 = new SimpleView {
          def paint( g: Graphics2D, w: Int, h: Int ) {
             val vz = ggZoomY.getValue.linexp( 0, 1000, 1.0/8, 8.0 )
-            val hz = ggZoomX.getValue.linexp( 0, 1000, 1.0, 1.0/200 )
+            val hz = ggZoomX.getValue.linexp( 0, 1000, 1.0, 1.0/800 )
             multi.zoomX.sourceHigh  = multiSize * hz
             multi.zoomX.targetHigh  = w
             multi.zoomY.sourceLow   = -1 * vz
