@@ -382,8 +382,8 @@ object WavePainter {
 
       private var pnt : WavePainter = pntLin
       private var reader            = readers.head
-      private var decimStart        = 0L
-      private var decimFrames       = 1
+      private var readStart         = 0L
+      private var readFrames        = 1
       private var decimTuples       = 1
       private var decimInline       = Decimator.dummy
 
@@ -491,10 +491,12 @@ object WavePainter {
 
          validZoom = true
 
-         decimStart     = startFrame / fPaint
+         val decimStart = startFrame / fPaint
+         readStart      = decimStart * fInline
 //         val decimStop  = (stopFrame + fPaint - 1) / fPaint
-         val decimStop  = (stopFrame + fRead - 1) / fPaint
-         decimFrames    = (decimStop - decimStart).toInt // math.ceil( numFrames / reader.decimationFactor ).toInt
+         val decimStop     = (stopFrame + fRead - 1) / fPaint
+         val decimFrames   = (decimStop - decimStart).toInt // math.ceil( numFrames / reader.decimationFactor ).toInt
+         readFrames        = decimFrames * fInline
 
 //println( "reader " + reader.decimationFactor + "; decimStart = " + decimStart + "; decimStop = " + decimStop + "; inlineFactor = " + decimInline.factor )
 
@@ -533,11 +535,12 @@ object WavePainter {
 
          val clipOrig   = g.getClip
          val atOrig     = g.getTransform
-         val readFrames = decimFrames * decimInline.factor
+//         val readFrames = decimFrames * decimInline.factor
          val data       = Array.ofDim[ Float ]( numCh, readFrames * decimTuples )
-         val success    = reader.read( data, 0, decimStart, readFrames )
+         val success    = reader.read( data, 0, readStart, readFrames )
          if( !success ) return   // XXX TODO: paint busy rectangle
 
+         val decimFrames = readFrames / decimInline.factor
          ch = 0; while( ch < numCh ) {
             try {
                val r    = rectCache( ch )
