@@ -194,6 +194,9 @@ object WavePainter {
    private final case class PeakRMSDecimator( factor: Int ) extends Decimator {
       override def toString = "WavePainter.Decimator.peakRMS(" + factor + ")"
 
+      def tupleInSize   = 3
+      def tupleOutSize  = 3
+
       def decimate( in: Array[ Float ], inOffset: Int, out: Array[ Float ], outOffset: Int, outLength: Int ) {
          var j = outOffset * 3; val stop = j + (outLength * 3); var k = inOffset * 3
          while( j < stop ) {
@@ -226,6 +229,9 @@ object WavePainter {
 
    private final case class PCMToPeakRMSDecimator( factor: Int ) extends Decimator {
       override def toString = "WavePainter.Decimator.pcmToPeakRMS(" + factor + ")"
+
+      def tupleInSize   = 1
+      def tupleOutSize  = 3
 
       def decimate( in: Array[ Float ], inOffset: Int, out: Array[ Float ], outOffset: Int, outLength: Int ) {
          var j = outOffset * 3; val stop = j + (outLength * 3); var k = inOffset
@@ -295,8 +301,18 @@ object WavePainter {
    object Decimator {
       def pcmToPeakRMS( factor: Int ) : Decimator = new PCMToPeakRMSDecimator( factor )
       def peakRMS(      factor: Int ) : Decimator = new PeakRMSDecimator(      factor )
+      def dummy : Decimator = Dummy
+
+      private object Dummy extends Decimator {
+         def factor        = 1
+         def tupleInSize   = 1
+         def tupleOutSize  = 1
+         def decimate( in: Array[ Float ], inOffset: Int, out: Array[ Float ], outOffset: Int, outLength: Int ) {}
+      }
    }
    trait Decimator {
+      def tupleInSize: Int
+      def tupleOutSize: Int
       def factor: Int
       def decimate( in: Array[ Float ], inOffset: Int, out: Array[ Float ], outOffset: Int, outLength: Int ) : Unit
    }
@@ -340,17 +356,6 @@ object WavePainter {
    extends MultiResolution {
       override def toString = "MultiResolution@" + hashCode().toHexString
 
-//      object zoomX extends ScalingImplLike {
-//         protected def didRecalc() {
-//            recalcDecim()
-//         }
-//      }
-//      object zoomY extends ScalingImplLike {
-//         protected def didRecalc() {
-//            setZoomY()
-//         }
-//      }
-
       private def setZoomY() {
          if( magLow == magHigh ) {
             validZoom = false
@@ -380,6 +385,7 @@ object WavePainter {
       private var decimStart        = 0L
       private var decimFrames       = 1
       private var decimTuples       = 1
+      private var decimInline       = Decimator.dummy
 
       recalcDecim()
 
@@ -413,14 +419,6 @@ object WavePainter {
             spanDirty      = true
          }
       }
-
-//      def span : (Long, Long) = (startFrame, stopFrame)
-//      def span_=( value: (Long, Long) ) {
-//         val (start, stop) = value
-//         require( start <= stop )
-//         startFrame  = start
-//         stopFrame   = stop
-//      }
 
       private var magDirty    = true
       private var magLowVar   = -1.0
@@ -459,49 +457,55 @@ object WavePainter {
          while( i < numReaders && readers( i ).decimationFactor < dispDecim ) i += 1
          i        = math.max( 0, i - 1 )
          reader   = readers( i )
-         val f    = reader.decimationFactor
+         val fRead = reader.decimationFactor
 //         val oldPnt = pnt
          decimTuples = reader.tupleSize
-         pnt      = if( decimTuples == 1 ) {
-            if( dispDecim <= 0.25 ) pntSH else pntLin
-         } else if( decimTuples == 3 ) {
-            pntDecim
-         } else {
+         val readIsPCM = decimTuples == 1
+         if( !readIsPCM && decimTuples != 3 ) {
             validZoom = false
             return
          }
+
+         val fInline0   = math.max( 1, (dispDecim / fRead).toInt )
+         // tricky: current decimation algorithm assumes write head is slower than read head.
+         // but in the case of PCMtoPeakRMS, this holds only for an inline decimation factor
+         // of >= 3. thus, if reader is PCM, we use inline decimation only for factors >= 3
+         val fInline    = if( readIsPCM && fInline0 < 3 ) 1 else fInline0
+         if( fInline > 1 ) {
+            decimInline = if( decimTuples == 1 ) {
+               Decimator.pcmToPeakRMS( fInline )
+            } else {
+               Decimator.peakRMS( fInline )
+            }
+            pnt = pntDecim
+         } else {
+            decimInline = Decimator.dummy
+            pnt = if( decimTuples == 1 ) {
+               if( dispDecim <= 0.25 ) pntSH else pntLin
+            } else {
+               pntDecim
+            }
+         }
+         val fPaint     = fRead * fInline
+
          validZoom = true
 
-//         val frameStart = math.floor( zoomX.sourceLow  )
-//         val frameStop  = math.ceil(  zoomX.sourceHigh )
-//         val frameStartL= frameStart.toLong
-//         val frameStopL = frameStop.toLong
-         decimStart     = startFrame / f
-         val decimStop  = (stopFrame + f - 1) / f
+         decimStart     = startFrame / fPaint
+//         val decimStop  = (stopFrame + fPaint - 1) / fPaint
+         val decimStop  = (stopFrame + fRead - 1) / fPaint
          decimFrames    = (decimStop - decimStart).toInt // math.ceil( numFrames / reader.decimationFactor ).toInt
 
-//         val floorTgtLo = zoomX( frameStart )
-//         val ceilTgtHi  = zoomX( frameStop )
-//         val zx         = pnt.zoomX
-//         zx.sourceLow   = frameStart
-//         zx.sourceHigh  = frameStop
-//         zx.targetLow   = floorTgtLo
-//         zx.targetHigh  = ceilTgtHi
+//println( "reader " + reader.decimationFactor + "; decimStart = " + decimStart + "; decimStop = " + decimStop + "; inlineFactor = " + decimInline.factor )
 
          // `decimStart * f` is `<= startFrame`, due to truncation (floor)
          // for full scale, the zoom X source low, which is counted form zero, would thus  be
          // `startFrame - decimStart * f`, and the decimated zoom X source low would thus be
          // `startFrame.toDouble/f - decimStart` (source low is _subtracted_ from the x count)
          val zx         = pnt.scaleX
-         zx.sourceLow   = (startFrame.toDouble / f) - decimStart
-         zx.sourceHigh  = zx.sourceLow + (numFrames.toDouble / f) // correct?
+         zx.sourceLow   = (startFrame.toDouble / fPaint) - decimStart
+         zx.sourceHigh  = zx.sourceLow + (numFrames.toDouble / fPaint) // correct?
          zx.targetLow   = 0.0
          zx.targetHigh  = numPixels
-
-//         if( pnt ne oldPnt ) {
-//            magDirty = true
-////            setZoomY()
-//         }
       }
 
       def paint( g: Graphics2D ) {
@@ -528,17 +532,19 @@ object WavePainter {
 
          val clipOrig   = g.getClip
          val atOrig     = g.getTransform
-         val data       = Array.ofDim[ Float ]( numCh, decimFrames * decimTuples )
-         val success    = reader.read( data, 0, decimStart, decimFrames )
+         val readFrames = decimFrames * decimInline.factor
+         val data       = Array.ofDim[ Float ]( numCh, readFrames * decimTuples )
+         val success    = reader.read( data, 0, decimStart, readFrames )
          if( !success ) return   // XXX TODO: paint busy rectangle
 
          ch = 0; while( ch < numCh ) {
             try {
-               val r = rectCache( ch )
+               val r    = rectCache( ch )
+               val dch  = data( ch )
+               decimInline.decimate( dch, 0, dch, 0, decimFrames )
                g.clipRect( r.x, r.y, r.width, r.height )
                g.translate( r.x, r.y )
-               pnt.paint( g, data( ch ), 0, decimFrames )
-               // ...
+               pnt.paint( g, dch, 0, decimFrames )
 
             } finally {
                g.setTransform( atOrig )

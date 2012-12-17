@@ -133,7 +133,7 @@ object WaveTests extends App with Runnable {
          def read( buf: Array[ Array[ Float ]], bufOff: Int, srcOff: Long, len : Int ) : Boolean = {
             val bch  = buf( 0 )
             var i    = bufOff * tupleSize    // if( isFull ) bufOff else bufOff * 3
-            val stop = i + len * tupleSize  // (if( isFull ) len * 3 else len)
+            val stop = i + len * tupleSize   // (if( isFull ) len * 3 else len)
             var j = 0; while( i < stop ) {
                bch( i ) = data( j )
             i += 1; j += 1 }
