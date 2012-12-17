@@ -1,6 +1,6 @@
 name := "AudioWidgets"
 
-version := "1.0.2-SNAPSHOT"
+version := "1.1.0-SNAPSHOT"
 
 organization := "de.sciss"
 
