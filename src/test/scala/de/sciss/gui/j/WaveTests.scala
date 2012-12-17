@@ -10,7 +10,7 @@ import javax.swing.event.{ChangeEvent, ChangeListener}
 object WaveTests extends App with Runnable {
    EventQueue.invokeLater( this )
 
-   private def ??? = sys.error( "TODO" )
+//   private def ??? = sys.error( "TODO" )
 
    def run() {
       val dataLen    = 128 // 64
@@ -55,11 +55,11 @@ object WaveTests extends App with Runnable {
 //      pnt.zoomX.sourceLow  = 0
 
       pntAll.foreach { pnt =>
-         pnt.zoomX.sourceHigh = dataLen - 1
-         pnt.zoomY.sourceLow  = -1
-         pnt.zoomY.sourceHigh = 1
+         pnt.scaleX.sourceHigh = dataLen - 1
+         pnt.scaleY.sourceLow  = -1
+         pnt.scaleY.sourceHigh = 1
    //      pnt.zoomX.targetLow  = 0
-         pnt.zoomY.targetHigh = 0
+         pnt.scaleY.targetHigh = 0
          pnt match {
             case one: WavePainter.OneLayer =>
                one.color = Color.white
@@ -90,8 +90,8 @@ object WaveTests extends App with Runnable {
 
       val view1 = new SimpleView {
          def paint( g: Graphics2D, w: Int, h: Int ) {
-            pnt.zoomX.targetHigh = w
-            pnt.zoomY.targetLow  = h - 1
+            pnt.scaleX.targetHigh = w
+            pnt.scaleY.targetLow  = h - 1
             pnt.paint( g, data, 0, dataLen )
          }
       }
@@ -200,12 +200,10 @@ object WaveTests extends App with Runnable {
          def paint( g: Graphics2D, w: Int, h: Int ) {
             val vz = ggZoomY.getValue.linexp( 0, 1000, 1.0/8, 8.0 )
             val hz = ggZoomX.getValue.linexp( 0, 1000, 1.0, 1.0/800 )
-            multi.zoomX.sourceHigh  = multiSize * hz
-            multi.zoomX.targetHigh  = w
-            multi.zoomY.sourceLow   = -1 * vz
-            multi.zoomY.sourceHigh  = 1 * vz
-            multi.zoomY.targetLow   = h - 1
-            multi.zoomY.targetHigh  = 0
+            multi.startFrame        = 0L
+            multi.stopFrame         = (multiSize * hz).toLong
+            multi.magLow            = -1 * vz
+            multi.magHigh           = 1 * vz
             multi.paint( g )
          }
       }

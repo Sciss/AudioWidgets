@@ -8,12 +8,12 @@ object WavePainter {
    def linear        : OneLayer  = new LinearImpl
    def peakRMS       : PeakRMS   = new PeakRMSImpl
 
-   private trait HasZoomImpl {
-      final val zoomX = new ZoomImpl
-      final val zoomY = new ZoomImpl
+   private trait HasScalingImpl {
+      final val scaleX = new ScalingImpl
+      final val scaleY = new ScalingImpl
    }
 
-   private trait OneLayerImpl extends HasZoomImpl with OneLayer {
+   private trait OneLayerImpl extends HasScalingImpl with OneLayer {
       final var color: Paint = Color.black
 
       final def tupleSize = 1
@@ -39,13 +39,13 @@ object WavePainter {
          val polyX      = new Array[ Int ]( polySize )
          val polyY      = new Array[ Int ]( polySize )
 
-         var di = dataOffset; var pi = 0; var i = 0; var x = (zoomX( 0 ) * 16).toInt; while( i < dataLength ) {
-            val y = (zoomY( data( di )) * 16).toInt
+         var di = dataOffset; var pi = 0; var i = 0; var x = (scaleX( 0 ) * 16).toInt; while( i < dataLength ) {
+            val y = (scaleY( data( di )) * 16).toInt
             polyX( pi ) = x
             polyY( pi ) = y
             pi += 1
             i  += 1
-            x   = (zoomX( i ) * 16).toInt
+            x   = (scaleX( i ) * 16).toInt
             polyX( pi ) = x
             polyY( pi ) = y
             pi += 1
@@ -70,8 +70,8 @@ object WavePainter {
          val polyY      = new Array[ Int ]( dataLength )
 
          var di = dataOffset; var i = 0; while( i < dataLength ) {
-            val x = (zoomX( i ) * 16).toInt
-            val y = (zoomY( data( di )) * 16).toInt
+            val x = (scaleX( i ) * 16).toInt
+            val y = (scaleY( data( di )) * 16).toInt
             polyX( i ) = x
             polyY( i ) = y
             i  += 1
@@ -92,7 +92,7 @@ object WavePainter {
       var rmsColor: Paint  = Color.black
    }
 
-   private final class PeakRMSImpl extends HasZoomImpl with PeakRMS with HasPeakRMSImpl {
+   private final class PeakRMSImpl extends HasScalingImpl with PeakRMS with HasPeakRMSImpl {
       def tupleSize = 3
 
       def paint( g: Graphics2D, data: Array[ Float ], dataOffset: Int, dataLength: Int ) {
@@ -103,7 +103,7 @@ object WavePainter {
          val rmsPolyY   = new Array[ Int ]( polySize )
 
          var i = 0; var j = dataOffset * 3; var k = polySize - 1; while( i < dataLength ) {
-            val x					= (zoomX( i ) * 16).toInt
+            val x					= (scaleX( i ) * 16).toInt
             peakPolyX( i )    = x
             peakPolyX( k )		= x
             rmsPolyX( i )     = x
@@ -112,13 +112,13 @@ object WavePainter {
             j += 1
             val peakN         = data( j )
             j += 1
-            peakPolyY( i )	   = (zoomY( peakP ) * 16).toInt + 8 // 2
-            peakPolyY( k )		= (zoomY( peakN ) * 16).toInt - 8 // 2
+            peakPolyY( i )	   = (scaleY( peakP ) * 16).toInt + 8 // 2
+            peakPolyY( k )		= (scaleY( peakN ) * 16).toInt - 8 // 2
             // peakC = (peakP + peakN) / 2
             val rms           = math.sqrt( data( j )).toFloat
             j += 1
-            rmsPolyY( i )     = (zoomY( math.min( peakP,  rms )) * 16).toInt
-            rmsPolyY( k )		= (zoomY( math.max( peakN, -rms )) * 16).toInt
+            rmsPolyY( i )     = (scaleY( math.min( peakP,  rms )) * 16).toInt
+            rmsPolyY( k )		= (scaleY( math.max( peakN, -rms )) * 16).toInt
             i += 1
             k -= 1
          }
@@ -133,7 +133,7 @@ object WavePainter {
       }
    }
 
-   private trait ZoomImplLike extends Zoom {
+   private trait ScalingImplLike extends Scaling {
       private var srcLoVar = 0.0
       private var srcHiVar = 1.0
       private var tgtLoVar = 0.0
@@ -187,7 +187,7 @@ object WavePainter {
       protected def didRecalc() : Unit
    }
 
-   private final class ZoomImpl extends ZoomImplLike {
+   private final class ScalingImpl extends ScalingImplLike {
       protected def didRecalc() {}
    }
 
@@ -270,12 +270,12 @@ object WavePainter {
 
    trait PeakRMS extends WavePainter with HasPeakRMS
 
-   trait HasZoom {
-      def zoomX: WavePainter.Zoom
-      def zoomY: WavePainter.Zoom
-   }
+//   trait HasZoom {
+//      def zoomX: WavePainter.Zoom
+//      def zoomY: WavePainter.Zoom
+//   }
 
-   trait Zoom {
+   trait Scaling {
       def sourceLow: Double
       def sourceLow_=( value: Double ) : Unit
 
@@ -322,7 +322,17 @@ object WavePainter {
          def rectangleForChannel( ch: Int, result: Rectangle ) : Unit
       }
    }
-   trait MultiResolution extends HasZoom with HasPeakRMS {
+   trait MultiResolution extends HasPeakRMS {
+      def magLow : Double
+      def magLow_=( value: Double ) : Unit
+      def magHigh : Double
+      def magHigh_=( value: Double ) : Unit
+
+      def startFrame : Long
+      def startFrame_=( value: Long ) : Unit
+      def stopFrame: Long
+      def stopFrame_=( value: Long ) : Unit
+
       def paint( g: Graphics2D ) : Unit
    }
 
@@ -330,31 +340,35 @@ object WavePainter {
    extends MultiResolution {
       override def toString = "MultiResolution@" + hashCode().toHexString
 
-      object zoomX extends ZoomImplLike {
-         protected def didRecalc() {
-            recalcDecim()
-         }
-      }
-      object zoomY extends ZoomImplLike {
-         protected def didRecalc() {
-            setZoomY()
-         }
-      }
+//      object zoomX extends ScalingImplLike {
+//         protected def didRecalc() {
+//            recalcDecim()
+//         }
+//      }
+//      object zoomY extends ScalingImplLike {
+//         protected def didRecalc() {
+//            setZoomY()
+//         }
+//      }
 
       private def setZoomY() {
-         import zoomY._
-         val zy         = pnt.zoomY
-         zy.sourceLow   = sourceLow
-         zy.sourceHigh  = sourceHigh
-         zy.targetLow   = targetLow
-         zy.targetHigh  = targetHigh
+         if( magLow == magHigh ) {
+            validZoom = false
+            return
+         }
+         val zy         = pnt.scaleY
+         zy.sourceLow   = magLow
+         zy.sourceHigh  = magHigh
+         zy.targetLow   = rectCache( 0 ).height - 1
+         zy.targetHigh  = 0
+         magDirty       = false
       }
 
       private val readers     = source.readers.sortBy( _.decimationFactor )
       private val numReaders  = readers.size
       private val rect        = new Rectangle()
+      private val rectCache   = Array.fill( source.numChannels )( new Rectangle() )
 
-      private var dispDecim   = 1.0
       private var validZoom   = true
 
       private val pntSH       = WavePainter.sampleAndHold
@@ -380,19 +394,73 @@ object WavePainter {
          pntDecim.rmsColor    = value
       }
 
-      private def recalcDecim() {
-         val numFrames  = zoomX.sourceHigh - zoomX.sourceLow
-         val numPixels  = zoomX.targetHigh - zoomX.targetLow
-         validZoom      = numFrames != 0 && numPixels != 0
-         if( !validZoom ) return
-         dispDecim      = numFrames / numPixels
+      private var spanDirty      = true
+      private var startFrameVar  = 0L
+      private var stopFrameVar   = 1L
 
+      def startFrame : Long = startFrameVar
+      def startFrame_=( value: Long ) {
+         if( startFrameVar != value ) {
+            startFrameVar  = value
+            spanDirty      = true
+         }
+      }
+
+      def stopFrame: Long = stopFrameVar
+      def stopFrame_=( value: Long ) {
+         if( stopFrameVar != value ) {
+            stopFrameVar   = value
+            spanDirty      = true
+         }
+      }
+
+//      def span : (Long, Long) = (startFrame, stopFrame)
+//      def span_=( value: (Long, Long) ) {
+//         val (start, stop) = value
+//         require( start <= stop )
+//         startFrame  = start
+//         stopFrame   = stop
+//      }
+
+      private var magDirty    = true
+      private var magLowVar   = -1.0
+      private var magHighVar  = 1.0
+
+      def magLow : Double = magLowVar
+      def magLow_=( value: Double ) {
+         if( magLowVar != value ) {
+            magLowVar   = value
+            magDirty    = true
+         }
+      }
+
+      def magHigh : Double = magHighVar
+      def magHigh_=( value: Double ) {
+         if( magHighVar != value ) {
+            magHighVar  = value
+            magDirty    = true
+         }
+      }
+
+      private def recalcDecim() {
+         val numFrames  = stopFrame - startFrame // zoomX.sourceHigh - zoomX.sourceLow
+         if( numFrames <= 0L ) {
+            validZoom = false
+            return
+         }
+         val numPixels  = rectCache( 0 ).width
+         if( numPixels <= 0 ) {
+            validZoom = false
+            return
+         }
+
+         val dispDecim = numFrames.toDouble / numPixels
          var i    = 0
          while( i < numReaders && readers( i ).decimationFactor < dispDecim ) i += 1
          i        = math.max( 0, i - 1 )
          reader   = readers( i )
          val f    = reader.decimationFactor
-         val oldPnt = pnt
+//         val oldPnt = pnt
          decimTuples = reader.tupleSize
          pnt      = if( decimTuples == 1 ) {
             if( dispDecim <= 0.25 ) pntSH else pntLin
@@ -402,13 +470,14 @@ object WavePainter {
             validZoom = false
             return
          }
+         validZoom = true
 
-         val frameStart = math.floor( zoomX.sourceLow  )
-         val frameStop  = math.ceil(  zoomX.sourceHigh )
-         val frameStartL= frameStart.toLong
-         val frameStopL = frameStop.toLong
-         decimStart     = frameStartL / f
-         val decimStop  = (frameStopL + f - 1) / f
+//         val frameStart = math.floor( zoomX.sourceLow  )
+//         val frameStop  = math.ceil(  zoomX.sourceHigh )
+//         val frameStartL= frameStart.toLong
+//         val frameStopL = frameStop.toLong
+         decimStart     = startFrame / f
+         val decimStop  = (stopFrame + f - 1) / f
          decimFrames    = (decimStop - decimStart).toInt // math.ceil( numFrames / reader.decimationFactor ).toInt
 
 //         val floorTgtLo = zoomX( frameStart )
@@ -418,30 +487,56 @@ object WavePainter {
 //         zx.sourceHigh  = frameStop
 //         zx.targetLow   = floorTgtLo
 //         zx.targetHigh  = ceilTgtHi
-         val floorTgtLo = zoomX( frameStart )
-         val ceilTgtHi  = zoomX( frameStop )
-         val zx         = pnt.zoomX
-         zx.sourceLow   = frameStart / f
-         zx.sourceHigh  = frameStop / f
-         zx.targetLow   = floorTgtLo
-         zx.targetHigh  = ceilTgtHi
-         if( pnt ne oldPnt ) setZoomY()
+
+         // `decimStart * f` is `<= startFrame`, due to truncation (floor)
+         // for full scale, the zoom X source low, which is counted form zero, would thus  be
+         // `startFrame - decimStart * f`, and the decimated zoom X source low would thus be
+         // `startFrame.toDouble/f - decimStart` (source low is _subtracted_ from the x count)
+         val zx         = pnt.scaleX
+         zx.sourceLow   = (startFrame.toDouble / f) - decimStart
+         zx.sourceHigh  = zx.sourceLow + (numFrames.toDouble / f) // correct?
+         zx.targetLow   = 0.0
+         zx.targetHigh  = numPixels
+
+//         if( pnt ne oldPnt ) {
+//            magDirty = true
+////            setZoomY()
+//         }
       }
 
       def paint( g: Graphics2D ) {
+         val numCh      = source.numChannels
+
+         var rectDirty  = false
+         var ch = 0; while( ch < numCh ) {
+            placement.rectangleForChannel( ch, rect )
+            val cr = rectCache( ch )
+            if( cr.x != rect.x || cr.y != rect.y || cr.width != rect.width || cr.height != rect.height ) {
+               cr.setBounds( rect )
+               rectDirty = true
+            }
+         ch +=1 }
+
+         if( rectDirty || spanDirty ) {
+            recalcDecim()
+            spanDirty      = false
+            setZoomY()
+         } else if( magDirty ) {
+            setZoomY()
+         }
          if( !validZoom ) return
+
          val clipOrig   = g.getClip
          val atOrig     = g.getTransform
-         val numCh      = source.numChannels
          val data       = Array.ofDim[ Float ]( numCh, decimFrames * decimTuples )
          val success    = reader.read( data, 0, decimStart, decimFrames )
          if( !success ) return   // XXX TODO: paint busy rectangle
 
-         var ch = 0; while( ch < numCh ) {
-            placement.rectangleForChannel( ch, rect )
+         ch = 0; while( ch < numCh ) {
             try {
-               g.clipRect( rect.x, rect.y, rect.width, rect.height )
-               g.translate( rect.x, rect.y )
+               val r = rectCache( ch )
+               g.clipRect( r.x, r.y, r.width, r.height )
+               g.translate( r.x, r.y )
                pnt.paint( g, data( ch ), 0, decimFrames )
                // ...
 
@@ -453,7 +548,9 @@ object WavePainter {
       }
    }
 }
-trait WavePainter extends WavePainter.HasZoom {
+trait WavePainter {
+   def scaleX : WavePainter.Scaling
+   def scaleY : WavePainter.Scaling
    def tupleSize : Int
    def paint( g: Graphics2D, data: Array[ Float ], dataOffset: Int, dataLength: Int ) : Unit
 }
