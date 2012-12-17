@@ -303,6 +303,16 @@ object WavePainter {
       def peakRMS(      factor: Int ) : Decimator = new PeakRMSDecimator(      factor )
       def dummy : Decimator = Dummy
 
+      private final val ln32 = math.log(32)
+
+      def suggest( numFrames: Long ) : IIdxSeq[ Decimator ] = {
+         val numDecim = (math.log( numFrames ) / ln32 - 1).toInt
+         if( numDecim <= 0 ) return IIdxSeq.empty
+
+         // decimate in steps of 32
+         pcmToPeakRMS( 32 ) +: IIdxSeq.tabulate( numDecim - 1 )( i => peakRMS( 32 << (i * 5) ))
+      }
+
       private object Dummy extends Decimator {
          def factor        = 1
          def tupleInSize   = 1
@@ -326,6 +336,69 @@ object WavePainter {
          def tupleSize : Int
          def available( sourceOffset: Long, length: Int ) : IIdxSeq[ Int ]
          def read( buf: Array[ Array[ Float ]], bufOffset: Int, sourceOffset: Long, length: Int ) : Boolean
+      }
+
+      object Source {
+         def wrap( data: Array[ Array[ Float ]], numFrames: Int = -1 ) : Source = {
+            val numCh   = data.length
+            val numF    = if( numFrames == -1 ) { if( numCh > 0 ) data( 0 ).length else 0 } else numFrames
+            val decim   = Decimator.suggest( numF )
+            val tailBuf: Array[ Float ] = if( decim.nonEmpty ) new Array( decim.map( _.factor ).max ) else null
+            var prevBuf = data
+            var prevSz  = numF
+            val fullR   = new ArrayReader( data, 1 )
+            var fTot    = 1
+            val decimR  = decim.map { d =>
+               val f          = d.factor
+               fTot          *= f
+               val decimSzF   = prevSz / f
+               val decimSz    = (prevSz + f - 1) / f
+               val decimBuf   = Array.ofDim[ Float ]( numCh, decimSz * d.tupleOutSize )
+               var ch = 0; while( ch < numCh ) {
+                  val pch  = prevBuf( ch )
+                  val dch  = decimBuf( ch )
+                  d.decimate( pch, 0, dch, 0, decimSzF )
+                  if( decimSzF < decimSz ) {
+                     System.arraycopy( pch, decimSzF * f, tailBuf, 0, f )
+                     d.decimate( tailBuf, 0, dch, decimSzF, 1 )
+                  }
+               ch += 1 }
+               prevBuf  = decimBuf
+               prevSz   = decimSz
+               new ArrayReader( decimBuf, fTot )
+            }
+
+            new WrapImpl( data, numCh, numF.toLong, fullR +: decimR )
+         }
+
+         private final class ArrayReader( data: Array[ Array[ Float ]], val decimationFactor: Int )
+         extends Reader {
+            val tupleSize = if( decimationFactor == 1 ) 1 else 3
+
+            def available( srcOff: Long, len: Int ) : IIdxSeq[ Int ] = IIdxSeq( 0, len )
+
+            def read( buf: Array[ Array[ Float ]], bufOff: Int, srcOff: Long, len : Int ) : Boolean = {
+               val bufOffT = bufOff       * tupleSize
+               val srcOffT = srcOff.toInt * tupleSize
+               var ch = 0; while( ch < buf.length ) {
+                  val bch  = buf( ch )
+                  val dch  = data( ch )
+                  var i    = bufOffT
+                  var j    = srcOffT
+                  val stop = j + len * tupleSize
+                  while( j < stop ) {
+                     bch( i ) = dch( j )
+                  i += 1; j += 1 }
+               ch += 1 }
+               true
+            }
+         }
+
+         private final class WrapImpl( data: Array[ Array[ Float ]], val numChannels: Int, val numFrames: Long,
+                                       val readers: IIdxSeq[ Reader ])
+         extends Source {
+            override def toString = "MultiResolution.Source.wrap@" + hashCode().toHexString
+         }
       }
 
       trait Source {

@@ -4,7 +4,6 @@ import java.awt.{GridLayout, Rectangle, FlowLayout, Color, BorderLayout, Renderi
 import javax.swing.{Box, SwingConstants, JSlider, JComboBox, JPanel, WindowConstants, JFrame, JComponent}
 import java.awt.event.{ActionListener, ActionEvent}
 import de.sciss.gui.j.WavePainter.MultiResolution
-import collection.immutable.{IndexedSeq => IIdxSeq}
 import javax.swing.event.{ChangeEvent, ChangeListener}
 
 object WaveTests extends App with Runnable {
@@ -124,51 +123,8 @@ object WaveTests extends App with Runnable {
             (a * math.cos( j * freq )).toFloat
          }
       }
+      val mSrc = MultiResolution.Source.wrap( Array( fullData ))
 
-      final class SimpleReader( data: Array[ Float ], val decimationFactor: Int ) extends MultiResolution.Reader {
-         private val isFull = decimationFactor == 1
-         def tupleSize = if( isFull ) 1 else 3
-         def available( srcOff: Long, len: Int ) : IIdxSeq[ Int ] = IIdxSeq( 0, len )
-
-         def read( buf: Array[ Array[ Float ]], bufOff: Int, srcOff: Long, len : Int ) : Boolean = {
-            val bch  = buf( 0 )
-            var i    = bufOff * tupleSize    // if( isFull ) bufOff else bufOff * 3
-            var j    = (srcOff * tupleSize).toInt
-            val stop = j + len * tupleSize   // (if( isFull ) len * 3 else len)
-            while( j < stop ) {
-               bch( i ) = data( j )
-            i += 1; j += 1 }
-            true
-         }
-      }
-
-      val fullReader    = new SimpleReader( fullData, 1 )
-      val decimData1    = new Array[ Float ]( multiSize / 32 * 3 )
-      WavePainter.Decimator.pcmToPeakRMS( 32 ).decimate( fullData, 0, decimData1, 0, multiSize / 32 )
-      val decim1Reader  = new SimpleReader( decimData1, 32 )
-      val decimData2    = new Array[ Float ]( multiSize / (32*32) * 3 )
-      WavePainter.Decimator.peakRMS( 32 ).decimate( decimData1, 0, decimData2, 0, multiSize / (32*32) )
-      val decim2Reader  = new SimpleReader( decimData2, 32*32 )
-
-      val mSrc = new MultiResolution.Source {
-         def numChannels : Int = 1
-         def numFrames : Long = multiSize
-
-         val readers : IIdxSeq[ MultiResolution.Reader ] = IIdxSeq( fullReader, decim1Reader, decim2Reader )
-
-//         def decimationFactor : Int = 1
-//
-//         def available( srcOff: Long, len: Int ) : IIdxSeq[ Int ] = IIdxSeq( 0, len )
-//
-//         def read( buf: Array[ Array[ Float ]], bufOff: Int, srcOff: Long, len : Int ) : Boolean = {
-//            val bch = buf( 0 )
-//            val r = new util.Random( 0L )
-//            var i = bufOff; val stop = i + len; while( i < stop ) {
-//               bch( i ) = r.nextFloat() * 2 - 1
-//            i += 1}
-//            true
-//         }
-      }
       lazy val multi = WavePainter.MultiResolution( mSrc, place )
       multi.peakColor   = Color.gray
 //      multi.peakColor   = new java.awt.LinearGradientPaint( 0f, 0f, 0f, 3200f, Array( 0f, 0.25f, 0.75f, 1f ), Array( Color.red, Color.yellow, Color.yellow, Color.red ))
