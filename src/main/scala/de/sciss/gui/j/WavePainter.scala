@@ -1,7 +1,9 @@
 package de.sciss.gui.j
 
-import java.awt.{Rectangle, Stroke, BasicStroke, Paint, Color, Graphics2D}
+import java.awt.{Point, Dimension, Toolkit, Stroke, BasicStroke, Paint, Color, Graphics2D}
 import collection.immutable.{IndexedSeq => IIdxSeq}
+import javax.swing.{JComponent, AbstractAction, KeyStroke, Action}
+import java.awt.event.{MouseWheelEvent, MouseWheelListener, ActionEvent, InputEvent, KeyEvent}
 
 object WavePainter {
    def sampleAndHold : OneLayer  = new SHImpl
@@ -18,7 +20,7 @@ object WavePainter {
 
       final def tupleSize = 1
 
-      final protected var strkVar   : Stroke = new BasicStroke( 1f )
+      final protected var strkVar   : Stroke = new BasicStroke(  1f )
       final protected var strkVarUp : Stroke = new BasicStroke( 16f )
       final def stroke : Stroke = strkVar
       final def stroke_=( value: Stroke ) {
@@ -328,8 +330,8 @@ object WavePainter {
    }
 
    object MultiResolution {
-      def apply( source: Source, placement: ChannelPlacement ) : MultiResolution =
-         new MultiResImpl( source, placement )
+      def apply( source: Source, display: Display ) : MultiResolution =
+         new MultiResImpl( source, display )
 
       trait Reader {
          def decimationFactor : Int
@@ -343,7 +345,7 @@ object WavePainter {
             val numCh   = data.length
             val numF    = if( numFrames == -1 ) { if( numCh > 0 ) data( 0 ).length else 0 } else numFrames
             val decim   = Decimator.suggest( numF )
-            val tailBuf: Array[ Float ] = if( decim.nonEmpty ) new Array( decim.map( _.factor ).max ) else null
+            val tailBuf: Array[ Float ] = if( decim.nonEmpty ) new Array( decim.map( _.factor ).max * 3 ) else null
             var prevBuf = data
             var prevSz  = numF
             val fullR   = new ArrayReader( data, 1 )
@@ -359,7 +361,15 @@ object WavePainter {
                   val dch  = decimBuf( ch )
                   d.decimate( pch, 0, dch, 0, decimSzF )
                   if( decimSzF < decimSz ) {
-                     System.arraycopy( pch, decimSzF * f, tailBuf, 0, f )
+//                     System.arraycopy( pch, decimSzF * f, tailBuf, 0, f * d.tupleInSize )
+//                     d.decimate( tailBuf, 0, dch, decimSzF, 1 )
+
+                     // XXX TODO: irgendwie bleiben trotzdem 1 bis 2 pixel schwarz uebrig
+                     val off  = decimSzF * f
+                     var tlen = prevSz - off
+                     System.arraycopy( pch, off, tailBuf, 0, tlen )
+                     val stop = f * d.tupleInSize
+                     while( tlen < stop ) { tailBuf( tlen ) = 0f; tlen += 1 }
                      d.decimate( tailBuf, 0, dch, decimSzF, 1 )
                   }
                ch += 1 }
@@ -407,11 +417,222 @@ object WavePainter {
          def readers : IIdxSeq[ Reader ]
       }
 
-      trait ChannelPlacement {
-         def rectangleForChannel( ch: Int, result: Rectangle ) : Unit
+   }
+
+   trait Display {
+//      def refreshChannel( ch: Int ) : Unit
+      def refreshAllChannels() : Unit
+      def channelDimension( result: Dimension ) : Unit
+      def channelLocation( ch: Int, result: Point ) : Unit
+   }
+
+   object HasZoom {
+      private abstract class ActionImpl extends AbstractAction with InstallableAction {
+         def install( component: JComponent, condition: Int ) {
+            val amap = component.getActionMap
+            val imap = component.getInputMap( condition )
+            val id   = getValue( Action.ACTION_COMMAND_KEY )
+            amap.put( id, this )
+            val ks   = getValue( Action.ACCELERATOR_KEY ).asInstanceOf[ KeyStroke ]
+            imap.put( ks, id )
+         }
+
+         final def actionPerformed( e: ActionEvent ) { perform() }
+
+         protected def perform() : Unit
+      }
+
+      private val chanDim = new Dimension()
+
+      private final class ActionSpanWidth( zoom: HasZoom, display: Display, numFrames: Long, factor: Double )
+   	extends ActionImpl {
+         def perform() {
+            val visiStart  = zoom.startFrame
+            val visiStop   = zoom.stopFrame
+   			val visiLen		= visiStop - visiStart
+//   			val pos			= timelineView.cursor.position
+
+            val (newStart, newStop) = if( factor == 0.0 ) {				// to sample level
+               display.channelDimension( chanDim )
+               val start	= 0L // math.max( 0, pos - (w >> 1) )
+               val stop	   = math.min( numFrames, start + chanDim.width )
+//println( "aqui: " + (start,stop))
+               (start, stop)
+            } else if( factor < 1.0 ) {		// zoom in
+               if( visiLen < 4 ) (0L, 0L)
+               else {
+//                  // if timeline pos visible -> try to keep it's relative position constant
+//                  if( visiSpan.contains( pos )) {
+                  val pos = visiStart // (visiStart + visiStop) / 2
+                     val start   = pos - ((pos - visiStart) * factor + 0.5).toLong
+                     val stop    = start + (visiLen * factor + 0.5).toLong
+                     (start, stop)
+//                  // if timeline pos before visible span, zoom left hand
+//                  } else if( visiSpan.start > pos ) {
+//                     val start   = visiSpan.start
+//                     val stop    = start + (visiLen * factor + 0.5).toLong
+//                     new Span( start, stop )
+//                  // if timeline pos after visible span, zoom right hand
+//                  } else {
+//                     val stop    = visiSpan.stop
+//                     val start   = stop - (visiLen * factor + 0.5).toLong
+//                     new Span( start, stop )
+//                  }
+               }
+   			} else if( factor == Float.PositiveInfinity ) { // zoom all out
+               (0L, numFrames)
+            } else {    // zoom out
+               val start   = math.max( 0L, visiStart - (visiLen * factor/4 + 0.5).toLong )
+               val stop    = math.min( numFrames, start + (visiLen * factor + 0.5).toLong )
+               (start, stop)
+            }
+            val newVisiIsEmpty = newStart >= newStop
+            if( !newVisiIsEmpty ) {
+//               val ce = ed.editBegin( "scroll" )
+//               ed.editScroll( ce, newVisiSpan )
+//               ed.editEnd( ce )
+               zoom.startFrame   = newStart
+               zoom.stopFrame    = newStop
+               display.refreshAllChannels()
+            }
+   		}
+      }
+
+      private def vMaxZoom( zoom: HasZoom, display: Display, factor: Double ) {
+         val min = zoom.magLow
+         val max = zoom.magHigh
+
+         if( ((factor >= 1.0) && (min > -1.0e6) && (max < 1.0e6)) || (factor < 1.0 && (min < -1.0e-4) && (max > 1.0e-4)) ) {
+            zoom.magLow    = min * factor
+            zoom.magHigh   = max * factor
+            display.refreshAllChannels()
+         }
+      }
+
+      private def linexp( x: Double, srcLo: Double, srcHi: Double, dstLo: Double, dstHi: Double) =
+         math.pow( dstHi / dstLo, (x - srcLo) / (srcHi - srcLo) ) * dstLo
+
+      private def linlin( x: Double, srcLo: Double, srcHi: Double, dstLo: Double, dstHi: Double ) =
+         (x - srcLo) / (srcHi - srcLo) * (dstHi - dstLo) + dstLo
+
+      private final class ActionVerticalMax( zoom: HasZoom, display: Display, factor: Double )
+      extends ActionImpl {
+     		def perform() { vMaxZoom( zoom, display, factor )}
+     	}
+
+      private final class MouseWheelImpl( zoom: HasZoom, display: Display, numFrames: Long,
+                                          sensitivity: Double = 12, horizontalModifiers: Int = 0,
+                                          verticalModifiers: Int = InputEvent.ALT_MASK )
+      extends MouseWheelListener {
+         private val handleHoriz = (verticalModifiers & InputEvent.SHIFT_MASK) == 0
+
+         def mouseWheelMoved( e: MouseWheelEvent ) {
+            val mods    = e.getModifiers
+            val wheel   = math.max( -1.0, math.min( 1.0, e.getWheelRotation / sensitivity ))
+
+            // OS X special handling: shift modifier indicates horizontal wheel
+            if( handleHoriz && (mods & InputEvent.SHIFT_MASK) != 0 ) {
+               if( (mods & horizontalModifiers) == horizontalModifiers ) {
+                  display.channelDimension( chanDim )
+                  if( chanDim.width == 0 ) return
+                  val startOld         = zoom.startFrame
+                  val visiLen          = zoom.stopFrame - startOld
+//                  val framesPerPixel   = visiLen.toDouble / chanDim.width
+//                  val delta            = (wheel * framesPerPixel / 2).toLong
+                  val maxScroll        = visiLen.toDouble * 0.5
+                  val delta            = (wheel * math.abs( wheel ) * maxScroll).toLong
+                  val startNew         = math.max( 0L, math.min( numFrames - visiLen, startOld + delta ))
+//println( "framesPerPixel " + framesPerPixel + "; delta " + delta + "; startOld " + startOld + "; startNew " + startNew )
+                  if( startNew != startOld ) {
+                     zoom.startFrame   = startNew
+                     zoom.stopFrame    = startNew + visiLen
+                     display.refreshAllChannels()
+                  }
+               }
+
+            } else {
+               if( (mods & verticalModifiers) == verticalModifiers ) {
+                  val factor  = linexp( wheel, -1, 1, 0.5, 2.0 )
+                  vMaxZoom( zoom, display, factor )
+               }
+            }
+         }
+      }
+
+      def defaultMouseWheelAction( zoom: HasZoom, display: Display, numFrames: Long ) : MouseWheelListener =
+         new MouseWheelImpl( zoom, display, numFrames )
+
+      def defaultKeyActions( zoom: HasZoom, display: Display, numFrames: Long ) : Iterable[ InstallableAction ] = {
+         val menuModif  = Toolkit.getDefaultToolkit.getMenuShortcutKeyMask
+         // META on Mac, CTRL+SHIFT on PC
+         val ctrlNoMenu = if( menuModif == InputEvent.CTRL_MASK ) InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK else menuModif
+
+         // horizontal zoom in
+         val idHZoomIn   = "synth.swing.HZoomIn"
+         val ksHZoomIn1  = KeyStroke.getKeyStroke( KeyEvent.VK_RIGHT, InputEvent.CTRL_MASK )
+         val ksHZoomIn2  = KeyStroke.getKeyStroke( KeyEvent.VK_CLOSE_BRACKET, menuModif )
+         val acHZoomIn1  = new ActionSpanWidth( zoom, display, numFrames, 0.5 )
+         acHZoomIn1.putValue( Action.ACTION_COMMAND_KEY, idHZoomIn )
+         acHZoomIn1.putValue( Action.ACCELERATOR_KEY, ksHZoomIn1 )
+         val acHZoomIn2  = new ActionSpanWidth( zoom, display, numFrames, 0.5 )
+         acHZoomIn2.putValue( Action.ACTION_COMMAND_KEY, idHZoomIn )
+         acHZoomIn2.putValue( Action.ACCELERATOR_KEY, ksHZoomIn2 )
+         // horizontal zoom out
+         val idHZoomOut  = "synth.swing.HZoomOut"
+         val ksHZoomOut1 = KeyStroke.getKeyStroke( KeyEvent.VK_LEFT, InputEvent.CTRL_MASK )
+         val ksHZoomOut2 = KeyStroke.getKeyStroke( KeyEvent.VK_OPEN_BRACKET, menuModif )
+         val acHZoomOut1 = new ActionSpanWidth( zoom, display, numFrames, 2.0 )
+         acHZoomOut1.putValue( Action.ACTION_COMMAND_KEY, idHZoomOut )
+         acHZoomOut1.putValue( Action.ACCELERATOR_KEY, ksHZoomOut1 )
+         val acHZoomOut2 = new ActionSpanWidth( zoom, display, numFrames, 2.0 )
+         acHZoomOut2.putValue( Action.ACTION_COMMAND_KEY, idHZoomOut )
+         acHZoomOut2.putValue( Action.ACCELERATOR_KEY, ksHZoomOut2 )
+         // zoom to sample level
+         val idHZoomSmp = "synth.swing.HZoomSample"
+         val ksHZoomSmp = KeyStroke.getKeyStroke( KeyEvent.VK_RIGHT, ctrlNoMenu )
+         val acHZoomSmp = new ActionSpanWidth( zoom, display, numFrames, 0.0 )
+         acHZoomSmp.putValue( Action.ACTION_COMMAND_KEY, idHZoomSmp )
+         acHZoomSmp.putValue( Action.ACCELERATOR_KEY, ksHZoomSmp )
+         // zoom out entirely
+         val idHZoomAllOut = "synth.swing.HZoomAllOut"
+         val ksHZoomAllOut1 = KeyStroke.getKeyStroke( KeyEvent.VK_A, InputEvent.ALT_MASK )
+         val ksHZoomAllOut2 = KeyStroke.getKeyStroke( KeyEvent.VK_LEFT, ctrlNoMenu )
+         val acHZoomAllOut1 = new ActionSpanWidth( zoom, display, numFrames, Float.PositiveInfinity )
+         acHZoomAllOut1.putValue( Action.ACTION_COMMAND_KEY, idHZoomAllOut )
+         acHZoomAllOut1.putValue( Action.ACCELERATOR_KEY, ksHZoomAllOut1 )
+         val acHZoomAllOut2 = new ActionSpanWidth( zoom, display, numFrames, Float.PositiveInfinity )
+         acHZoomAllOut2.putValue( Action.ACTION_COMMAND_KEY, idHZoomAllOut )
+         acHZoomAllOut2.putValue( Action.ACCELERATOR_KEY, ksHZoomAllOut2 )
+
+         // vertical amplitude zoom in
+         val idCeilZoomIn  = "synth.swing.VCeilZoomIn"
+         val ksCeilZoomIn  = KeyStroke.getKeyStroke( KeyEvent.VK_UP, InputEvent.CTRL_MASK )
+         val acCeilZoomIn  = new ActionVerticalMax( zoom, display, 0.5 )
+         acCeilZoomIn.putValue( Action.ACTION_COMMAND_KEY, idCeilZoomIn )
+         acCeilZoomIn.putValue( Action.ACCELERATOR_KEY, ksCeilZoomIn )
+         // vertical amplitude zoom out
+         val idCeilZoomOut = "synth.swing.VCeilZoomOut"
+         val ksCeilZoomOut = KeyStroke.getKeyStroke( KeyEvent.VK_DOWN, InputEvent.CTRL_MASK )
+         val acCeilZoomOut = new ActionVerticalMax( zoom, display, 2.0 )
+         acCeilZoomOut.putValue( Action.ACTION_COMMAND_KEY, idCeilZoomOut )
+         acCeilZoomOut.putValue( Action.ACCELERATOR_KEY, ksCeilZoomOut )
+
+         acHZoomIn1 :: acHZoomIn2 :: acHZoomOut1 :: acHZoomOut2 :: acHZoomSmp :: acHZoomAllOut1 :: acHZoomAllOut2 ::
+            acCeilZoomIn :: acCeilZoomOut :: Nil
+
+//         imap.put( KeyStroke.getKeyStroke( KeyEvent.VK_ENTER, 0 ), "retn" )
+//         amap.put( "retn", new ActionScroll( ActionScroll.SCROLL_SESSION_START ))
+//
+//       		imap.put( KeyStroke.getKeyStroke( KeyEvent.VK_DOWN, InputEvent.CTRL_MASK | InputEvent.ALT_MASK ), "incvmin" );
+//       		amap.put( "incvmin", actionIncVertMin );
+//       		imap.put( KeyStroke.getKeyStroke( KeyEvent.VK_UP, InputEvent.CTRL_MASK | InputEvent.ALT_MASK ), "decvmin" );
+//       		amap.put( "decvmin", actionDecVertMin );
+//       		actionIncVertMin	= new ActionVerticalMin( 6f );
+//       		actionDecVertMin	= new ActionVerticalMin( -6f );
+
       }
    }
-   trait MultiResolution extends HasPeakRMS {
+   trait HasZoom {
       def magLow : Double
       def magLow_=( value: Double ) : Unit
       def magHigh : Double
@@ -421,11 +642,12 @@ object WavePainter {
       def startFrame_=( value: Long ) : Unit
       def stopFrame: Long
       def stopFrame_=( value: Long ) : Unit
-
+   }
+   trait MultiResolution extends HasPeakRMS with HasZoom {
       def paint( g: Graphics2D ) : Unit
    }
 
-   private final class MultiResImpl( source: MultiResolution.Source, placement: MultiResolution.ChannelPlacement )
+   private final class MultiResImpl( source: MultiResolution.Source, display: Display )
    extends MultiResolution {
       override def toString = "MultiResolution@" + hashCode().toHexString
 
@@ -437,15 +659,16 @@ object WavePainter {
          val zy         = pnt.scaleY
          zy.sourceLow   = magLow
          zy.sourceHigh  = magHigh
-         zy.targetLow   = rectCache( 0 ).height - 1
+         zy.targetLow   = dim.height - 1
          zy.targetHigh  = 0
          magDirty       = false
       }
 
       private val readers     = source.readers.sortBy( _.decimationFactor )
       private val numReaders  = readers.size
-      private val rect        = new Rectangle()
-      private val rectCache   = Array.fill( source.numChannels )( new Rectangle() )
+      private val dim         = new Dimension()
+      private val point       = new Point()
+//      private val rectCache   = Array.fill( source.numChannels )( new Rectangle() )
 
       private var validZoom   = true
 
@@ -519,7 +742,7 @@ object WavePainter {
             validZoom = false
             return
          }
-         val numPixels  = rectCache( 0 ).width
+         val numPixels  = dim.width
          if( numPixels <= 0 ) {
             validZoom = false
             return
@@ -587,15 +810,10 @@ object WavePainter {
       def paint( g: Graphics2D ) {
          val numCh      = source.numChannels
 
-         var rectDirty  = false
-         var ch = 0; while( ch < numCh ) {
-            placement.rectangleForChannel( ch, rect )
-            val cr = rectCache( ch )
-            if( cr.x != rect.x || cr.y != rect.y || cr.width != rect.width || cr.height != rect.height ) {
-               cr.setBounds( rect )
-               rectDirty = true
-            }
-         ch +=1 }
+         val oldW       = dim.width
+         val oldH       = dim.height
+         display.channelDimension( dim )
+         val rectDirty  = dim.width != oldW || dim.height != oldH
 
          if( rectDirty || spanDirty ) {
             recalcDecim()
@@ -614,13 +832,13 @@ object WavePainter {
          if( !success ) return   // XXX TODO: paint busy rectangle
 
          val decimFrames = readFrames / decimInline.factor
-         ch = 0; while( ch < numCh ) {
+         var ch = 0; while( ch < numCh ) {
             try {
-               val r    = rectCache( ch )
                val dch  = data( ch )
                decimInline.decimate( dch, 0, dch, 0, decimFrames )
-               g.clipRect( r.x, r.y, r.width, r.height )
-               g.translate( r.x, r.y )
+               display.channelLocation( ch, point )
+               g.clipRect( point.x, point.y, dim.width, dim.height )
+               g.translate( point.x, point.y )
                pnt.paint( g, dch, 0, decimFrames )
 
             } finally {
