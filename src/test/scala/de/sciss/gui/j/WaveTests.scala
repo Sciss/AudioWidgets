@@ -149,6 +149,7 @@ object WaveTests extends App with Runnable {
       }
       lazy val display: WavePainter.Display = new WavePainter.Display {
          def numChannels = 1
+         def numFrames = multiSize
 //         def refreshChannel( ch: Int ) { view2.repaint() }
          def refreshAllChannels() { view2.repaint() }
 
@@ -156,8 +157,8 @@ object WaveTests extends App with Runnable {
          def channelLocation( ch: Int, result: Point ) { result.x = 0; result.y = 0 }
       }
 
-      WavePainter.HasZoom.defaultKeyActions( multi, display, multiSize ).foreach( _.install( view2 ))
-      view2.addMouseWheelListener( WavePainter.HasZoom.defaultMouseWheelAction( multi, display, multiSize ))
+      WavePainter.HasZoom.defaultKeyActions( multi, display ).foreach( _.install( view2 ))
+      view2.addMouseWheelListener( WavePainter.HasZoom.defaultMouseWheelAction( multi, display ))
 
       val f    = new JFrame()
       val cp   = f.getContentPane

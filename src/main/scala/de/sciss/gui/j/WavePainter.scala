@@ -420,8 +420,8 @@ object WavePainter {
    }
 
    trait Display {
-//      def refreshChannel( ch: Int ) : Unit
       def numChannels : Int
+      def numFrames : Long
       def refreshAllChannels() : Unit
       def channelDimension( result: Dimension ) : Unit
       def channelLocation( ch: Int, result: Point ) : Unit
@@ -446,13 +446,13 @@ object WavePainter {
       private val chanDim     = new Dimension()
       private val chanPoint   = new Point()
 
-      private def hZoom( zoom: HasZoom, display: Display, numFrames: Long, factor: Double, fixDisplayPos: Int ) {
+      private def hZoom( zoom: HasZoom, display: Display, factor: Double, fixDisplayPos: Int ) {
          val visiStart  = zoom.startFrame
          val visiStop   = zoom.stopFrame
 			val visiLen		= visiStop - visiStart
 
          val (newStart, newStop) = if( factor == Float.PositiveInfinity ) { // zoom all out
-            (0L, numFrames)
+            (0L, display.numFrames)
          } else {
             display.channelDimension( chanDim )
             val w = chanDim.width
@@ -461,7 +461,7 @@ object WavePainter {
 
             val fixRel     = fixDisplayPos.toDouble / w
             val fixFrame   = fixRel * visiLen + visiStart
-            val stop       = math.min( numFrames, (fixFrame + (1 - fixRel) * targetLen + 0.5).toLong )
+            val stop       = math.min( display.numFrames, (fixFrame + (1 - fixRel) * targetLen + 0.5).toLong )
             val start	   = math.max( 0L, stop - targetLen )
             (start, stop)
          }
@@ -474,9 +474,9 @@ object WavePainter {
          }
       }
 
-      private final class ActionSpanWidth( zoom: HasZoom, display: Display, numFrames: Long, factor: Double )
+      private final class ActionSpanWidth( zoom: HasZoom, display: Display, factor: Double )
    	extends ActionImpl {
-         def perform() { hZoom( zoom, display, numFrames, factor, 0 )}
+         def perform() { hZoom( zoom, display, factor, 0 )}
       }
 
       private def vMaxZoom( zoom: HasZoom, display: Display, factor: Double ) {
@@ -493,15 +493,15 @@ object WavePainter {
       private def linexp( x: Double, srcLo: Double, srcHi: Double, dstLo: Double, dstHi: Double) =
          math.pow( dstHi / dstLo, (x - srcLo) / (srcHi - srcLo) ) * dstLo
 
-      private def linlin( x: Double, srcLo: Double, srcHi: Double, dstLo: Double, dstHi: Double ) =
-         (x - srcLo) / (srcHi - srcLo) * (dstHi - dstLo) + dstLo
+//      private def linlin( x: Double, srcLo: Double, srcHi: Double, dstLo: Double, dstHi: Double ) =
+//         (x - srcLo) / (srcHi - srcLo) * (dstHi - dstLo) + dstLo
 
       private final class ActionVerticalMax( zoom: HasZoom, display: Display, factor: Double )
       extends ActionImpl {
      		def perform() { vMaxZoom( zoom, display, factor )}
      	}
 
-      private final class MouseWheelImpl( zoom: HasZoom, display: Display, numFrames: Long,
+      private final class MouseWheelImpl( zoom: HasZoom, display: Display,
                                           sensitivity: Double, zoomModifiers: Int, horizontalScroll: Boolean )
       extends MouseWheelListener {
          // OS X special handling: shift modifier indicates horizontal wheel
@@ -526,7 +526,7 @@ object WavePainter {
                      if( chanPoint.x <= mx && (chanPoint.x + chanDim.width) > mx &&
                          chanPoint.y <= my && (chanPoint.y + chanDim.height ) > my ) x = mx - chanPoint.x
                   ch += 1 }
-                  hZoom( zoom, display, numFrames, factor, math.max( 0, x ))
+                  hZoom( zoom, display, factor, math.max( 0, x ))
 
                } else {
                   val factor = linexp( wheel, -1, 1, 0.5, 2.0 )
@@ -541,7 +541,7 @@ object WavePainter {
 //                  val delta            = (wheel * framesPerPixel / 2).toLong
                val maxScroll        = visiLen.toDouble * 0.5
                val delta            = (wheel * math.abs( wheel ) * maxScroll).toLong
-               val startNew         = math.max( 0L, math.min( numFrames - visiLen, startOld + delta ))
+               val startNew         = math.max( 0L, math.min( display.numFrames - visiLen, startOld + delta ))
 //println( "framesPerPixel " + framesPerPixel + "; delta " + delta + "; startOld " + startOld + "; startNew " + startNew )
                if( startNew != startOld ) {
                   zoom.startFrame   = startNew
@@ -552,12 +552,12 @@ object WavePainter {
          }
       }
 
-      def defaultMouseWheelAction( zoom: HasZoom, display: Display, numFrames: Long, sensitivity: Double = 12,
+      def defaultMouseWheelAction( zoom: HasZoom, display: Display, sensitivity: Double = 12,
                                    zoomModifiers: Int = InputEvent.ALT_MASK,
                                    horizontalScroll: Boolean = true ) : MouseWheelListener =
-         new MouseWheelImpl( zoom, display, numFrames, sensitivity, zoomModifiers, horizontalScroll )
+         new MouseWheelImpl( zoom, display, sensitivity, zoomModifiers, horizontalScroll )
 
-      def defaultKeyActions( zoom: HasZoom, display: Display, numFrames: Long ) : Iterable[ InstallableAction ] = {
+      def defaultKeyActions( zoom: HasZoom, display: Display ) : Iterable[ InstallableAction ] = {
          val menuModif  = Toolkit.getDefaultToolkit.getMenuShortcutKeyMask
          // META on Mac, CTRL+SHIFT on PC
          val ctrlNoMenu = if( menuModif == InputEvent.CTRL_MASK ) InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK else menuModif
@@ -566,36 +566,36 @@ object WavePainter {
          val idHZoomIn   = "synth.swing.HZoomIn"
          val ksHZoomIn1  = KeyStroke.getKeyStroke( KeyEvent.VK_RIGHT, InputEvent.CTRL_MASK )
          val ksHZoomIn2  = KeyStroke.getKeyStroke( KeyEvent.VK_CLOSE_BRACKET, menuModif )
-         val acHZoomIn1  = new ActionSpanWidth( zoom, display, numFrames, 0.5 )
+         val acHZoomIn1  = new ActionSpanWidth( zoom, display, 0.5 )
          acHZoomIn1.putValue( Action.ACTION_COMMAND_KEY, idHZoomIn )
          acHZoomIn1.putValue( Action.ACCELERATOR_KEY, ksHZoomIn1 )
-         val acHZoomIn2  = new ActionSpanWidth( zoom, display, numFrames, 0.5 )
+         val acHZoomIn2  = new ActionSpanWidth( zoom, display, 0.5 )
          acHZoomIn2.putValue( Action.ACTION_COMMAND_KEY, idHZoomIn )
          acHZoomIn2.putValue( Action.ACCELERATOR_KEY, ksHZoomIn2 )
          // horizontal zoom out
          val idHZoomOut  = "synth.swing.HZoomOut"
          val ksHZoomOut1 = KeyStroke.getKeyStroke( KeyEvent.VK_LEFT, InputEvent.CTRL_MASK )
          val ksHZoomOut2 = KeyStroke.getKeyStroke( KeyEvent.VK_OPEN_BRACKET, menuModif )
-         val acHZoomOut1 = new ActionSpanWidth( zoom, display, numFrames, 2.0 )
+         val acHZoomOut1 = new ActionSpanWidth( zoom, display, 2.0 )
          acHZoomOut1.putValue( Action.ACTION_COMMAND_KEY, idHZoomOut )
          acHZoomOut1.putValue( Action.ACCELERATOR_KEY, ksHZoomOut1 )
-         val acHZoomOut2 = new ActionSpanWidth( zoom, display, numFrames, 2.0 )
+         val acHZoomOut2 = new ActionSpanWidth( zoom, display, 2.0 )
          acHZoomOut2.putValue( Action.ACTION_COMMAND_KEY, idHZoomOut )
          acHZoomOut2.putValue( Action.ACCELERATOR_KEY, ksHZoomOut2 )
          // zoom to sample level
          val idHZoomSmp = "synth.swing.HZoomSample"
          val ksHZoomSmp = KeyStroke.getKeyStroke( KeyEvent.VK_RIGHT, ctrlNoMenu )
-         val acHZoomSmp = new ActionSpanWidth( zoom, display, numFrames, 0.0 )
+         val acHZoomSmp = new ActionSpanWidth( zoom, display, 0.0 )
          acHZoomSmp.putValue( Action.ACTION_COMMAND_KEY, idHZoomSmp )
          acHZoomSmp.putValue( Action.ACCELERATOR_KEY, ksHZoomSmp )
          // zoom out entirely
          val idHZoomAllOut = "synth.swing.HZoomAllOut"
          val ksHZoomAllOut1 = KeyStroke.getKeyStroke( KeyEvent.VK_A, InputEvent.ALT_MASK )
          val ksHZoomAllOut2 = KeyStroke.getKeyStroke( KeyEvent.VK_LEFT, ctrlNoMenu )
-         val acHZoomAllOut1 = new ActionSpanWidth( zoom, display, numFrames, Float.PositiveInfinity )
+         val acHZoomAllOut1 = new ActionSpanWidth( zoom, display, Float.PositiveInfinity )
          acHZoomAllOut1.putValue( Action.ACTION_COMMAND_KEY, idHZoomAllOut )
          acHZoomAllOut1.putValue( Action.ACCELERATOR_KEY, ksHZoomAllOut1 )
-         val acHZoomAllOut2 = new ActionSpanWidth( zoom, display, numFrames, Float.PositiveInfinity )
+         val acHZoomAllOut2 = new ActionSpanWidth( zoom, display, Float.PositiveInfinity )
          acHZoomAllOut2.putValue( Action.ACTION_COMMAND_KEY, idHZoomAllOut )
          acHZoomAllOut2.putValue( Action.ACCELERATOR_KEY, ksHZoomAllOut2 )
 
