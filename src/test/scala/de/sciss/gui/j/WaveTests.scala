@@ -133,6 +133,7 @@ object WaveTests extends App with Runnable {
       multi.peakColor   = Color.gray
 //      multi.peakColor   = new java.awt.LinearGradientPaint( 0f, 0f, 0f, 3200f, Array( 0f, 0.25f, 0.75f, 1f ), Array( Color.red, Color.yellow, Color.yellow, Color.red ))
       multi.rmsColor    = Color.white
+      multi.stopFrame   = multiSize
 
       implicit def richDouble( x: Double ) = new RichDouble( x )
       final class RichDouble( x: Double ) {
@@ -143,51 +144,16 @@ object WaveTests extends App with Runnable {
             math.pow( dstHi / dstLo, (x- srcLo) / (srcHi - srcLo) ) * dstLo
       }
 
-//      lazy val refreshL: ChangeListener = new ChangeListener {
-//         def stateChanged( e: ChangeEvent ) {
-////            if( e.getSource == ggStart ) {
-////               if( ggStop.getValue <= ggStart.getValue ) {
-////                  ggStop.setValue( ggStart.getValue + 1 )
-////               }
-////            } else if( e.getSource == ggStop ) {
-////               if( ggStart.getValue >= ggStop.getValue ) {
-////                  ggStart.setValue( ggStop.getValue - 1 )
-////               }
-////            }
-//            val vz = ggZoomY.getValue.linexp( 0, 1000, 1.0/8, 8.0 )
-////            val hz = ggZoomX.getValue.linexp( 0, 1000, 1.0, 1.0/800 )
-////            val startFrame = ggStart.getValue.linlin( 0, 1000, 0, multiSize ).toLong
-////            val stopFrame  = ggStop.getValue.linlin(  0, 1000, 0, multiSize ).toLong
-////            multi.startFrame        = startFrame   // 0L
-////            multi.stopFrame         = stopFrame    // (multiSize * hz).toLong
-//            multi.magLow            = -1 * vz
-//            multi.magHigh           = 1 * vz
-//            view2.repaint()
-//         }
-//      }
-//      lazy val ggStart = new JSlider( SwingConstants.HORIZONTAL, 0, 999, 0 )
-//      ggStart.setPaintTicks( true )
-//      ggStart.putClientProperty( "JComponent.sizeVariant", "small" )
-//      ggStart.addChangeListener( refreshL )
-//      lazy val ggStop = new JSlider( SwingConstants.HORIZONTAL, 1, 1000, 1000 )
-//      ggStop.setPaintTicks( true )
-//      ggStop.putClientProperty( "JComponent.sizeVariant", "small" )
-//      ggStop.addChangeListener( refreshL )
-//      lazy val ggZoomY = new JSlider( SwingConstants.VERTICAL, 0, 1000, 500 )
-//      ggZoomY.setInverted( true )
-//      ggZoomY.setPaintTicks( true )
-//      ggZoomY.putClientProperty( "JComponent.sizeVariant", "small" )
-//      ggZoomY.addChangeListener( refreshL )
-
       lazy val view2 = new SimpleView {
          def paint( g: Graphics2D, w: Int, h: Int ) { multi.paint( g )}
       }
       lazy val display: WavePainter.Display = new WavePainter.Display {
+         def numChannels = 1
 //         def refreshChannel( ch: Int ) { view2.repaint() }
          def refreshAllChannels() { view2.repaint() }
 
          def channelDimension( result: Dimension ) { view2.getSize( result )}
-         def channelLocation(ch: Int, result: Point) { result.x = 0; result.y = 0 }
+         def channelLocation( ch: Int, result: Point ) { result.x = 0; result.y = 0 }
       }
 
       WavePainter.HasZoom.defaultKeyActions( multi, display, multiSize ).foreach( _.install( view2 ))

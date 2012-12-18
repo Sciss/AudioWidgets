@@ -421,6 +421,7 @@ object WavePainter {
 
    trait Display {
 //      def refreshChannel( ch: Int ) : Unit
+      def numChannels : Int
       def refreshAllChannels() : Unit
       def channelDimension( result: Dimension ) : Unit
       def channelLocation( ch: Int, result: Point ) : Unit
@@ -442,60 +443,40 @@ object WavePainter {
          protected def perform() : Unit
       }
 
-      private val chanDim = new Dimension()
+      private val chanDim     = new Dimension()
+      private val chanPoint   = new Point()
+
+      private def hZoom( zoom: HasZoom, display: Display, numFrames: Long, factor: Double, fixDisplayPos: Int ) {
+         val visiStart  = zoom.startFrame
+         val visiStop   = zoom.stopFrame
+			val visiLen		= visiStop - visiStart
+
+         val (newStart, newStop) = if( factor == Float.PositiveInfinity ) { // zoom all out
+            (0L, numFrames)
+         } else {
+            display.channelDimension( chanDim )
+            val w = chanDim.width
+            val targetLen = if( factor == 0.0 ) w.toLong else (factor * visiLen + 0.5).toLong
+            if( targetLen < 4 ) return
+
+            val fixRel     = fixDisplayPos.toDouble / w
+            val fixFrame   = fixRel * visiLen + visiStart
+            val stop       = math.min( numFrames, (fixFrame + (1 - fixRel) * targetLen + 0.5).toLong )
+            val start	   = math.max( 0L, stop - targetLen )
+            (start, stop)
+         }
+
+         val newVisiIsEmpty = newStart >= newStop
+         if( !newVisiIsEmpty ) {
+            zoom.startFrame   = newStart
+            zoom.stopFrame    = newStop
+            display.refreshAllChannels()
+         }
+      }
 
       private final class ActionSpanWidth( zoom: HasZoom, display: Display, numFrames: Long, factor: Double )
    	extends ActionImpl {
-         def perform() {
-            val visiStart  = zoom.startFrame
-            val visiStop   = zoom.stopFrame
-   			val visiLen		= visiStop - visiStart
-//   			val pos			= timelineView.cursor.position
-
-            val (newStart, newStop) = if( factor == 0.0 ) {				// to sample level
-               display.channelDimension( chanDim )
-               val start	= 0L // math.max( 0, pos - (w >> 1) )
-               val stop	   = math.min( numFrames, start + chanDim.width )
-//println( "aqui: " + (start,stop))
-               (start, stop)
-            } else if( factor < 1.0 ) {		// zoom in
-               if( visiLen < 4 ) (0L, 0L)
-               else {
-//                  // if timeline pos visible -> try to keep it's relative position constant
-//                  if( visiSpan.contains( pos )) {
-                  val pos = visiStart // (visiStart + visiStop) / 2
-                     val start   = pos - ((pos - visiStart) * factor + 0.5).toLong
-                     val stop    = start + (visiLen * factor + 0.5).toLong
-                     (start, stop)
-//                  // if timeline pos before visible span, zoom left hand
-//                  } else if( visiSpan.start > pos ) {
-//                     val start   = visiSpan.start
-//                     val stop    = start + (visiLen * factor + 0.5).toLong
-//                     new Span( start, stop )
-//                  // if timeline pos after visible span, zoom right hand
-//                  } else {
-//                     val stop    = visiSpan.stop
-//                     val start   = stop - (visiLen * factor + 0.5).toLong
-//                     new Span( start, stop )
-//                  }
-               }
-   			} else if( factor == Float.PositiveInfinity ) { // zoom all out
-               (0L, numFrames)
-            } else {    // zoom out
-               val start   = math.max( 0L, visiStart - (visiLen * factor/4 + 0.5).toLong )
-               val stop    = math.min( numFrames, start + (visiLen * factor + 0.5).toLong )
-               (start, stop)
-            }
-            val newVisiIsEmpty = newStart >= newStop
-            if( !newVisiIsEmpty ) {
-//               val ce = ed.editBegin( "scroll" )
-//               ed.editScroll( ce, newVisiSpan )
-//               ed.editEnd( ce )
-               zoom.startFrame   = newStart
-               zoom.stopFrame    = newStop
-               display.refreshAllChannels()
-            }
-   		}
+         def perform() { hZoom( zoom, display, numFrames, factor, 0 )}
       }
 
       private def vMaxZoom( zoom: HasZoom, display: Display, factor: Double ) {
@@ -521,46 +502,60 @@ object WavePainter {
      	}
 
       private final class MouseWheelImpl( zoom: HasZoom, display: Display, numFrames: Long,
-                                          sensitivity: Double = 12, horizontalModifiers: Int = 0,
-                                          verticalModifiers: Int = InputEvent.ALT_MASK )
+                                          sensitivity: Double, zoomModifiers: Int, horizontalScroll: Boolean )
       extends MouseWheelListener {
-         private val handleHoriz = (verticalModifiers & InputEvent.SHIFT_MASK) == 0
+         // OS X special handling: shift modifier indicates horizontal wheel
+         private val handleHoriz = (zoomModifiers & InputEvent.SHIFT_MASK) == 0
 
          def mouseWheelMoved( e: MouseWheelEvent ) {
             val mods    = e.getModifiers
             val wheel   = math.max( -1.0, math.min( 1.0, e.getWheelRotation / sensitivity ))
+            val isHoriz = handleHoriz && (mods & InputEvent.SHIFT_MASK) != 0
+            val isZoom  = (mods & zoomModifiers) == zoomModifiers
 
-            // OS X special handling: shift modifier indicates horizontal wheel
-            if( handleHoriz && (mods & InputEvent.SHIFT_MASK) != 0 ) {
-               if( (mods & horizontalModifiers) == horizontalModifiers ) {
+            if( isZoom ) {
+               if( isHoriz ) {
+                  val factor = linexp( wheel, -1, 1, 2.0, 0.5 )
                   display.channelDimension( chanDim )
-                  if( chanDim.width == 0 ) return
-                  val startOld         = zoom.startFrame
-                  val visiLen          = zoom.stopFrame - startOld
+                  val numCh   = display.numChannels
+                  var x       = -1
+                  val mx      = e.getX
+                  val my      = e.getY
+                  var ch = 0; while( ch < numCh && x < 0 ) {
+                     display.channelLocation( ch, chanPoint )
+                     if( chanPoint.x <= mx && (chanPoint.x + chanDim.width) > mx &&
+                         chanPoint.y <= my && (chanPoint.y + chanDim.height ) > my ) x = mx - chanPoint.x
+                  ch += 1 }
+                  hZoom( zoom, display, numFrames, factor, math.max( 0, x ))
+
+               } else {
+                  val factor = linexp( wheel, -1, 1, 0.5, 2.0 )
+                  vMaxZoom( zoom, display, factor )
+               }
+            } else if( isHoriz && horizontalScroll ) {
+               display.channelDimension( chanDim )
+               if( chanDim.width == 0 ) return
+               val startOld         = zoom.startFrame
+               val visiLen          = zoom.stopFrame - startOld
 //                  val framesPerPixel   = visiLen.toDouble / chanDim.width
 //                  val delta            = (wheel * framesPerPixel / 2).toLong
-                  val maxScroll        = visiLen.toDouble * 0.5
-                  val delta            = (wheel * math.abs( wheel ) * maxScroll).toLong
-                  val startNew         = math.max( 0L, math.min( numFrames - visiLen, startOld + delta ))
+               val maxScroll        = visiLen.toDouble * 0.5
+               val delta            = (wheel * math.abs( wheel ) * maxScroll).toLong
+               val startNew         = math.max( 0L, math.min( numFrames - visiLen, startOld + delta ))
 //println( "framesPerPixel " + framesPerPixel + "; delta " + delta + "; startOld " + startOld + "; startNew " + startNew )
-                  if( startNew != startOld ) {
-                     zoom.startFrame   = startNew
-                     zoom.stopFrame    = startNew + visiLen
-                     display.refreshAllChannels()
-                  }
-               }
-
-            } else {
-               if( (mods & verticalModifiers) == verticalModifiers ) {
-                  val factor  = linexp( wheel, -1, 1, 0.5, 2.0 )
-                  vMaxZoom( zoom, display, factor )
+               if( startNew != startOld ) {
+                  zoom.startFrame   = startNew
+                  zoom.stopFrame    = startNew + visiLen
+                  display.refreshAllChannels()
                }
             }
          }
       }
 
-      def defaultMouseWheelAction( zoom: HasZoom, display: Display, numFrames: Long ) : MouseWheelListener =
-         new MouseWheelImpl( zoom, display, numFrames )
+      def defaultMouseWheelAction( zoom: HasZoom, display: Display, numFrames: Long, sensitivity: Double = 12,
+                                   zoomModifiers: Int = InputEvent.ALT_MASK,
+                                   horizontalScroll: Boolean = true ) : MouseWheelListener =
+         new MouseWheelImpl( zoom, display, numFrames, sensitivity, zoomModifiers, horizontalScroll )
 
       def defaultKeyActions( zoom: HasZoom, display: Display, numFrames: Long ) : Iterable[ InstallableAction ] = {
          val menuModif  = Toolkit.getDefaultToolkit.getMenuShortcutKeyMask
