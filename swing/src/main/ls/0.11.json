@@ -1,0 +1,22 @@
+
+{
+ "organization":"de.sciss",
+ "name":"ScalaAudioWidgets",
+ "version":"0.11",
+ "description":"Scala-Swing wrappers for the AudioWidgets library",
+ "site":"https://github.com/Sciss/ScalaAudioWidgets",
+ "tags":["swing","audio","widgets"],
+ "docs":"",
+ "licenses": [{
+   "name": "GPL v2+",
+   "url": "http://www.gnu.org/licenses/gpl-2.0.txt"
+  }],
+ "resolvers": ["http://scala-tools.org/repo-releases"],
+ "dependencies": [{
+   "organization":"de.sciss",
+   "name": "audiowidgets",
+   "version": "0.11"
+  }],
+ "scalas": ["2.9.1"],
+ "sbt": false
+}
