@@ -1,39 +1,41 @@
 name := "AudioWidgets"
 
-version := "1.1.0-SNAPSHOT"
+version in ThisBuild := "1.1.0-SNAPSHOT"
 
-organization := "de.sciss"
+organization in ThisBuild := "de.sciss"
 
-description := "Specialized Swing widgets for audio applications in Scala"
+description in ThisBuild := "Specialized Swing widgets for audio applications in Scala"
 
-homepage := Some( url( "https://github.com/Sciss/AudioWidgets" ))
+homepage in ThisBuild := Some( url( "https://github.com/Sciss/AudioWidgets" ))
 
-licenses := Seq( "GPL v2+" -> url( "http://www.gnu.org/licenses/gpl-2.0.txt" ))
+licenses in ThisBuild := Seq( "GPL v2+" -> url( "http://www.gnu.org/licenses/gpl-2.0.txt" ))
 
-scalaVersion := "2.9.2"
+scalaVersion in ThisBuild := "2.10.0"
 
-retrieveManaged := true
+crossScalaVersions in ThisBuild := Seq( "2.10.0", "2.9.2" )
 
-scalacOptions ++= Seq( "-deprecation", "-unchecked" )
+retrieveManaged in ThisBuild := true
+
+scalacOptions in ThisBuild ++= Seq( "-deprecation", "-unchecked" )
 
 // ---- build info ----
 
-buildInfoSettings
-
-sourceGenerators in Compile <+= buildInfo
-
-buildInfoKeys := Seq( name, organization, version, scalaVersion, description,
-   BuildInfoKey.map( homepage ) { case (k, opt) => k -> opt.get },
-   BuildInfoKey.map( licenses ) { case (_, Seq( (lic, _) )) => "license" -> lic }
-)
-
-buildInfoPackage := "de.sciss.gui.j"
+// buildInfoSettings
+// 
+// sourceGenerators in Compile <+= buildInfo
+// 
+// buildInfoKeys := Seq( name, organization, version, scalaVersion, description,
+//    BuildInfoKey.map( homepage ) { case (k, opt) => k -> opt.get },
+//    BuildInfoKey.map( licenses ) { case (_, Seq( (lic, _) )) => "license" -> lic }
+// )
+// 
+// buildInfoPackage := "de.sciss.gui.j"
 
 // ---- publishing ----
 
-publishMavenStyle := true
+publishMavenStyle in ThisBuild := true
 
-publishTo <<= version { (v: String) =>
+publishTo in ThisBuild <<= version { (v: String) =>
    Some( if( v.endsWith( "-SNAPSHOT" ))
       "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
    else
@@ -43,9 +45,9 @@ publishTo <<= version { (v: String) =>
 
 publishArtifact in Test := false
 
-pomIncludeRepository := { _ => false }
+pomIncludeRepository in ThisBuild := { _ => false }
 
-pomExtra :=
+pomExtra in ThisBuild :=
 <scm>
   <url>git@github.com:Sciss/AudioWidgets.git</url>
   <connection>scm:git:git@github.com:Sciss/AudioWidgets.git</connection>
