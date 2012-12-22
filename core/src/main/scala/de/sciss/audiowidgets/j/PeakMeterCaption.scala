@@ -23,7 +23,8 @@
  *	contact@sciss.de
  */
 
-package de.sciss.gui.j
+package de.sciss.audiowidgets
+package j
 
 import java.awt.font.{GlyphVector, FontRenderContext}
 import java.awt.geom.{AffineTransform, GeneralPath, Rectangle2D}

@@ -1,4 +1,4 @@
-package de.sciss.gui.j
+package de.sciss.audiowidgets.j
 
 import java.awt.{Point, Dimension, Toolkit, Stroke, BasicStroke, Paint, Color, Graphics2D}
 import collection.immutable.{IndexedSeq => IIdxSeq}

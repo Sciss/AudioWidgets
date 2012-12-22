@@ -23,7 +23,7 @@
  *	contact@sciss.de
  */
 
-package de.sciss.gui
+package de.sciss.audiowidgets
 
 import j.{LCDPanel => JLCDPanel}
 import swing.FlowPanel

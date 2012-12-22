@@ -1,4 +1,4 @@
-package de.sciss.gui.j
+package de.sciss.audiowidgets.j
 
 import javax.swing.{JComponent, Action}
 

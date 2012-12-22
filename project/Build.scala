@@ -20,7 +20,7 @@ object Build extends sbt.Build {
             BuildInfoKey.map( homepage ) { case (k, opt) => k -> opt.get },
             BuildInfoKey.map( licenses ) { case (_, Seq( (lic, _) )) => "license" -> lic }
          ),
-         buildInfoPackage := "de.sciss.gui.j"
+         buildInfoPackage := "de.sciss.audiowidgets"
       )
    )
 

@@ -1,4 +1,4 @@
-package de.sciss.gui.j
+package de.sciss.audiowidgets.j
 
 import java.awt.event.{WindowEvent, WindowAdapter, ActionEvent, ActionListener}
 import collection.immutable.{IndexedSeq => IIdxSeq}

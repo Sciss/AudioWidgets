@@ -1,4 +1,4 @@
-package de.sciss.gui
+package de.sciss.audiowidgets
 
 import j.TransportCompanion
 import swing.{Button, Orientation, BoxPanel, AbstractButton, Component}

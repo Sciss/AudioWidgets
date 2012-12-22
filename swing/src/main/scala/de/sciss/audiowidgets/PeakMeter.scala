@@ -23,9 +23,9 @@
  *	contact@sciss.de
  */
 
-package de.sciss.gui
+package de.sciss.audiowidgets
 
-import j.{PeakMeter => JPeakMeter, PeakMeterLike}
+import j.{PeakMeter => JPeakMeter}
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import swing.{Alignment, Orientation, Component}
 

@@ -23,7 +23,7 @@
  *	contact@sciss.de
  */
 
-package de.sciss.gui.j
+package de.sciss.audiowidgets.j
 
 import java.awt.{RenderingHints, Graphics, Component, Graphics2D, BasicStroke, Shape, Color, LinearGradientPaint, Paint}
 import scala.Array

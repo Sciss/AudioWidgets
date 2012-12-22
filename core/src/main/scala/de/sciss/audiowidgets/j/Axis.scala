@@ -23,7 +23,8 @@
  *	contact@sciss.de
  */
 
-package de.sciss.gui.j
+package de.sciss.audiowidgets
+package j
 
 import java.awt.geom.{ GeneralPath, AffineTransform }
 import java.awt.image.BufferedImage
@@ -32,28 +33,6 @@ import java.util.Locale
 import annotation.switch
 import java.awt.{Font, Color, Dimension, FontMetrics, Graphics, Graphics2D, Rectangle, RenderingHints, TexturePaint}
 import javax.swing.{UIManager, SwingConstants, JComponent}
-
-trait AxisLike {
-   def fixedBounds : Boolean
-   def fixedBounds_= (b: Boolean): Unit
-//   def format : Format
-//   def format_= (f: Format): Unit
-   def inverted : Boolean
-   def inverted_= (b: Boolean): Unit
-   def maximum : Double
-   def maximum_= (value: Double): Unit
-   def minimum : Double
-   def minimum_= (value: Double): Unit
-}
-
-trait AxisCompanion {
-   sealed trait Format
-   object Format {
-      case object Decimal extends Format
-      case object Integer extends Format
-      final case class Time( hours: Boolean = false, millis: Boolean = true ) extends Format
-   }
-}
 
 /**
  *  A GUI element for displaying

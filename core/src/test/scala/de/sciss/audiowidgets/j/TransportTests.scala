@@ -1,4 +1,4 @@
-package de.sciss.gui.j
+package de.sciss.audiowidgets.j
 
 import java.awt.{BorderLayout, Dimension, RenderingHints, Graphics2D, Graphics, EventQueue}
 import javax.swing.{JComponent, WindowConstants, JPanel, JFrame}

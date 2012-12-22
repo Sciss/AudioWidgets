@@ -23,7 +23,8 @@
  *	contact@sciss.de
  */
 
-package de.sciss.gui.j
+package de.sciss.audiowidgets
+package j
 
 import java.beans.{PropertyChangeListener, PropertyChangeEvent}
 import javax.swing.{BorderFactory, JComponent, SwingConstants}

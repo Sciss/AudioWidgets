@@ -23,7 +23,7 @@
  *	contact@sciss.de
  */
 
-package de.sciss.gui.j
+package de.sciss.audiowidgets.j
 
 import javax.swing.JPanel
 import java.beans.{PropertyChangeEvent, PropertyChangeListener}

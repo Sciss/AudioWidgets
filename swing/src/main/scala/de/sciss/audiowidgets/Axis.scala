@@ -23,9 +23,9 @@
  *	contact@sciss.de
  */
 
-package de.sciss.gui
+package de.sciss.audiowidgets
 
-import j.{Axis => JAxis, AxisCompanion, AxisLike}
+import j.{Axis => JAxis}
 import swing.Component
 import JAxis.{Format => JFormat}
 

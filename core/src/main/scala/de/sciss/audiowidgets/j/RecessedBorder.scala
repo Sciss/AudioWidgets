@@ -23,7 +23,7 @@
  *	contact@sciss.de
  */
 
-package de.sciss.gui.j
+package de.sciss.audiowidgets.j
 
 import javax.swing.border.AbstractBorder
 import java.awt.{RenderingHints, BasicStroke, Color, Component, Graphics, Graphics2D, Insets, Shape}
