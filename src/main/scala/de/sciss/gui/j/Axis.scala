@@ -368,9 +368,10 @@ extends JComponent with AxisLike {
 		g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON )
 		g2.setColor( Color.black )
 
-      labels.foreach( l => {
+      var i = 0; while( i < labels.length ) {
+         val l = labels( i )
 			g2.drawString( l.name, l.pos, y )
-		})
+		i += 1 }
 
 		g2.setTransform( trnsOrig )
 //      paintOnTop( g2 )
