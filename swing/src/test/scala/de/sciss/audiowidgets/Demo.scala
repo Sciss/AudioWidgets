@@ -23,7 +23,7 @@
  *	contact@sciss.de
  */
 
-package de.sciss.gui
+package de.sciss.audiowidgets
 
 import java.awt.event.{ActionEvent, ActionListener}
 import swing.event.{WindowClosing, WindowOpened}

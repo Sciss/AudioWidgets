@@ -3,7 +3,7 @@ package de.sciss.audiowidgets.j
 import java.awt.{Point, GridLayout, FlowLayout, Color, BorderLayout, RenderingHints, Graphics2D, Graphics, Dimension, EventQueue}
 import javax.swing.{JComboBox, JPanel, WindowConstants, JFrame, JComponent}
 import java.awt.event.{MouseEvent, MouseAdapter, ActionListener, ActionEvent}
-import de.sciss.gui.j.WavePainter.MultiResolution
+import WavePainter.MultiResolution
 
 object WaveTests extends App with Runnable {
    EventQueue.invokeLater( this )
