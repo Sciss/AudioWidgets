@@ -28,7 +28,6 @@ package j
 
 import java.awt.geom.{ GeneralPath, AffineTransform }
 import java.awt.image.BufferedImage
-import java.text.MessageFormat
 import java.util.Locale
 import annotation.switch
 import java.awt.{Font, Color, Dimension, FontMetrics, Graphics, Graphics2D, Rectangle, RenderingHints, TexturePaint}
@@ -86,7 +85,6 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
 
   private val trnsVertical = new AffineTransform()
 
-  private var msgPtrn: Array[String] = null
   private var labelRaster: Array[Long] = null
   private var labelMinRaster = 0L
 
@@ -505,7 +503,7 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
         }
         valueStep *= raster
         val valueOff = floor(abs(minK) / valueStep) * (if (minK >= 0) valueStep else -valueStep)
-        val pixelOff = (valueOff - minK) / kPeriod * scale + 0.5
+        val pixelOff = (valueOff - minK) / kPeriod * scale // + 0.5 (was a left over from quartz rendering)
 
         (decimals1, numTicks, valueOff, pixelOff, valueStep)
       }

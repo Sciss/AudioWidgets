@@ -28,47 +28,38 @@ package de.sciss.audiowidgets
 import collection.immutable.{IndexedSeq => IIdxSeq}
 
 trait PeakMeterLike {
-   def clearHold() : Unit
-   def clearMeter() : Unit
-   def dispose(): Unit
-//   def holdDecibels : Float
-   def holdDuration : Int
-   def holdDuration_=( millis: Int ) : Unit
-   def holdPainted : Boolean
-   def holdPainted_=( b: Boolean ): Unit
-//   def orientation : Int
-//   def orientation_=( orient: Int ): Unit
-//   def peak : Float
-//   def peak_=( value: Float ) : Unit
-//   def peakDecibels : Float
-   def channel( ch: Int ) : PeakMeterChannel
-   def numChannels : Int
-   def numChannels_=( n: Int ) : Unit
-//   def peak : Float
-//   def peak_=( value: Float ) : Unit
-//   def peakDecibels : Float
-//   var refreshParent : Boolean
-//   def rms : Float
-//   def rms_=( value: Float ) : Unit
-   def rmsPainted : Boolean
-   def rmsPainted_=( b: Boolean ) : Unit
-   def ticks : Int
-   def ticks_= (num: Int): Unit
-//   def update( peak: Float, rms: Float = rms, time: Long = System.currentTimeMillis ) : Boolean
-   def update( values: IIdxSeq[ Float ], offset: Int = 0, time: Long = System.currentTimeMillis ) : Boolean
+  def clearHold (): Unit
+  def clearMeter(): Unit
 
-   def borderVisible_=( b: Boolean ) : Unit
-   def borderVisible : Boolean
+  def dispose(): Unit
 
-	def hasCaption_=( b: Boolean ) : Unit
-   def hasCaption : Boolean
+  //   def holdDecibels : Float
+  var holdDuration: Int
+  var holdPainted: Boolean
 
-//   def captionPosition_=( pos: Int ) : Unit
-//   def captionPosition : Int
+  //   def orientation : Int
+  //   def orientation_=( orient: Int ): Unit
+  //   def peak : Float
+  //   def peak_=( value: Float ) : Unit
+  //   def peakDecibels : Float
+  def channel(ch: Int): PeakMeterChannel
 
-   def captionLabels_=( b: Boolean ) : Unit
-   def captionLabels : Boolean
+  var numChannels: Int
+  //   def peak : Float
+  //   def peak_=( value: Float ) : Unit
+  //   def peakDecibels : Float
+  //   var refreshParent : Boolean
+  //   def rms : Float
+  //   def rms_=( value: Float ) : Unit
+  var rmsPainted: Boolean
+  var ticks: Int
 
-   def captionVisible_=( b: Boolean ) : Unit
-   def captionVisible : Boolean
+  //   def update( peak: Float, rms: Float = rms, time: Long = System.currentTimeMillis ) : Boolean
+  def update(values: IIdxSeq[Float], offset: Int = 0, time: Long = System.currentTimeMillis): Boolean
+
+  var borderVisible: Boolean
+
+  var hasCaption    : Boolean
+  var captionLabels : Boolean
+  var captionVisible: Boolean
 }

@@ -26,27 +26,20 @@
 package de.sciss.audiowidgets
 
 trait PeakMeterChannel {
-   def peak : Float
-   def peak_=( value: Float ) : Unit
-   def peakDecibels : Float
+  var peak: Float
+  def peakDecibels: Float
 
-   /**
-    * Reads the linear mean square value. Not that this is
-    * not the _root_ mean square for optimization purposes.
-    * The caller needs to take the square root of the returned value.
-    */
-   def rms : Float
-   /**
-    * Sets the linear mean square value. Not that this is
-    * not the _root_ mean square for optimization purposes.
-    */
-   def rms_=( value: Float ) : Unit
-   def rmsDecibels : Float
+  /**
+   * Reads or sets the linear mean square value. Not that this is
+   * not the _root_ mean square for optimization purposes.
+   * The caller needs to take the square root of the returned value.
+   */
+  var rms: Float
+  def rmsDecibels: Float
 
-   def hold : Float
-   def hold_=( value: Float ) : Unit
-   def holdDecibels : Float
+  var hold: Float
+  def holdDecibels: Float
 
-   def clearHold() : Unit
-   def clearMeter() : Unit
+  def clearHold (): Unit
+  def clearMeter(): Unit
 }
