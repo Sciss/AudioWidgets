@@ -135,16 +135,15 @@ object WaveTests extends App with Runnable {
       multi.rmsColor    = Color.white
       multi.stopFrame   = multiSize
 
-      implicit def richDouble( x: Double ) = new RichDouble( x )
-      final class RichDouble( x: Double ) {
-         def linlin( srcLo: Double, srcHi: Double, dstLo: Double, dstHi: Double ) =
-            (x - srcLo) / (srcHi - srcLo) * (dstHi - dstLo) + dstLo
+     final implicit class RichDouble(val x: Double) /* extends AnyVal */ {
+       def linlin(srcLo: Double, srcHi: Double, dstLo: Double, dstHi: Double) =
+         (x - srcLo) / (srcHi - srcLo) * (dstHi - dstLo) + dstLo
 
-         def linexp( srcLo: Double, srcHi: Double, dstLo: Double, dstHi: Double) =
-            math.pow( dstHi / dstLo, (x- srcLo) / (srcHi - srcLo) ) * dstLo
-      }
+       def linexp(srcLo: Double, srcHi: Double, dstLo: Double, dstHi: Double) =
+         math.pow(dstHi / dstLo, (x - srcLo) / (srcHi - srcLo)) * dstLo
+     }
 
-      lazy val view2 = new SimpleView {
+     lazy val view2 = new SimpleView {
          def paint( g: Graphics2D, w: Int, h: Int ) { multi.paint( g )}
       }
       lazy val display: WavePainter.Display = new WavePainter.Display {

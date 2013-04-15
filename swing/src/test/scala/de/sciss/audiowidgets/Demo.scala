@@ -2,7 +2,7 @@
  *  AudioWidgets.scala
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2012 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2013 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is free software; you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License
@@ -69,7 +69,7 @@ object Demo extends SimpleSwingApplication {
       }
 
       val axis = new Axis {
-         format   = Axis.Format.Time()
+         format   = AxisFormat.Time()
          minimum  = 0.0
          maximum  = 34.56
       }

@@ -1,0 +1,7 @@
+Font: Receptional Receipt
+Author: Jayvee D. Enaguas (~GrandChaos9000)
+Source: http://grandchaos9000.deviantart.com/art/Receiptional-Receipt-Font-297034953
+
+licensed under Creative Commons (CC-BY-NC-SA 3.0) and GNU GPL
+
+and included in this project under the terms of the GNU GPL.

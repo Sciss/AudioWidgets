@@ -2,7 +2,7 @@
  *  Axis.scala
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2012 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2013 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is free software; you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License
@@ -27,34 +27,35 @@ package de.sciss.audiowidgets
 
 import j.{Axis => JAxis}
 import swing.Component
-import JAxis.{Format => JFormat}
 
-object Axis extends AxisCompanion
 class Axis extends Component with AxisLike {
-   import Axis._
+  override lazy val peer: JAxis = new JAxis with SuperMixin
 
-   override lazy val peer: JAxis = new JAxis with SuperMixin
-   def fixedBounds = peer.fixedBounds
-   def fixedBounds_=( b: Boolean ) { peer.fixedBounds = b }
+  def fixedBounds = peer.fixedBounds
+  def fixedBounds_=(b: Boolean) {
+    peer.fixedBounds = b
+  }
 
-   // stupid translations...
-   def format : Format = peer.format match {
-      case JFormat.Decimal => Format.Decimal
-      case JFormat.Integer => Format.Integer
-      case JFormat.Time( hours, millis ) => Format.Time( hours, millis )
-   }
+  // stupid translations...
+  def format: AxisFormat = peer.format
 
-   // stupid translations...
-   def format_=( f: Format ) { peer.format = f match {
-      case Format.Decimal => JFormat.Decimal
-      case Format.Integer => JFormat.Integer
-      case Format.Time( hours, millis ) => JFormat.Time( hours, millis )
-   }}
+  // stupid translations...
+  def format_=(f: AxisFormat) {
+    peer.format = f
+  }
 
-   def inverted = peer.inverted
-   def inverted_=( b: Boolean ) { peer.inverted = b }
-   def maximum = peer.maximum
-   def maximum_=( value: Double ) { peer.maximum = value }
-   def minimum = peer.minimum
-   def minimum_=( value: Double ) { peer.minimum = value }
+  def inverted = peer.inverted
+  def inverted_=(b: Boolean) {
+    peer.inverted = b
+  }
+
+  def maximum = peer.maximum
+  def maximum_=(value: Double) {
+    peer.maximum = value
+  }
+
+  def minimum = peer.minimum
+  def minimum_=(value: Double) {
+    peer.minimum = value
+  }
 }

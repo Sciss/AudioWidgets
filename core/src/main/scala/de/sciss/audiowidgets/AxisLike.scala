@@ -2,7 +2,7 @@
  *  AxisLike.scala
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2012 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2013 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is free software; you can redistribute it and/or
  *	modify it under the terms of the GNU General Public License
@@ -26,23 +26,18 @@
 package de.sciss.audiowidgets
 
 trait AxisLike {
-   def fixedBounds : Boolean
-   def fixedBounds_= (b: Boolean): Unit
-//   def format : Format
-//   def format_= (f: Format): Unit
-   def inverted : Boolean
-   def inverted_= (b: Boolean): Unit
-   def maximum : Double
-   def maximum_= (value: Double): Unit
-   def minimum : Double
-   def minimum_= (value: Double): Unit
+  var fixedBounds: Boolean
+  var inverted   : Boolean
+
+  var maximum: Double
+  var minimum: Double
 }
 
-trait AxisCompanion {
-   sealed trait Format
-   object Format {
-      case object Decimal extends Format
-      case object Integer extends Format
-      final case class Time( hours: Boolean = false, millis: Boolean = true ) extends Format
-   }
-}
+//trait AxisCompanion {
+//   sealed trait Format
+//   object Format {
+//      case object Decimal extends Format
+//      case object Integer extends Format
+//      final case class Time( hours: Boolean = false, millis: Boolean = true ) extends Format
+//   }
+//}

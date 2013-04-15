@@ -1,6 +1,6 @@
 name := "AudioWidgets"
 
-version in ThisBuild := "1.1.1-SNAPSHOT"
+version in ThisBuild := "1.2.0-SNAPSHOT"
 
 organization in ThisBuild := "de.sciss"
 
@@ -8,15 +8,13 @@ description in ThisBuild := "Specialized Swing widgets for audio applications in
 
 homepage in ThisBuild := Some( url( "https://github.com/Sciss/AudioWidgets" ))
 
-licenses in ThisBuild := Seq( "GPL v2+" -> url( "http://www.gnu.org/licenses/gpl-2.0.txt" ))
+licenses in ThisBuild := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt"))
 
-scalaVersion in ThisBuild := "2.10.0"
-
-crossScalaVersions in ThisBuild := Seq( "2.10.0", "2.9.2" )
+scalaVersion in ThisBuild := "2.10.1"
 
 retrieveManaged in ThisBuild := true
 
-scalacOptions in ThisBuild ++= Seq( "-deprecation", "-unchecked" )
+scalacOptions in ThisBuild ++= Seq("-deprecation", "-unchecked", "-feature")
 
 // ---- build info ----
 
@@ -35,22 +33,22 @@ scalacOptions in ThisBuild ++= Seq( "-deprecation", "-unchecked" )
 
 publishMavenStyle in ThisBuild := true
 
-publishTo in ThisBuild <<= version { (v: String) =>
-   Some( if( v.endsWith( "-SNAPSHOT" ))
-      "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
-   else
-      "Sonatype Releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-   )
+publishTo in ThisBuild <<= version { v =>
+  Some(if (v endsWith "-SNAPSHOT")
+    "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+  else
+    "Sonatype Releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+  )
 }
 
 publishArtifact in Test := false
 
 pomIncludeRepository in ThisBuild := { _ => false }
 
-pomExtra in ThisBuild :=
+pomExtra in ThisBuild <<= name { n =>
 <scm>
-  <url>git@github.com:Sciss/AudioWidgets.git</url>
-  <connection>scm:git:git@github.com:Sciss/AudioWidgets.git</connection>
+  <url>git@github.com:Sciss/{n}.git</url>
+  <connection>scm:git:git@github.com:Sciss/{n}.git</connection>
 </scm>
 <developers>
    <developer>
@@ -59,16 +57,14 @@ pomExtra in ThisBuild :=
       <url>http://www.sciss.de</url>
    </developer>
 </developers>
+}
 
 // ---- ls.implicit.ly ----
 
-seq( lsSettings :_* )
+seq(lsSettings :_*)
 
-(LsKeys.tags in LsKeys.lsync) := Seq( "swing", "audio", "widgets" )
+(LsKeys.tags in LsKeys.lsync) := Seq("swing", "audio", "widgets")
 
-(LsKeys.ghUser in LsKeys.lsync) := Some( "Sciss" )
+(LsKeys.ghUser in LsKeys.lsync) := Some("Sciss")
 
-(LsKeys.ghRepo in LsKeys.lsync) := Some( "AudioWidgets" )
-
-// bug in ls -- doesn't find the licenses from global scope
-(licenses in LsKeys.lsync) := Seq( "GPL v2+" -> url( "http://www.gnu.org/licenses/gpl-2.0.txt" ))
+(LsKeys.ghRepo in LsKeys.lsync) <<= name(Some(_))
