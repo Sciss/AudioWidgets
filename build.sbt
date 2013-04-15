@@ -16,6 +16,9 @@ retrieveManaged in ThisBuild := true
 
 scalacOptions in ThisBuild ++= Seq("-deprecation", "-unchecked", "-feature")
 
+initialCommands in console in ThisBuild := """
+  |import de.sciss.audiowidgets._""".stripMargin
+
 // ---- build info ----
 
 // buildInfoSettings

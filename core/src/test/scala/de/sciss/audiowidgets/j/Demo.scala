@@ -35,7 +35,8 @@ object Demo extends App with Runnable {
         val lcd = new LCDPanel
         if (bg.getAlpha > 0) lcd.setBackground(bg)
         val lb = new JLabel("00:00:0" + idx)
-        lb.putClientProperty("JComponent.sizeVariant", "small")
+        if (idx == 0) lb.setFont(LCDFont().deriveFont(11f)) else
+          lb.putClientProperty("JComponent.sizeVariant", "small")
         lb.setForeground(fg)
         lcd.add(lb)
         lcdGrid.add(lcd)

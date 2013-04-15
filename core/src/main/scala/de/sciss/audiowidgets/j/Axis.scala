@@ -52,26 +52,6 @@ object Axis {
   private final val TIME_RASTER     = Array( 60000000L,  6000000L,  600000L,  60000L, 10000L, 1000L, 100L, 10L, 1L)
   private /* final */ val MIN_LABSPC = 16 // TODO: make final in binary incompatible next version
 
-  // the following are used for Number to String conversion using MessageFormat
-  private final val msgNormalPtrn = Array(
-    "{0,number,0}",
-    "{0,number,0.0}",
-    "{0,number,0.00}",
-    "{0,number,0.000}"
-  )
-  private final val msgTimePtrn = Array(
-    "{0,number,integer}:{1,number,00}",
-    "{0,number,integer}:{1,number,00.0}",
-    "{0,number,integer}:{1,number,00.00}",
-    "{0,number,integer}:{1,number,00.000}"
-  )
-  private final val msgTimeHoursPtrn = Array(
-    "{0,number,integer}:{1,number,00}:{2,number,00}",
-    "{0,number,integer}:{1,number,00}:{2,number,00.0}",
-    "{0,number,integer}:{1,number,00}:{2,number,00.00}",
-    "{0,number,integer}:{1,number,00}:{2,number,00.000}"
-  )
-
   private final val pntBarGradientPixels = Array(0xFFB8B8B8, 0xFFC0C0C0, 0xFFC8C8C8, 0xFFD3D3D3,
     0xFFDBDBDB, 0xFFE4E4E4, 0xFFEBEBEB, 0xFFF1F1F1,
     0xFFF6F6F6, 0xFFFAFAFA, 0xFFFBFBFB, 0xFFFCFCFC,
@@ -103,9 +83,6 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
   private val kPeriod   = 1000.0
   private var labels    = new Array[Label](0)
   private val shpTicks  = new GeneralPath()
-
-  private val msgForm   = new MessageFormat(msgNormalPtrn(0), Locale.US)
-  private val msgArgs   = new Array[AnyRef](3)
 
   private val trnsVertical = new AffineTransform()
 
@@ -259,10 +236,8 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
     //		flFixedBounds	= (flags & FIXEDBOUNDS) != 0
 
     if (flTimeFormat) {
-      msgPtrn     = if (flTimeHours) msgTimeHoursPtrn else msgTimePtrn
       labelRaster = TIME_RASTER
     } else {
-      msgPtrn     = msgNormalPtrn
       labelRaster = if (flIntegers) INTEGERS_RASTER else DECIMAL_RASTER
     }
     labelMinRaster = labelRaster(labelRaster.length - 1)
@@ -366,28 +341,13 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
       recentHeight.toDouble / 2)
   }
 
-  private def calcStringWidth(fntMetr: FontMetrics, value: Double): Int = {
-    if (flTimeFormat) {
-      val secs  = value % 60
-      val mins0 = (value / 60).toInt
-      if (flTimeHours) {
-        val hours = mins0 / 60
-        val mins  = mins0 % 60
-        msgArgs(0) = hours.asInstanceOf[AnyRef]
-        msgArgs(1) = mins.asInstanceOf[AnyRef]
-        msgArgs(2) = secs.asInstanceOf[AnyRef]
-      } else {
-        msgArgs(0) = mins0.asInstanceOf[AnyRef]
-        msgArgs(1) = secs.asInstanceOf[AnyRef]
-      }
-    } else {
-      msgArgs(0) = value.asInstanceOf[AnyRef]
-    }
-    fntMetr.stringWidth(msgForm.format(msgArgs))
+  private def calcStringWidth(decimals: Int, fntMetr: FontMetrics, value: Double): Int = {
+    val s = format.format(value, decimals = decimals, pad = 0)
+    fntMetr.stringWidth(s)
   }
 
-  private def calcMinLabSpc(fntMetr: FontMetrics, mini: Double, maxi: Double): Int = {
-    math.max(calcStringWidth(fntMetr, mini), calcStringWidth(fntMetr, maxi)) + MIN_LABSPC
+  private def calcMinLabSpc(decimals: Int, fntMetr: FontMetrics, mini: Double, maxi: Double): Int = {
+    math.max(calcStringWidth(decimals, fntMetr, mini), calcStringWidth(decimals, fntMetr, maxi)) + MIN_LABSPC
   }
 
   private def recalcLabels(g: Graphics) {
@@ -419,11 +379,11 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
     val maxK  = kPeriod * spcMax
 
     val isInteger = flIntegers || (flTimeFormat && !flTimeMillis)
-    var (numTicks: Int, valueOff: Double, pixelOff: Double, valueStep: Double) =
+    var (decimals: Int, numTicks: Int, valueOff: Double, pixelOff: Double, valueStep: Double) =
       if (flFixedBounds) {
-        val ptrnIdx1 = if (isInteger) 0
+        val decimals1 = if (isInteger) 0
         else {
-          val ptrnIdxTmp = {
+          val decTmp = {
             val n = abs(minK).toLong
             if ((n % 1000) == 0) {
               0
@@ -438,19 +398,18 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
 
           val n = abs(maxK).toLong
           if ((n % 1000) == 0) {
-            ptrnIdxTmp
+            decTmp
           } else if ((n % 100) == 0) {
-            max(ptrnIdxTmp, 1)
+            max(decTmp, 1)
           } else if ((n % 10) == 0) {
-            max(ptrnIdxTmp, 2)
+            max(decTmp, 2)
           } else {
             3
           }
         }
 
         // make a first label width calculation with coarsest display
-        msgForm.applyPattern(msgPtrn(ptrnIdx1))
-        val minLbDist = calcMinLabSpc(fntMetr, spcMin, spcMax)
+        val minLbDist = calcMinLabSpc(decimals1, fntMetr, spcMin, spcMax)
         var numLabels = max(1, width / minLbDist)
 
         // ok, easy way : only divisions by powers of two
@@ -462,24 +421,23 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
         numLabels   <<= shift
         val valueStep = (maxK - minK) / numLabels
 
-        val ptrnIdx2 = if (isInteger) 0
+        val decimals2 = if (isInteger) 0
         else {
           val n = valueStep.toLong
           if ((n % 1000) == 0) {
-            ptrnIdx1
+            decimals1
           } else if ((n % 100) == 0) {
-            max(ptrnIdx1, 1)
+            max(decimals1, 1)
           } else if ((n % 10) == 0) {
-            max(ptrnIdx1, 2)
+            max(decimals1, 2)
           } else {
             3
           }
         }
 
-        if (ptrnIdx2 != ptrnIdx1) {
+        val decimals3 = if (decimals2 == decimals1) decimals2 else {
           // ok, labels get bigger, recalc numLabels ...
-          msgForm.applyPattern(msgPtrn(ptrnIdx2))
-          val minLbDist = calcMinLabSpc(fntMetr, spcMin, spcMax)
+          val minLbDist = calcMinLabSpc(decimals2, fntMetr, spcMin, spcMax)
           numLabels = max(1, width / minLbDist)
           shift = 0
           while (numLabels > 2) {
@@ -490,50 +448,47 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
           val valueStep = (maxK - minK) / numLabels
 
           // nochmal ptrnIdx berechnen, evtl. reduziert sich die aufloesung wieder...
-          msgForm.applyPattern(msgPtrn({
-            val n = valueStep.toLong
-            if ((n % 1000) == 0) {
-              ptrnIdx1
-            } else if ((n % 100) == 0) {
-              max(ptrnIdx1, 1)
-            } else if ((n % 10) == 0) {
-              max(ptrnIdx1, 2)
-            } else {
-              3
-            }
-          }))
+          val n = valueStep.toLong
+          if ((n % 1000) == 0) {
+            decimals1
+          } else if ((n % 100) == 0) {
+            max(decimals1, 1)
+          } else if ((n % 10) == 0) {
+            max(decimals1, 2)
+          } else {
+            3
+          }
         }
 
-        (4, minK, 0, valueStep)
+        (decimals3, 4, minK, 0, valueStep)
 
       } else {
         // ---- no fixed bounds ----
 
         // make a first label width calculation with coarsest display
-        msgForm.applyPattern(msgPtrn(0))
-        var minLbDist = calcMinLabSpc(fntMetr, spcMin, spcMax)
+        var minLbDist = calcMinLabSpc(0, fntMetr, spcMin, spcMax)
         var numLabels = max(1, width / minLbDist)
 
         // now valueStep =^= 1000 * minStep
         var valueStep = ceil((maxK - minK) / numLabels)
         // die Grossenordnung von valueStep ist Indikator fuer Message Pattern
-        var ptrnIdx1 = if (isInteger) 0 else 3
+        var decimals1 = if (isInteger) 0 else 3
         var raster = labelMinRaster
         var i = 0
         var break = false
         while ((i < labelRaster.length) && !break) {
           if (valueStep >= labelRaster(i)) {
-            ptrnIdx1  = max(0, i - 5)
+            decimals1  = max(0, i - 5)
             raster    = labelRaster(i)
             break     = true
           } else {
             i += 1
           }
         }
-        msgForm.applyPattern(msgPtrn(ptrnIdx1))
-        if (ptrnIdx1 > 0) {
+        if (decimals1 > 0) {
           // have to recheck label width!
-          minLbDist = max(calcStringWidth(fntMetr, spcMin), calcStringWidth(fntMetr, spcMax)) + MIN_LABSPC
+          minLbDist = max(calcStringWidth(decimals1, fntMetr, spcMin),
+                          calcStringWidth(decimals1, fntMetr, spcMax)) + MIN_LABSPC
           numLabels = max(1, width / minLbDist)
           valueStep = ceil((maxK - minK) / numLabels)
         }
@@ -552,7 +507,7 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
         val valueOff = floor(abs(minK) / valueStep) * (if (minK >= 0) valueStep else -valueStep)
         val pixelOff = (valueOff - minK) / kPeriod * scale + 0.5
 
-        (numTicks, valueOff, pixelOff, valueStep)
+        (decimals1, numTicks, valueOff, pixelOff, valueStep)
       }
 
     val pixelStep = valueStep / kPeriod * scale
@@ -568,23 +523,7 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
 
     var i = 0
     while (i < numLabels) {
-      if (flTimeFormat) {
-        val mins0 = (valueOff / 60000).toInt
-        val secs  = (valueOff % 60000) / 1000
-        if (flTimeHours) {
-          val hours = mins0 / 60
-          val mins  = mins0 % 60
-          msgArgs(0) = hours.asInstanceOf[AnyRef]
-          msgArgs(1) = mins.asInstanceOf[AnyRef]
-          msgArgs(1) = secs.asInstanceOf[AnyRef]
-        } else {
-          msgArgs(0) = mins0.asInstanceOf[AnyRef]
-          msgArgs(1) = secs.asInstanceOf[AnyRef]
-        }
-      } else {
-        msgArgs(0) = (valueOff / kPeriod).asInstanceOf[AnyRef]
-      }
-      labels(i) = new Label(msgForm.format(msgArgs), (pixelOff + 2).toInt)
+      labels(i) = new Label(format.format(valueOff / kPeriod, decimals = decimals, pad = 0), (pixelOff + 2).toInt)
       valueOff += valueStep
       shpTicks.moveTo(pixelOff.toFloat, 1)
       shpTicks.lineTo(pixelOff.toFloat, height - 2)
