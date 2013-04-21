@@ -1,0 +1,17 @@
+{
+  "organization" : "de.sciss",
+  "name" : "AudioWidgets",
+  "version" : "1.2.0",
+  "description" : "Specialized Swing widgets for audio applications in Scala",
+  "site" : "https://github.com/Sciss/AudioWidgets",
+  "tags" : [ "swing", "audio", "widgets" ],
+  "docs" : "",
+  "resolvers" : [ "https://oss.sonatype.org/content/repositories/releases" ],
+  "dependencies" : [ ],
+  "scalas" : [ "2.10.1" ],
+  "licenses" : [ {
+    "name" : "GPL v2+",
+    "url" : "http://www.gnu.org/licenses/gpl-2.0.txt"
+  } ],
+  "sbt" : false
+}
