@@ -26,20 +26,20 @@
 package de.sciss.audiowidgets
 
 import j.{Axis => JAxis}
-import swing.Component
+import scala.swing.{Orientation, Component}
 
-class Axis extends Component with AxisLike {
-  override lazy val peer: JAxis = new JAxis with SuperMixin
+class Axis(orientation0: Orientation.Value = Orientation.Horizontal) extends Component with AxisLike {
+  override lazy val peer: JAxis = new JAxis(orientation0.id) with SuperMixin
+
+  def orientation = Orientation(peer.orientation)
+  def orientation_=(value: Orientation.Value) { peer.orientation = value.id }
 
   def fixedBounds = peer.fixedBounds
   def fixedBounds_=(b: Boolean) {
     peer.fixedBounds = b
   }
 
-  // stupid translations...
   def format: AxisFormat = peer.format
-
-  // stupid translations...
   def format_=(f: AxisFormat) {
     peer.format = f
   }
