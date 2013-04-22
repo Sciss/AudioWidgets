@@ -26,8 +26,8 @@ object Transport extends TransportCompanion {
     }
   }
 
-  def makeButtonStrip(actions: Seq[ActionElement], scheme: ColorScheme = DarkScheme): Component with ButtonStrip = {
-    val a = actions.map(_.apply(0.8f, scheme))
+  def makeButtonStrip(actions: Seq[ActionElement], scale: Float, scheme: ColorScheme = DarkScheme): Component with ButtonStrip = {
+    val a = actions.map(_.apply(scale, scheme))
     new SButtonStripImpl(a, scheme)
   }
 

@@ -4,7 +4,8 @@ package j
 import java.awt.event.{WindowEvent, WindowAdapter, ActionEvent, ActionListener}
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import javax.swing.{JComponent, Box, JLabel, BorderFactory, JFrame, JPanel, Timer, WindowConstants}
-import java.awt.{Color, GridLayout, EventQueue, BorderLayout}
+import java.awt.{Font, Color, GridLayout, EventQueue, BorderLayout}
+import java.awt.geom.AffineTransform
 
 object Demo extends App with Runnable {
   EventQueue.invokeLater(this)
@@ -35,7 +36,7 @@ object Demo extends App with Runnable {
         val lcd = new LCDPanel
         if (bg.getAlpha > 0) lcd.setBackground(bg)
         val lb = new JLabel("00:00:0" + idx)
-        if (idx == 0) lb.setFont(LCDFont().deriveFont(11f)) else
+        if (idx == 0) lb.setFont(LCDFont()) else
           lb.putClientProperty("JComponent.sizeVariant", "small")
         lb.setForeground(fg)
         lcd.add(lb)

@@ -70,6 +70,9 @@ class LCDPanel extends JPanel {
     }
   })
 
+  override def getMaximumSize = getPreferredSize
+  override def getMinimumSize = getPreferredSize
+
   override def getInsets: Insets = getInsets(new Insets(0, 0, 0, 0))
   override def getInsets(insets: Insets): Insets = {
     super.getInsets(insets)

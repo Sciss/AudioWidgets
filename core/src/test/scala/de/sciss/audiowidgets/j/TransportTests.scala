@@ -39,7 +39,7 @@ object TransportTests extends App with Runnable {
                }
             }
          }
-         lazy val strip: JComponent with Transport.ButtonStrip = Transport.makeButtonStrip( act, scheme )
+        lazy val strip: JComponent with Transport.ButtonStrip = Transport.makeButtonStrip(act, scheme = scheme)
 //         strip.buttons.foreach { b =>
 //            b.addActionListener( new ActionListener {
 //               def actionPerformed( e: ActionEvent ) {
