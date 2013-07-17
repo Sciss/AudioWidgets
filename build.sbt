@@ -10,7 +10,7 @@ homepage in ThisBuild := Some( url( "https://github.com/Sciss/AudioWidgets" ))
 
 licenses in ThisBuild := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt"))
 
-scalaVersion in ThisBuild := "2.10.1"
+scalaVersion in ThisBuild := "2.10.2"
 
 retrieveManaged in ThisBuild := true
 

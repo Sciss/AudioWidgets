@@ -6,136 +6,137 @@ import javax.swing.{JComponent, AbstractAction, KeyStroke, Action}
 import java.awt.event.{MouseWheelEvent, MouseWheelListener, ActionEvent, InputEvent, KeyEvent}
 
 object WavePainter {
-   def sampleAndHold : OneLayer  = new SHImpl
-   def linear        : OneLayer  = new LinearImpl
-   def peakRMS       : PeakRMS   = new PeakRMSImpl
+  def sampleAndHold: OneLayer  = new SHImpl
+  def linear       : OneLayer  = new LinearImpl
+  def peakRMS      : PeakRMS   = new PeakRMSImpl
 
-   private trait HasScalingImpl {
-      final val scaleX = new ScalingImpl
-      final val scaleY = new ScalingImpl
-   }
+  private trait HasScalingImpl {
+    final val scaleX = new ScalingImpl
+    final val scaleY = new ScalingImpl
+  }
 
-   private trait OneLayerImpl extends HasScalingImpl with OneLayer {
-      final var color: Paint = Color.black
+  private trait OneLayerImpl extends HasScalingImpl with OneLayer {
+    final var color: Paint = Color.black
 
-      final def tupleSize = 1
+    final def tupleSize = 1
 
-      final protected var strkVar   : Stroke = new BasicStroke(  1f )
-      final protected var strkVarUp : Stroke = new BasicStroke( 16f )
-      final def stroke : Stroke = strkVar
-      final def stroke_=( value: Stroke ) {
-         strkVar = value
-         strkVarUp = value match {
-            case bs: BasicStroke =>
-               new BasicStroke( bs.getLineWidth * 16f, bs.getEndCap, bs.getLineJoin, bs.getMiterLimit, bs.getDashArray, bs.getDashPhase )
-            case _ => value
-         }
+    final protected var strkVar  : Stroke = new BasicStroke(1f)
+    final protected var strkVarUp: Stroke = new BasicStroke(16f)
+
+    final def stroke: Stroke = strkVar
+    final def stroke_=(value: Stroke) {
+      strkVar = value
+      strkVarUp = value match {
+        case bs: BasicStroke =>
+          new BasicStroke(bs.getLineWidth * 16f, bs.getEndCap, bs.getLineJoin, bs.getMiterLimit, bs.getDashArray, bs.getDashPhase)
+        case _ => value
       }
-   }
+    }
+  }
 
-   private final class SHImpl extends OneLayerImpl {
-      override def toString = "WavePainter.sampleAndHold@" + hashCode().toHexString
+  private final class SHImpl extends OneLayerImpl {
+    override def toString = "WavePainter.sampleAndHold@" + hashCode().toHexString
 
-      def paint( g: Graphics2D, data: Array[ Float ], dataOffset: Int, dataLength: Int ) {
-         val polySize   = dataLength << 1
-         val polyX      = new Array[ Int ]( polySize )
-         val polyY      = new Array[ Int ]( polySize )
+    def paint( g: Graphics2D, data: Array[ Float ], dataOffset: Int, dataLength: Int ) {
+      val polySize  = dataLength << 1
+      val polyX     = new Array[Int](polySize)
+      val polyY     = new Array[Int](polySize)
 
-         var di = dataOffset; var pi = 0; var i = 0; var x = (scaleX( 0 ) * 16).toInt; while( i < dataLength ) {
-            val y = (scaleY( data( di )) * 16).toInt
-            polyX( pi ) = x
-            polyY( pi ) = y
-            pi += 1
-            i  += 1
-            x   = (scaleX( i ) * 16).toInt
-            polyX( pi ) = x
-            polyY( pi ) = y
-            pi += 1
-            di += 1
-         }
-
-         val atOrig = g.getTransform
-         g.scale( 0.0625, 0.0625 )
-         g.setPaint( color )
-         g.setStroke( strkVarUp )
-         g.drawPolyline( polyX, polyY, polySize )
-         g.setTransform( atOrig )
-//         g.scale( 16.0, 16.0 )
+      var di = dataOffset; var pi = 0; var i = 0; var x = (scaleX(0) * 16).toInt; while (i < dataLength) {
+        val y     = (scaleY(data(di)) * 16).toInt
+        polyX(pi) = x
+        polyY(pi) = y
+        pi       += 1
+        i        += 1
+        x         = (scaleX(i) * 16).toInt
+        polyX(pi) = x
+        polyY(pi) = y
+        pi       += 1
+        di       += 1
       }
-   }
 
-   private final class LinearImpl extends OneLayerImpl {
-      override def toString = "WavePainter.linear@" + hashCode().toHexString
+      val atOrig = g.getTransform
+      g.scale(0.0625, 0.0625)
+      g.setPaint(color)
+      g.setStroke(strkVarUp)
+      g.drawPolyline(polyX, polyY, polySize)
+      g.setTransform(atOrig)
+      //         g.scale( 16.0, 16.0 )
+    }
+  }
 
-      def paint( g: Graphics2D, data: Array[ Float ], dataOffset: Int, dataLength: Int ) {
-         val polyX      = new Array[ Int ]( dataLength )
-         val polyY      = new Array[ Int ]( dataLength )
+  private final class LinearImpl extends OneLayerImpl {
+    override def toString = "WavePainter.linear@" + hashCode().toHexString
 
-         var di = dataOffset; var i = 0; while( i < dataLength ) {
-            val x = (scaleX( i ) * 16).toInt
-            val y = (scaleY( data( di )) * 16).toInt
-            polyX( i ) = x
-            polyY( i ) = y
-            i  += 1
-            di += 1
-         }
+    def paint( g: Graphics2D, data: Array[ Float ], dataOffset: Int, dataLength: Int ) {
+      val polyX = new Array[Int](dataLength)
+      val polyY = new Array[Int](dataLength)
 
-         val atOrig = g.getTransform
-         g.scale( 0.0625, 0.0625 )
-         g.setPaint( color )
-         g.setStroke( strkVarUp )
-         g.drawPolyline( polyX, polyY, dataLength )
-         g.setTransform( atOrig )
+      var di = dataOffset; var i = 0; while (i < dataLength) {
+        val x = (scaleX(i)        * 16).toInt
+        val y = (scaleY(data(di)) * 16).toInt
+        polyX(i) = x
+        polyY(i) = y
+        i  += 1
+        di += 1
       }
-   }
 
-   private trait HasPeakRMSImpl {
-      var peakColor: Paint = Color.gray
-      var rmsColor: Paint  = Color.black
-   }
+      val atOrig = g.getTransform
+      g.scale(0.0625, 0.0625)
+      g.setPaint(color)
+      g.setStroke(strkVarUp)
+      g.drawPolyline(polyX, polyY, dataLength)
+      g.setTransform(atOrig)
+    }
+  }
 
-   private final class PeakRMSImpl extends HasScalingImpl with PeakRMS with HasPeakRMSImpl {
-      def tupleSize = 3
+  private trait HasPeakRMSImpl {
+    var peakColor: Paint = Color.gray
+    var rmsColor : Paint = Color.black
+  }
 
-      def paint( g: Graphics2D, data: Array[ Float ], dataOffset: Int, dataLength: Int ) {
-         val polySize   = dataLength * 2 // / 3
-         val peakPolyX  = new Array[ Int ]( polySize )
-         val peakPolyY  = new Array[ Int ]( polySize )
-         val rmsPolyX   = new Array[ Int ]( polySize )
-         val rmsPolyY   = new Array[ Int ]( polySize )
+  private final class PeakRMSImpl extends HasScalingImpl with PeakRMS with HasPeakRMSImpl {
+    def tupleSize = 3
 
-         var i = 0; var j = dataOffset * 3; var k = polySize - 1; while( i < dataLength ) {
-            val x					= (scaleX( i ) * 16).toInt
-            peakPolyX( i )    = x
-            peakPolyX( k )		= x
-            rmsPolyX( i )     = x
-            rmsPolyX( k )     = x
-            val peakP         = data( j )
-            j += 1
-            val peakN         = data( j )
-            j += 1
-            peakPolyY( i )	   = (scaleY( peakP ) * 16).toInt + 8 // 2
-            peakPolyY( k )		= (scaleY( peakN ) * 16).toInt - 8 // 2
-            // peakC = (peakP + peakN) / 2
-            val rms           = math.sqrt( data( j )).toFloat
-            j += 1
-            rmsPolyY( i )     = (scaleY( math.min( peakP,  rms )) * 16).toInt
-            rmsPolyY( k )		= (scaleY( math.max( peakN, -rms )) * 16).toInt
-            i += 1
-            k -= 1
-         }
+    def paint(g: Graphics2D, data: Array[Float], dataOffset: Int, dataLength: Int) {
+      val polySize  = dataLength * 2 // / 3
+      val peakPolyX = new Array[Int](polySize)
+      val peakPolyY = new Array[Int](polySize)
+      val rmsPolyX  = new Array[Int](polySize)
+      val rmsPolyY  = new Array[Int](polySize)
 
-         val atOrig = g.getTransform
-         g.scale( 0.0625, 0.0625 )
-         g.setPaint( peakColor )
-         g.fillPolygon( peakPolyX, peakPolyY, polySize )
-         g.setPaint( rmsColor )
-         g.fillPolygon( rmsPolyX, rmsPolyY, polySize )
-         g.setTransform( atOrig )
+      var i = 0; var j = dataOffset * 3; var k = polySize - 1; while (i < dataLength) {
+        val x         = (scaleX(i) * 16).toInt
+        peakPolyX(i)  = x
+        peakPolyX(k)  = x
+        rmsPolyX(i)   = x
+        rmsPolyX(k)   = x
+        val peakP     = data(j)
+        j += 1
+        val peakN     = data(j)
+        j += 1
+        peakPolyY(i)  = (scaleY(peakP) * 16).toInt + 8 // 2
+        peakPolyY(k)  = (scaleY(peakN) * 16).toInt - 8 // 2
+        // peakC = (peakP + peakN) / 2
+        val rms       = math.sqrt(data(j)).toFloat
+        j += 1
+        rmsPolyY(i)   = (scaleY(math.min(peakP, rms)) * 16).toInt
+        rmsPolyY(k)   = (scaleY(math.max(peakN, -rms)) * 16).toInt
+        i += 1
+        k -= 1
       }
-   }
 
-   private trait ScalingImplLike extends Scaling {
+      val atOrig = g.getTransform
+      g.scale(0.0625, 0.0625)
+      g.setPaint(peakColor)
+      g.fillPolygon(peakPolyX, peakPolyY, polySize)
+      g.setPaint(rmsColor)
+      g.fillPolygon(rmsPolyX, rmsPolyY, polySize)
+      g.setTransform(atOrig)
+    }
+  }
+
+  private trait ScalingImplLike extends Scaling {
       private var srcLoVar = 0.0
       private var srcHiVar = 1.0
       private var tgtLoVar = 0.0
@@ -179,7 +180,7 @@ object WavePainter {
          invalid  = div == 0.0
          if( invalid )return
 
-         scale    = ((tgtHiVar - tgtLoVar) / div) // * 16
+         scale    = (tgtHiVar - tgtLoVar) / div // * 16
          preAdd   = -srcLoVar
          postAdd  = tgtLoVar // * 16
 
@@ -260,47 +261,34 @@ object WavePainter {
       }
    }
 
-   trait OneLayer extends WavePainter {
-      def color: Paint
-      def color_=( value: Paint ) : Unit
+  trait OneLayer extends WavePainter {
+    var color : Paint
+    var stroke: Stroke
+  }
 
-      def stroke : Stroke
-      def stroke_=( value: Stroke ) : Unit
-   }
+  trait HasPeakRMS {
+    var peakColor: Paint
+    var rmsColor : Paint
+  }
 
-   trait HasPeakRMS {
-      def peakColor: Paint
-      def peakColor_=( value: Paint ) : Unit
+  trait PeakRMS extends WavePainter with HasPeakRMS
 
-      def rmsColor: Paint
-      def rmsColor_=( value: Paint ) : Unit
-   }
+  //   trait HasZoom {
+  //      def zoomX: WavePainter.Zoom
+  //      def zoomY: WavePainter.Zoom
+  //   }
 
-   trait PeakRMS extends WavePainter with HasPeakRMS
+  trait Scaling {
+    var sourceLow : Double
+    var sourceHigh: Double
 
-//   trait HasZoom {
-//      def zoomX: WavePainter.Zoom
-//      def zoomY: WavePainter.Zoom
-//   }
+    var targetLow : Double
+    var targetHigh: Double
 
-   trait Scaling {
-      def sourceLow: Double
-      def sourceLow_=( value: Double ) : Unit
+    //      var logarithmic : Boolean
+  }
 
-      def sourceHigh: Double
-      def sourceHigh_=( value: Double ) : Unit
-
-      def targetLow: Double
-      def targetLow_=( value: Double ) : Unit
-
-      def targetHigh: Double
-      def targetHigh_=( value: Double ) : Unit
-
-//      def logarithmic : Boolean
-//      def logarithmic_=( value: Boolean ) : Unit
-   }
-
-   object Decimator {
+  object Decimator {
       def pcmToPeakRMS( factor: Int ) : Decimator = new PCMToPeakRMSDecimator( factor )
       def peakRMS(      factor: Int ) : Decimator = new PeakRMSDecimator(      factor )
       def dummy : Decimator = Dummy
