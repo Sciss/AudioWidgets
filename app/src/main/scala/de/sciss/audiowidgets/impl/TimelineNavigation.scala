@@ -2,39 +2,46 @@ package de.sciss.audiowidgets
 package impl
 
 import scala.swing.{Action, Component}
-import de.sciss.desktop.{FocusType, KeyStrokes}
+import de.sciss.desktop.{Window, FocusType, KeyStrokes}
 import de.sciss.desktop
 import javax.swing.KeyStroke
 import de.sciss.span.Span
-import java.awt.event.KeyEvent
+import java.awt.event.{InputEvent, KeyEvent}
 
 object TimelineNavigation {
   def install(model: TimelineModel.Modifiable, component: Component) {
     import KeyStrokes._
     import KeyEvent._
     import desktop.Implicits._
+    import FocusType.{Window => Focus}
 
-    component.addAction("timeline-inch1", new ActionSpanWidth(model, 2.0, ctrl  + VK_LEFT         ), FocusType.Window)
-    component.addAction("timeline-inch2", new ActionSpanWidth(model, 2.0, menu1 + VK_OPEN_BRACKET ), FocusType.Window)
-    component.addAction("timeline-dech1", new ActionSpanWidth(model, 0.5, ctrl  + VK_RIGHT        ), FocusType.Window)
-    component.addAction("timeline-dech2", new ActionSpanWidth(model, 0.5, menu1 + VK_CLOSE_BRACKET), FocusType.Window)
+    // XXX TODO: should be in `Desktop`
+    val meta2 = if (menu1.mask == InputEvent.CTRL_MASK) ctrl + shift else menu1 // META on Mac, CTRL+SHIFT on PC
+
+    // ---- zoom ----
+    component.addAction("timeline-inch1"  , new ActionSpanWidth(model, 2.0, ctrl  + VK_LEFT         ), Focus)
+    component.addAction("timeline-inch2"  , new ActionSpanWidth(model, 2.0, menu1 + VK_OPEN_BRACKET ), Focus)
+    component.addAction("timeline-dech1"  , new ActionSpanWidth(model, 0.5, ctrl  + VK_RIGHT        ), Focus)
+    component.addAction("timeline-dech2"  , new ActionSpanWidth(model, 0.5, menu1 + VK_CLOSE_BRACKET), Focus)
+
+    component.addAction("timeline-possel1", new ActionSelToPos(model, 0.0, deselect = true,  plain + VK_UP  ), Focus)
+    component.addAction("timeline-possel2", new ActionSelToPos(model, 1.0, deselect = true,  plain + VK_DOWN), Focus)
+    component.addAction("timeline-possel3", new ActionSelToPos(model, 0.0, deselect = false, alt   + VK_UP  ), Focus)
+    component.addAction("timeline-possel4", new ActionSelToPos(model, 1.0, deselect = false, alt   + VK_DOWN), Focus)
+
+    import ActionScroll._
+    component.addAction("timeline-retn"   , new ActionScroll(model, BoundsStart   , plain + VK_ENTER), Focus)
+    component.addAction("timeline-left"   , new ActionScroll(model, SelectionStart, plain + VK_LEFT ), Focus)
+    component.addAction("timeline-right"  , new ActionScroll(model, SelectionStop , plain + VK_RIGHT), Focus)
+    component.addAction("timeline-fit"    , new ActionScroll(model, FitToSelection, alt   + VK_F    ), Focus)
+    component.addAction("timeline-entire1", new ActionScroll(model, EntireBounds  , alt   + VK_A    ), Focus)
+    component.addAction("timeline-entire2", new ActionScroll(model, EntireBounds  , meta2 + VK_LEFT ), Focus)
+
+    import ActionSelect._
+    component.addAction("timeline-seltobeg", new ActionSelect(model, ExtendToBoundsStart, shift + VK_ENTER), Focus)
+    component.addAction("timeline-seltoend", new ActionSelect(model, ExtendToBoundsStop , shift + alt + VK_ENTER), Focus)
+    component.addAction("timeline-selall"  , new ActionSelect(model, All, menu1 + VK_A), FocusType.Default)
   }
-
-  //  import ActionScroll._
-  //  addAction("retn",     new ActionScroll(SCROLL_SESSION_START,    stroke(VK_ENTER,  0       )))
-  //  addAction("left",     new ActionScroll(SCROLL_SELECTION_START,  stroke(VK_LEFT,   0       )))
-  //  addAction("right",    new ActionScroll(SCROLL_SELECTION_STOP,   stroke(VK_RIGHT,  0       )))
-  //  addAction("fit",      new ActionScroll(SCROLL_FIT_TO_SELECTION, stroke(VK_F,      ALT_MASK)))
-  //  addAction("entire1",  new ActionScroll(SCROLL_ENTIRE_SESSION,   stroke(VK_A,      ALT_MASK)))
-  //  addAction("entire2",  new ActionScroll(SCROLL_ENTIRE_SESSION,   stroke(VK_LEFT,   meta2   )))
-  //  import ActionSelect._
-  //  addAction("seltobeg", new ActionSelect(SELECT_TO_SESSION_START, stroke(VK_ENTER, SHIFT_MASK           )))
-  //  addAction("seltoend", new ActionSelect(SELECT_TO_SESSION_END,   stroke(VK_ENTER, SHIFT_MASK | ALT_MASK)))
-  //
-  //  addAction("posselbegc", new ActionSelToPos(0.0, deselect = true,  stroke(VK_UP,   0       )))
-  //  addAction("posselendc", new ActionSelToPos(1.0, deselect = true,  stroke(VK_DOWN, 0       )))
-  //  addAction("posselbeg",  new ActionSelToPos(0.0, deselect = false, stroke(VK_UP,   ALT_MASK)))
-  //  addAction("posselend",  new ActionSelToPos(1.0, deselect = false, stroke(VK_DOWN, ALT_MASK)))
 
   private class ActionSpanWidth(model: TimelineModel.Modifiable, factor: Double, stroke: KeyStroke)
     extends Action(s"Span Width $factor") {
@@ -81,5 +88,128 @@ object TimelineNavigation {
     }
   }
 
-  // class actionSpanWidthClass
+  private class ActionSelToPos(model: TimelineModel.Modifiable, weight: Double, deselect: Boolean, stroke: KeyStroke)
+    extends Action("Extends Selection to Position") {
+
+    accelerator = Some(stroke)
+
+    def apply() {
+      model.selection match {
+        case sel @ Span(selStart, _) =>
+          if (deselect) model.selection = Span.Void
+          val pos = (selStart + sel.length * weight + 0.5).toLong
+          model.position = pos
+
+        case _ =>
+      }
+    }
+  }
+
+  private object ActionScroll {
+    sealed trait Mode
+    case object BoundsStart     extends Mode
+    sealed trait NotBoundsStart extends Mode
+    case object SelectionStart  extends NotBoundsStart
+    case object SelectionStop   extends NotBoundsStart
+    case object FitToSelection  extends NotBoundsStart
+    case object EntireBounds    extends NotBoundsStart
+   }
+
+  private class ActionScroll(model: TimelineModel.Modifiable, mode: ActionScroll.Mode, stroke: KeyStroke)
+    extends Action("Scroll") {
+
+    accelerator = Some(stroke)
+
+    import ActionScroll._
+
+    def apply() {
+      val pos       = model.position
+      val visiSpan  = model.visible
+      val wholeSpan = model.bounds
+
+      mode match {
+        case BoundsStart =>
+        //             if( transport.isRunning ) transport.stop
+        val posNotZero = pos != wholeSpan.start
+        val zeroNotVisi = !visiSpan.contains(wholeSpan.start)
+        if (posNotZero || zeroNotVisi) {
+          if (posNotZero) model.position = wholeSpan.start
+          if (zeroNotVisi) {
+            model.visible = Span(wholeSpan.start, wholeSpan.start + visiSpan.length)
+          }
+        }
+
+        case mode2: NotBoundsStart =>
+          val selSpan = model.selection
+          val newSpan = mode2 match {
+            case SelectionStart =>
+              val selSpanStart = selSpan match {
+                case Span.HasStart(s) => s
+                case _                => pos
+              }
+              val start = math.max(wholeSpan.start, selSpanStart - (visiSpan.length >>
+                (if (visiSpan.contains(selSpanStart)) 1 else 3)))
+              val stop = math.min(wholeSpan.stop, start + visiSpan.length)
+              Span(start, stop)
+
+            case SelectionStop =>
+              val selSpanStop = selSpan match {
+                case Span.HasStop(s)  => s
+                case _                => pos
+              }
+              val stop = math.min(wholeSpan.stop, selSpanStop + (visiSpan.length >>
+                (if (visiSpan.contains(selSpanStop)) 1 else 3)))
+              val start = math.max(wholeSpan.start, stop - visiSpan.length)
+              Span(start, stop)
+
+            case FitToSelection => selSpan
+            case EntireBounds   => wholeSpan
+          }
+          newSpan match {
+            case sp @ Span(_, _) if sp.nonEmpty && sp != visiSpan =>
+              model.visible = sp
+            case _ =>
+          }
+      }
+    }
+  }
+
+  private object ActionSelect {
+    sealed trait Mode
+    case object ExtendToBoundsStart extends Mode
+    case object ExtendToBoundsStop  extends Mode
+    case object All                 extends Mode
+    case object FlipBackward        extends Mode
+    case object FlipForward         extends Mode
+   }
+
+ private class ActionSelect(model: TimelineModel.Modifiable, mode: ActionSelect.Mode, stroke: KeyStroke = null)
+   extends Action("Select") {
+
+   accelerator = Option(stroke)
+
+   import ActionSelect._
+
+   def apply() {
+     val pos      = model.position
+     val selSpan  = model.selection match {
+       case sp @ Span(_, _) => sp
+       case _               => Span(pos, pos)
+     }
+
+     val wholeSpan  = model.bounds
+     val newSpan    = mode match {
+       case ExtendToBoundsStart => Span(wholeSpan.start, selSpan.stop)
+       case ExtendToBoundsStop  => Span(selSpan.start, wholeSpan.stop)
+       case All                 => wholeSpan
+       case FlipBackward =>
+         val delta = -math.min(selSpan.start - wholeSpan.start, selSpan.length)
+         selSpan.shift(delta)
+       case FlipForward =>
+         val delta = math.min(wholeSpan.stop - selSpan.stop, selSpan.length)
+         selSpan.shift(delta)
+     }
+     if (newSpan != selSpan) model.selection = newSpan
+   }
+ }
 }
