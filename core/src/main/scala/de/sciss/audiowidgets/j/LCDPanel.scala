@@ -51,7 +51,7 @@ class LCDPanel extends JPanel {
   private final var recentHeight      = -1
   private final val in                = new Insets(0, 0, 0, 0)
   private final val rClip             = new Rectangle()
-  private final var gradInner: LinearGradientPaint = null
+  private final var gradInner : LinearGradientPaint = null
   private final var gradOuterL: LinearGradientPaint = null
   private final var gradOuterR: LinearGradientPaint = null
   private final var gradInnerL: LinearGradientPaint = null
@@ -76,10 +76,10 @@ class LCDPanel extends JPanel {
   override def getInsets: Insets = getInsets(new Insets(0, 0, 0, 0))
   override def getInsets(insets: Insets): Insets = {
     super.getInsets(insets)
-    insets.top += inV
-    insets.left += inH
+    insets.top    += inV
+    insets.left   += inH
     insets.bottom += inV
-    insets.right += inH
+    insets.right  += inH
     insets
   }
 

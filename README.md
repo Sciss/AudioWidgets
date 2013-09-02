@@ -18,7 +18,7 @@ To use the library in your project:
     "de.sciss" %% "audiowidgets-swing" % v
     "de.sciss" %% "audiowidgets-app"   % v
 
-The current stable version `v` is `"1.3.+"`
+The current stable version `v` is `"1.3.1+"`
 
 To view a demo of the widgets from the sbt console:
 
@@ -37,5 +37,6 @@ The following components are available:
  - `PeakMeter` -- A dual peak and RMS meter suitable for audio signals
  - `Transport` -- A tool bar for transport controls
  - `WavePainter` -- A painter class for waveforms, along with sub types for multi resolution display
+ - `DualRangeSlider` -- A QuickTime Player style slider combining single value and a range thumb
 
 The API docs are currently the only source of documentation (`sbt doc`).

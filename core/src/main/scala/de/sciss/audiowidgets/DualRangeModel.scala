@@ -1,3 +1,28 @@
+/*
+ *  DualRangeModel.java
+ *  (AudioWidgets)
+ *
+ *  Copyright (c) 2011-2013 Hanns Holger Rutz. All rights reserved.
+ *
+ *	This software is free software; you can redistribute it and/or
+ *	modify it under the terms of the GNU General Public License
+ *	as published by the Free Software Foundation; either
+ *	version 2, june 1991 of the License, or (at your option) any later version.
+ *
+ *	This software is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ *	General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public
+ *	License (gpl.txt) along with this software; if not, write to the Free Software
+ *	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ *	For further information, please contact Hanns Holger Rutz at
+ *	contact@sciss.de
+ */
+
 package de.sciss.audiowidgets
 
 import javax.swing.event.{ChangeEvent, ChangeListener}
@@ -44,8 +69,10 @@ object DualRangeModel {
     def range = _range
 
     def range_=(value: (Int, Int)): Unit = {
-      val lo    = math.max(_minimum, math.min(_maximum, value._1))
-      val hi    = math.max(_minimum, math.min(_maximum, math.max(lo, value._2)))
+      val lo0   = math.min(value._1, value._2)
+      val hi0   = math.max(value._1, value._2)
+      val lo    = math.max(_minimum, math.min(_maximum, lo0))
+      val hi    = math.max(_minimum, math.min(_maximum, hi0))
       val clip  = (lo, hi)
       if (_range != clip) {
         _range = clip
