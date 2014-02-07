@@ -2,21 +2,9 @@
  *  LCDPanel.java
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2013 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2014 Hanns Holger Rutz. All rights reserved.
  *
- *	This software is free software; you can redistribute it and/or
- *	modify it under the terms of the GNU General Public License
- *	as published by the Free Software Foundation; either
- *	version 2, june 1991 of the License, or (at your option) any later version.
- *
- *	This software is distributed in the hope that it will be useful,
- *	but WITHOUT ANY WARRANTY; without even the implied warranty of
- *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *	General Public License for more details.
- *
- *	You should have received a copy of the GNU General Public
- *	License (gpl.txt) along with this software; if not, write to the Free Software
- *	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *	This software is published under the GNU General Public License v2+
  *
  *
  *	For further information, please contact Hanns Holger Rutz at
@@ -64,7 +52,7 @@ class LCDPanel extends JPanel {
   recalcColors()
 
   addPropertyChangeListener("background", new PropertyChangeListener {
-    def propertyChange(e: PropertyChangeEvent) {
+    def propertyChange(e: PropertyChangeEvent): Unit = {
       recalcColors()
       repaint()
     }
@@ -92,7 +80,7 @@ class LCDPanel extends JPanel {
   //   private def changeAlpha( c: Color, alpha: Float ) =
   //      new Color( c.getRed, c.getGreen, c.getBlue, (alpha * 255).toInt )
 
-  private def recalcColors() {
+  private def recalcColors(): Unit = {
     val c   = getBackground
     val arr = Color.RGBtoHSB(c.getRed, c.getGreen, c.getBlue, null)
     val hue = arr(0)
@@ -148,7 +136,7 @@ class LCDPanel extends JPanel {
     gradInnerRColr(1) = mixColor2(0.003f, 0.02f, -0.025f)
   }
 
-  private def recalcGradients(h: Int) {
+  private def recalcGradients(h: Int): Unit = {
     val hi            = math.max(1, h - 4)
     val fi1           = math.min(0.499f, 1f / hi)
     val fi3           = math.min(0.999f, 0.5f + 1f / hi)
@@ -169,7 +157,7 @@ class LCDPanel extends JPanel {
     gradInnerR        = new LinearGradientPaint(0f, 1f, 0f, (1 + hi2).toFloat, gradInnerRFrac, gradInnerRColr)
   }
 
-  override def paintComponent(g: Graphics) {
+  override def paintComponent(g: Graphics): Unit = {
     getInsets(in)
     in.top    -= inV
     in.left   -= inH

@@ -2,21 +2,9 @@
  *  Axis.scala
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2013 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2014 Hanns Holger Rutz. All rights reserved.
  *
- *	This software is free software; you can redistribute it and/or
- *	modify it under the terms of the GNU General Public License
- *	as published by the Free Software Foundation; either
- *	version 2, june 1991 of the License, or (at your option) any later version.
- *
- *	This software is distributed in the hope that it will be useful,
- *	but WITHOUT ANY WARRANTY; without even the implied warranty of
- *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *	General Public License for more details.
- *
- *	You should have received a copy of the GNU General Public
- *	License (gpl.txt) along with this software; if not, write to the Free Software
- *	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *	This software is published under the GNU General Public License v2+
  *
  *
  *	For further information, please contact Hanns Holger Rutz at
@@ -49,9 +37,10 @@ object Axis {
   private final val DECIMAL_RASTER  = Array(100000000L, 10000000L, 1000000L, 100000L, 10000L, 1000L, 100L, 10L, 1L)
   private final val INTEGERS_RASTER = Array(100000000L, 10000000L, 1000000L, 100000L, 10000L, 1000L)
   private final val TIME_RASTER     = Array( 60000000L,  6000000L,  600000L,  60000L, 10000L, 1000L, 100L, 10L, 1L)
-  private /* final */ val MIN_LABSPC = 16 // TODO: make final in binary incompatible next version
+  private final val MinLabelSpace   = 16
 
-  private final val pntBarGradientPixels = Array(0xFFB8B8B8, 0xFFC0C0C0, 0xFFC8C8C8, 0xFFD3D3D3,
+  private final val pntBarGradientPixels = Array(
+    0xFFB8B8B8, 0xFFC0C0C0, 0xFFC8C8C8, 0xFFD3D3D3,
     0xFFDBDBDB, 0xFFE4E4E4, 0xFFEBEBEB, 0xFFF1F1F1,
     0xFFF6F6F6, 0xFFFAFAFA, 0xFFFBFBFB, 0xFFFCFCFC,
     0xFFF9F9F9, 0xFFF4F4F4, 0xFFEFEFEF)
@@ -59,12 +48,10 @@ object Axis {
 
   private class Label(val name: String, val pos: Int)
 
-  //   sealed trait Format
-  //   object Format {
-  //      case object Decimal extends Format
-  //      case object Integer extends Format
-  //      final case class Time( hours: Boolean = false, millis: Boolean = true ) extends Format
-  //   }
+  lazy val DefaultFont: Font = {
+    val f = UIManager.getFont("Slider.font", Locale.US)
+    if (f != null) f.deriveFont(math.min(f.getSize2D, 9.5f)) else new Font("SansSerif", Font.PLAIN, 9)
+  }
 }
 
 class Axis(orient: Int = SwingConstants.HORIZONTAL)
@@ -92,7 +79,7 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
   private var spcMax = 0.0 // 1.0
 
   private var formatVar: AxisFormat = AxisFormat.Decimal
-  private var flMirroir     = false
+  private var flMirror      = false
   private var flTimeFormat  = false
   private var flTimeHours   = false
   private var flTimeMillis  = false
@@ -104,7 +91,7 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
   private var img: BufferedImage = null
   private var pntBackground: TexturePaint = null
 
-  private def orientUpdated() {
+  private def orientUpdated(): Unit = {
     (_orient: @switch) match {
       case HORIZONTAL =>
         setMaximumSize  (new Dimension(getMaximumSize.width, barExtent))
@@ -132,29 +119,24 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
   orientUpdated()
   flagsUpdated()
 
-  setFont({
-    val f = UIManager.getFont("Slider.font", Locale.US)
-    if (f != null) f.deriveFont(math.min(f.getSize2D, 9.5f)) else new Font("SansSerif", Font.PLAIN, 9)
-  })
+  setFont(Axis.DefaultFont)
   setOpaque(true)
 
   //   def viewport : Option[ JViewport ] = viewPortVar
-  //   def viewport_=( v: JViewport ) { viewPortVar = v }
+  //   def viewport_=( v: JViewport ): Unit = viewPortVar = v
 
   //   def flags = flagsVar
-  //	def flags_=( newFlags: Int ) {
+  //	def flags_=( newFlags: Int ): Unit = {
   //		if( flagsVar == newFlags ) return
   //        flagsVar = newFlags
   //        flagsUpdated()
   //    }
 
   def orientation: Int = _orient
-  def orientation_=(orient: Int) {
-    if (_orient != orient) {
-      if (orient != HORIZONTAL && orient != VERTICAL) throw new IllegalArgumentException(orient.toString)
-      _orient = orient
-      orientUpdated()
-    }
+  def orientation_=(orient: Int): Unit = if (_orient != orient) {
+    if (orient != HORIZONTAL && orient != VERTICAL) throw new IllegalArgumentException(orient.toString)
+    _orient = orient
+    orientUpdated()
   }
 
   /**
@@ -163,12 +145,10 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
    * corresponds to the left edge, for vertical orient
    * the maximum corresponds to the bottom edge
    */
-  def inverted: Boolean = flMirroir
-  def inverted_=(b: Boolean) {
-    if (flMirroir != b) {
-      flMirroir = b
-      flagsUpdated()
-    }
+  def inverted: Boolean = flMirror
+  def inverted_=(b: Boolean): Unit = if (flMirror != b) {
+    flMirror = b
+    flagsUpdated()
   }
 
   /*
@@ -176,39 +156,35 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
    *		  and hence subdivision are made according to the bounds
    */
   def fixedBounds: Boolean = flFixedBounds
-  def fixedBounds_=(b: Boolean) {
-    if (flFixedBounds != b) {
-      flFixedBounds = b
-      flagsUpdated()
-    }
+  def fixedBounds_=(b: Boolean): Unit = if (flFixedBounds != b) {
+    flFixedBounds = b
+    flagsUpdated()
   }
 
   def format: AxisFormat = formatVar
-  def format_=(f: AxisFormat) {
-    if (formatVar != f) {
-      formatVar = f
-      f match {
-        case AxisFormat.Integer =>
-          flIntegers    = true
-          flTimeFormat  = false
-        case AxisFormat.Time(hours, millis) =>
-          flIntegers    = false
-          flTimeFormat  = true
-          flTimeHours   = hours
-          flTimeMillis  = millis
-        case AxisFormat.Decimal =>
-          flIntegers    = false
-          flTimeFormat  = false
-      }
-      flagsUpdated()
+  def format_=(f: AxisFormat): Unit = if (formatVar != f) {
+    formatVar = f
+    f match {
+      case AxisFormat.Integer =>
+        flIntegers    = true
+        flTimeFormat  = false
+      case AxisFormat.Time(hours, millis) =>
+        flIntegers    = false
+        flTimeFormat  = true
+        flTimeHours   = hours
+        flTimeMillis  = millis
+      case AxisFormat.Decimal =>
+        flIntegers    = false
+        flTimeFormat  = false
     }
+    flagsUpdated()
   }
 
   //   /**
   //    *	Flag: Requests the labels to be formatted as MIN:SEC.MILLIS
   //    */
   //   def timeFormat : Boolean = flTimeFormat
-  //   def timeFormat_=( b: Boolean ) {
+  //   def timeFormat_=( b: Boolean ): Unit = {
   //      if( flTimeFormat != b ) {
   //         flTimeFormat = b
   //         flagsUpdated()
@@ -219,7 +195,7 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
   //	 *	Flag: Requests that the label values be integers
   //	 */
   //   def intFormat : Boolean = flIntegers
-  //   def intFormat_=( b: Boolean ) {
+  //   def intFormat_=( b: Boolean ): Unit = {
   //      if( flIntegers != b ) {
   //         flIntegers = b
   //         if( b ) flTimeFormat = false
@@ -227,7 +203,7 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
   //      }
   //   }
 
-  private def flagsUpdated() {
+  private def flagsUpdated(): Unit = {
     //	   flMirroir		= (flags & MIRROIR) != 0
     //		flTimeFormat	= (flags & TIMEFORMAT) != 0
     //		flIntegers		= (flags & INTEGERS) != 0
@@ -244,22 +220,18 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
   }
 
   def minimum: Double = spcMin
-  def minimum_=(value: Double) {
-    if (value != spcMin) {
-      spcMin = value
-      triggerRedisplay()
-    }
+  def minimum_=(value: Double): Unit = if (value != spcMin) {
+    spcMin = value
+    triggerRedisplay()
   }
 
   def maximum: Double = spcMax
-  def maximum_=(value: Double) {
-    if (value != spcMax) {
-      spcMax = value
-      triggerRedisplay()
-    }
+  def maximum_=(value: Double): Unit =if (value != spcMax) {
+    spcMax = value
+    triggerRedisplay()
   }
 
-  //   protected def setSpaceNoRepaint( newSpace: VectorSpace ) {
+  //   protected def setSpaceNoRepaint( newSpace: VectorSpace ): Unit = {
   //      spaceVar = newSpace
   //		doRecalc = true
   //   }
@@ -284,9 +256,9 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
   //   }
 
   //   // subclasses might want to use this
-  //   protected def viewRectChanged( r: Rectangle ) {}
+  //   protected def viewRectChanged( r: Rectangle ) = ()
 
-  override def paintComponent(g: Graphics) {
+  override def paintComponent(g: Graphics): Unit = {
     super.paintComponent(g)
 
     val g2        = g.asInstanceOf[Graphics2D]
@@ -334,10 +306,8 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, aaOrig)
   }
 
-  private def recalcTransforms() {
-    trnsVertical.setToRotation(-math.Pi / 2, recentHeight.toDouble / 2,
-      recentHeight.toDouble / 2)
-  }
+  private def recalcTransforms(): Unit =
+    trnsVertical.setToRotation(-math.Pi / 2, recentHeight.toDouble / 2, recentHeight.toDouble / 2)
 
   private def calcStringWidth(decimals: Int, fntMetr: FontMetrics, value: Double): Int = {
     val s = format.format(value, decimals = decimals, pad = 0)
@@ -345,10 +315,10 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
   }
 
   private def calcMinLabSpc(decimals: Int, fntMetr: FontMetrics, mini: Double, maxi: Double): Int = {
-    math.max(calcStringWidth(decimals, fntMetr, mini), calcStringWidth(decimals, fntMetr, maxi)) + MIN_LABSPC
+    math.max(calcStringWidth(decimals, fntMetr, mini), calcStringWidth(decimals, fntMetr, maxi)) + MinLabelSpace
   }
 
-  private def recalcLabels(g: Graphics) {
+  private def recalcLabels(g: Graphics): Unit = {
     import math._
 
     val fntMetr = g.getFontMetrics
@@ -486,7 +456,7 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
         if (decimals1 > 0) {
           // have to recheck label width!
           minLbDist = max(calcStringWidth(decimals1, fntMetr, spcMin),
-                          calcStringWidth(decimals1, fntMetr, spcMax)) + MIN_LABSPC
+                          calcStringWidth(decimals1, fntMetr, spcMax)) + MinLabelSpace
           numLabels = max(1, width / minLbDist)
           valueStep = ceil((maxK - minK) / numLabels)
         }
@@ -514,7 +484,7 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
 
     if (labels.length != numLabels) labels = new Array[Label](numLabels)
 
-    if (flMirroir) {
+    if (flMirror) {
       pixelOff = width - pixelOff
       tickStep = -tickStep
     }
@@ -549,7 +519,7 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
 
   // -------------- Disposable interface --------------
 
-  def dispose() {
+  def dispose(): Unit = {
     labels = null
     shpTicks.reset()
     img.flush()

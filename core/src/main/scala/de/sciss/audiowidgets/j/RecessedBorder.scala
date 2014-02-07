@@ -2,21 +2,9 @@
  *  RecessedBorder.java
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2013 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2014 Hanns Holger Rutz. All rights reserved.
  *
- *	This software is free software; you can redistribute it and/or
- *	modify it under the terms of the GNU General Public License
- *	as published by the Free Software Foundation; either
- *	version 2, june 1991 of the License, or (at your option) any later version.
- *
- *	This software is distributed in the hope that it will be useful,
- *	but WITHOUT ANY WARRANTY; without even the implied warranty of
- *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *	General Public License for more details.
- *
- *	You should have received a copy of the GNU General Public
- *	License (gpl.txt) along with this software; if not, write to the Free Software
- *	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *	This software is published under the GNU General Public License v2+
  *
  *
  *	For further information, please contact Hanns Holger Rutz at
@@ -30,70 +18,75 @@ import java.awt.{RenderingHints, BasicStroke, Color, Component, Graphics, Graphi
 import java.awt.geom.{Rectangle2D, Area, RoundRectangle2D}
 
 object RecessedBorder {
-   private /* final */ val diameter = 4   // TODO: make final in binary incompatible next version
-   private final val colrDark		= new Color( 0x00, 0x00, 0x00, 0x88 )
-   private final val colrLight	= new Color( 0xFF, 0xFF, 0xFF, 0xD8 )
-   private final val strkOutline	= new BasicStroke( 1.0f )
-   private final val strkInline	= new BasicStroke( 2.0f )
-   private final val insets      = new Insets( 3, 3, 4, 4 )
+  private final val diameter      = 4
+  private final val colorDark     = new Color(0x00, 0x00, 0x00, 0x88)
+  private final val colorLight    = new Color(0xFF, 0xFF, 0xFF, 0xD8)
+  private final val strokeOutline = new BasicStroke(1.0f)
+  private final val strokeInline  = new BasicStroke(2.0f)
+  private final val insets        = new Insets(3, 3, 4, 4)
 }
-class RecessedBorder( c: Color = Color.black ) extends AbstractBorder {
-   import RecessedBorder._
 
-	private final var colorVar          = c
-	private final var shpBg: Shape      = null
-   private final var shpInline: Shape  = null
-   private final var shpOutline: Shape = null
+class RecessedBorder(c: Color = Color.black)
+  extends AbstractBorder {
 
-	private final var recentWidth		= -1
-	private final var recentHeight	= -1
+  import RecessedBorder._
 
-	def color_=( value: Color ) {
-      colorVar = value
-   }
-   def color : Color = colorVar
+  private final var colorVar = c
+  private final var shpBg     : Shape = null
+  private final var shpInline : Shape = null
+  private final var shpOutline: Shape = null
 
-	override def getBorderInsets( c: Component ) = new Insets( insets.top, insets.left, insets.bottom, insets.right )
+  private final var recentWidth  = -1
+  private final var recentHeight = -1
 
-	override def getBorderInsets( c: Component, i: Insets ) : Insets = {
-		i.top	   = insets.top
-		i.left	= insets.left
-		i.bottom	= insets.bottom
-		i.right	= insets.right
-		i
-	}
+  def color_=(value: Color): Unit = colorVar = value
 
-	override def paintBorder( c: Component, g: Graphics, x: Int, y: Int, width: Int, height: Int ) {
-		val g2      = g.asInstanceOf[ Graphics2D ]
-		val atOrig  = g2.getTransform
+  def color: Color = colorVar
 
-		g2.translate( x, y )
+  override def getBorderInsets(c: Component) = new Insets(insets.top, insets.left, insets.bottom, insets.right)
 
-		if( (width != recentWidth) || (height != recentHeight) ) {
-			val r	   = new RoundRectangle2D.Float( 1.0f, 0.5f, width - 2f, height - 1.5f, diameter, diameter )
-			val r2   = new RoundRectangle2D.Float( 0.5f, 0, width - 1.5f, height - 1, diameter, diameter )
-			val a    = new Area( r )
-			a.subtract( new Area( new Rectangle2D.Float( insets.left, insets.top,
-				width - insets.left - insets.right, height - insets.top - insets.bottom )))
+  override def getBorderInsets(c: Component, i: Insets): Insets = {
+    i.top    = insets.top
+    i.left   = insets.left
+    i.bottom = insets.bottom
+    i.right  = insets.right
+    i
+  }
 
-			shpOutline		= strkOutline.createStrokedShape( r2 )
-			shpInline		= strkInline.createStrokedShape( r2 )
-			shpBg			   = a
+  override def paintBorder(c: Component, g: Graphics, x: Int, y: Int, width: Int, height: Int): Unit = {
+    val g2      = g.asInstanceOf[Graphics2D]
+    val atOrig  = g2.getTransform
 
-			recentWidth		= width
-			recentHeight	= height
-		}
+    g2.translate(x, y)
 
-		g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON )
-		g2.setPaint( colrDark )
-		g2.fill( shpOutline )
-		g2.translate( 1, 1 )
-		g2.setPaint( colrLight )
-		g2.fill( shpInline )
-		g2.translate( -1, -1 )
-		g2.setPaint( colorVar )
-		g2.fill( shpBg )
+    if ((width != recentWidth) || (height != recentHeight)) {
+      val r        = new RoundRectangle2D.Float(1.0f, 0.5f, width - 2.0f, height - 1.5f, diameter, diameter)
+      val r2       = new RoundRectangle2D.Float(0.5f, 0.0f, width - 1.5f, height - 1.0f, diameter, diameter)
+      val a        = new Area(r)
+      a.subtract(new Area(new Rectangle2D.Float(
+        insets.left,
+        insets.top,
+        width - insets.left - insets.right,
+        height - insets.top - insets.bottom)))
 
-		g2.setTransform( atOrig )
-	}
+      shpOutline   = strokeOutline.createStrokedShape(r2)
+      shpInline    = strokeInline .createStrokedShape(r2)
+      shpBg        = a
+
+      recentWidth  = width
+      recentHeight = height
+    }
+
+    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+    g2.setPaint(colorDark)
+    g2.fill(shpOutline)
+    g2.translate(1, 1)
+    g2.setPaint(colorLight)
+    g2.fill(shpInline)
+    g2.translate(-1, -1)
+    g2.setPaint(colorVar)
+    g2.fill(shpBg)
+
+    g2.setTransform(atOrig)
+  }
 }

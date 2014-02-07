@@ -18,7 +18,6 @@ object App extends SwingApplicationImpl("AudioWidgets") {
   override protected def init() {
     new WindowImpl {
       def handler = App.windowHandler
-      def style   = Window.Regular
 
       // println("CREATE WIN")
       val canvas = new TimelineCanvasImpl {

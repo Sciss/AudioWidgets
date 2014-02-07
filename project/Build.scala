@@ -5,10 +5,16 @@ import sbtbuildinfo.Plugin._
 object Build extends sbt.Build {
   def baseID = "audiowidgets"
 
+  lazy val desktopVersion = "0.4.+"
+  lazy val spanVersion    = "1.2.+"
+
   lazy val audiowidgets: Project = Project(
     id        = baseID,
     base      = file("."),
-    aggregate = Seq(core, swing, app)
+    aggregate = Seq(core, swing, app),
+    settings  = Project.defaultSettings ++ Seq(
+      packagedArtifacts := Map.empty           // prevent publishing anything!
+    )
   )
 
   lazy val core = Project(
@@ -47,10 +53,8 @@ object Build extends sbt.Build {
     dependencies  = Seq(swing),
     settings      = Project.defaultSettings ++ Seq(
       libraryDependencies ++= Seq(
-        "de.sciss" %% "desktop"   % "0.3.2+",
-        "de.sciss" %% "model"     % "0.3.1+",
-        "de.sciss" %% "span"      % "1.2.+",
-        "de.sciss" %% "swingplus" % "0.0.1+"      // until included in `desktop`
+        "de.sciss" %% "desktop"   % desktopVersion,
+        "de.sciss" %% "span"      % spanVersion
       )
     )
   )

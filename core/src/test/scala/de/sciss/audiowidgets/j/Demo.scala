@@ -2,10 +2,9 @@ package de.sciss.audiowidgets
 package j
 
 import java.awt.event.{WindowEvent, WindowAdapter, ActionEvent, ActionListener}
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 import javax.swing.{JComponent, Box, JLabel, BorderFactory, JFrame, JPanel, Timer, WindowConstants}
-import java.awt.{Font, Color, GridLayout, EventQueue, BorderLayout}
-import java.awt.geom.AffineTransform
+import java.awt.{Color, GridLayout, EventQueue, BorderLayout}
 
 object Demo extends App with Runnable {
   EventQueue.invokeLater(this)
@@ -19,11 +18,11 @@ object Demo extends App with Runnable {
 
     val m = new PeakMeter()
     m.numChannels = 1
-    m.hasCaption = true
+    m.caption = true
     m.borderVisible = true
 
     import LCDColors._
-    val lcdColors = IndexedSeq(
+    val lcdColors = Vec(
       (grayFg,  new Color(0, 0, 0, 0)),
       (blueFg,  blueBg),
       (grayFg,  grayBg),
@@ -84,7 +83,7 @@ object Demo extends App with Runnable {
       def actionPerformed(e: ActionEvent) {
         peak  = math.max(0f, math.min(1f, peak + math.pow(rnd.nextFloat() * 0.5, 2).toFloat * (if (rnd.nextBoolean()) 1 else -1)))
         rms   = math.max(0f, math.min(peak, rms * 0.98f + (rnd.nextFloat() * 0.02f * (if (rnd.nextBoolean()) 1 else -1))))
-        m.update(IIdxSeq(peak, rms))
+        m.update(Vec(peak, rms))
       }
     })
     val t2 = new Timer(1000, new ActionListener {

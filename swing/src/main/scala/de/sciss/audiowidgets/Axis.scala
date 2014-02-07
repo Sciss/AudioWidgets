@@ -2,21 +2,9 @@
  *  Axis.scala
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2013 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2014 Hanns Holger Rutz. All rights reserved.
  *
- *	This software is free software; you can redistribute it and/or
- *	modify it under the terms of the GNU General Public License
- *	as published by the Free Software Foundation; either
- *	version 2, june 1991 of the License, or (at your option) any later version.
- *
- *	This software is distributed in the hope that it will be useful,
- *	but WITHOUT ANY WARRANTY; without even the implied warranty of
- *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *	General Public License for more details.
- *
- *	You should have received a copy of the GNU General Public
- *	License (gpl.txt) along with this software; if not, write to the Free Software
- *	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *	This software is published under the GNU General Public License v2+
  *
  *
  *	For further information, please contact Hanns Holger Rutz at
@@ -26,36 +14,29 @@
 package de.sciss.audiowidgets
 
 import j.{Axis => JAxis}
-import scala.swing.{Orientation, Component}
+import scala.swing.{Font, Orientation, Component}
 
+object Axis {
+  def DefaultFont: Font = JAxis.DefaultFont
+}
 class Axis(orientation0: Orientation.Value = Orientation.Horizontal) extends Component with AxisLike {
   override lazy val peer: JAxis = new JAxis(orientation0.id) with SuperMixin
 
-  def orientation = Orientation(peer.orientation)
-  def orientation_=(value: Orientation.Value) { peer.orientation = value.id }
+  def orientation        : Orientation.Value        = Orientation(peer.orientation)
+  def orientation_=(value: Orientation.Value): Unit = peer.orientation = value.id
 
-  def fixedBounds = peer.fixedBounds
-  def fixedBounds_=(b: Boolean) {
-    peer.fixedBounds = b
-  }
+  def fixedBounds        : Boolean                  = peer.fixedBounds
+  def fixedBounds_=(b    : Boolean          ): Unit = peer.fixedBounds = b
 
-  def format: AxisFormat = peer.format
-  def format_=(f: AxisFormat) {
-    peer.format = f
-  }
+  def format             : AxisFormat               = peer.format
+  def format_=     (f    : AxisFormat       ): Unit = peer.format = f
 
-  def inverted = peer.inverted
-  def inverted_=(b: Boolean) {
-    peer.inverted = b
-  }
+  def inverted           : Boolean                  = peer.inverted
+  def inverted_=   (b    : Boolean          ): Unit = peer.inverted = b
 
-  def maximum = peer.maximum
-  def maximum_=(value: Double) {
-    peer.maximum = value
-  }
+  def maximum            : Double                   = peer.maximum
+  def maximum_=    (value: Double           ): Unit = peer.maximum = value
 
-  def minimum = peer.minimum
-  def minimum_=(value: Double) {
-    peer.minimum = value
-  }
+  def minimum            : Double                   = peer.minimum
+  def minimum_=    (value: Double           ): Unit = peer.minimum = value
 }

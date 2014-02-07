@@ -2,21 +2,9 @@
  *  Transport.java
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2013 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2014 Hanns Holger Rutz. All rights reserved.
  *
- *	This software is free software; you can redistribute it and/or
- *	modify it under the terms of the GNU General Public License
- *	as published by the Free Software Foundation; either
- *	version 2, june 1991 of the License, or (at your option) any later version.
- *
- *	This software is distributed in the hope that it will be useful,
- *	but WITHOUT ANY WARRANTY; without even the implied warranty of
- *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *	General Public License for more details.
- *
- *	You should have received a copy of the GNU General Public
- *	License (gpl.txt) along with this software; if not, write to the Free Software
- *	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *	This software is published under the GNU General Public License v2+
  *
  *
  *	For further information, please contact Hanns Holger Rutz at
@@ -29,7 +17,7 @@ import java.awt.{RenderingHints, Graphics, Component, Graphics2D, BasicStroke, S
 import scala.Array
 import java.awt.geom.{RoundRectangle2D, AffineTransform, Ellipse2D, Area, Rectangle2D, GeneralPath}
 import javax.swing.{AbstractAction, Icon, JComponent, JButton, AbstractButton, BoxLayout, Box}
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 import java.awt.event.ActionEvent
 
 trait TransportCompanion {
@@ -78,7 +66,7 @@ trait TransportCompanion {
     def getIconWidth  = math.ceil(24 * scale).toInt
     def getIconHeight = math.ceil(22 * scale).toInt
 
-    def paintIcon(c: Component, g: Graphics, x: Int, y: Int) {
+    def paintIcon(c: Component, g: Graphics, x: Int, y: Int): Unit = {
       val g2 = g.asInstanceOf[Graphics2D]
       g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING  , RenderingHints.VALUE_ANTIALIAS_ON)
       g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE )
@@ -123,7 +111,8 @@ trait TransportCompanion {
     def scale: Float
   }
 
-  def paint(g: Graphics2D, iconType: Element, x: Float = 0f, y: Float = 0f, scale: Float = 1f, colorScheme: ColorScheme = DarkScheme) {
+  def paint(g: Graphics2D, iconType: Element, x: Float = 0f, y: Float = 0f, scale: Float = 1f,
+            colorScheme: ColorScheme = DarkScheme): Unit = {
     val x1 = iconType.defaultXOffset * scale
     val y1 = iconType.defaultYOffset * scale
     //         val x1 = x
@@ -139,9 +128,8 @@ trait TransportCompanion {
     out
   }
 
-  private def paintImpl(g2: Graphics2D, inShape: Shape, outShape: Shape, x: Float, y: Float, scale: Float, scheme: ColorScheme) {
-    //            g2.setColor( Color.red )
-    //            g2.fillRect( x.toInt, y.toInt, math.ceil(24 * scale).toInt, math.ceil(22 * scale).toInt )
+  private def paintImpl(g2: Graphics2D, inShape: Shape, outShape: Shape, x: Float, y: Float, scale: Float, 
+                        scheme: ColorScheme): Unit = {
     val atOrig = g2.getTransform
     g2.translate(x + 1, y + 1 + shadowYOff)
     g2.setPaint(scheme.shadowPaint)
@@ -300,12 +288,12 @@ trait TransportCompanion {
     //      protected def add( c: ComponentType ) : Unit
     protected def makeButton(pos: String, action: Action): AbstractButtonType
 
-    protected def addButtons(seq: IIdxSeq[AbstractButtonType]): Unit
+    protected def addButtons(seq: Vec[AbstractButtonType]): Unit
 
     private val (buttonSeq, buttonMap, elementMap) = {
       var bMap = Map.empty[Element, AbstractButtonType]
       var tMap = Map.empty[AbstractButtonType, Action]
-      var sq = IIdxSeq.empty[AbstractButtonType]
+      var sq = Vec.empty[AbstractButtonType]
       val it = actions.iterator
       if (it.hasNext) {
         val n1 = it.next()
@@ -346,9 +334,7 @@ object Transport extends TransportCompanion {
 
   private final class JButtonStripImpl( protected val actions: Seq[ Action ], protected val scheme: ColorScheme )
     extends Box(BoxLayout.X_AXIS) with ButtonStripImpl {
-    protected def addButtons(seq: IIdxSeq[AbstractButton]) {
-      seq.foreach(add)
-    }
+    protected def addButtons(seq: Vec[AbstractButton]): Unit = seq.foreach(add)
 
     protected def makeButton(pos: String, action: Action): AbstractButton = {
       val b = new JButton(action)
@@ -371,6 +357,6 @@ object Transport extends TransportCompanion {
     def element: Element  = icn.element
     def scale  : Float    = icn.scale
 
-    def actionPerformed(e: ActionEvent) { fun }
+    def actionPerformed(e: ActionEvent): Unit = fun
   }
 }

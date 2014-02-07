@@ -1,20 +1,20 @@
-name := "AudioWidgets"
+lazy val baseName = "AudioWidgets"
 
-version in ThisBuild := "1.3.1"
+version         in ThisBuild := "1.4.0"
 
-organization in ThisBuild := "de.sciss"
+organization    in ThisBuild := "de.sciss"
 
-description in ThisBuild := "Specialized Swing widgets for audio applications in Scala"
+description     in ThisBuild := "Specialized Swing widgets for audio applications in Scala"
 
-homepage in ThisBuild := Some( url( "https://github.com/Sciss/AudioWidgets" ))
+homepage        in ThisBuild := Some(url("https://github.com/Sciss/" + baseName))
 
-licenses in ThisBuild := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt"))
+licenses        in ThisBuild := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt"))
 
-scalaVersion in ThisBuild := "2.10.2"
+scalaVersion    in ThisBuild := "2.10.3"
 
 retrieveManaged in ThisBuild := true
 
-scalacOptions in ThisBuild ++= Seq("-deprecation", "-unchecked", "-feature")
+scalacOptions   in ThisBuild ++= Seq("-deprecation", "-unchecked", "-feature")
 
 initialCommands in console in ThisBuild := """
   |import de.sciss.audiowidgets._""".stripMargin
@@ -36,19 +36,18 @@ initialCommands in console in ThisBuild := """
 
 publishMavenStyle in ThisBuild := true
 
-publishTo in ThisBuild <<= version { v =>
-  Some(if (v endsWith "-SNAPSHOT")
+publishTo in ThisBuild :=
+  Some(if (version.value endsWith "-SNAPSHOT")
     "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
   else
     "Sonatype Releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
   )
-}
 
 publishArtifact in Test := false
 
 pomIncludeRepository in ThisBuild := { _ => false }
 
-pomExtra in ThisBuild <<= name { n =>
+pomExtra in ThisBuild := { val n = baseName
 <scm>
   <url>git@github.com:Sciss/{n}.git</url>
   <connection>scm:git:git@github.com:Sciss/{n}.git</connection>
@@ -66,8 +65,8 @@ pomExtra in ThisBuild <<= name { n =>
 
 seq(lsSettings :_*)
 
-(LsKeys.tags in LsKeys.lsync) := Seq("swing", "audio", "widgets")
+(LsKeys.tags   in LsKeys.lsync) := Seq("swing", "audio", "widgets")
 
 (LsKeys.ghUser in LsKeys.lsync) := Some("Sciss")
 
-(LsKeys.ghRepo in LsKeys.lsync) <<= name(Some(_))
+(LsKeys.ghRepo in LsKeys.lsync) := Some(baseName)
