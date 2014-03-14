@@ -48,7 +48,8 @@ object DualRangeSliderTests extends App with Runnable {
     f.setVisible(true)
 
     sl.addChangeListener(new ChangeListener {
-      def stateChanged(e: ChangeEvent): Unit = println(s"Change: value is ${m.value}, range is ${m.range}")
+      def stateChanged(e: ChangeEvent): Unit =
+        println(s"Change: value is ${m.value}, range is ${m.range}, adjusting? ${m.adjusting}")
     })
   }
 }

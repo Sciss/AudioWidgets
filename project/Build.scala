@@ -41,8 +41,11 @@ object Build extends sbt.Build {
     base          = file("swing"),
     dependencies  = Seq(core),
     settings      = Project.defaultSettings ++ Seq(
-      libraryDependencies <+= scalaVersion { sv =>
-        "org.scala-lang" % "scala-swing" % sv
+      libraryDependencies += { val sv = scalaVersion.value
+        if (sv startsWith "2.11")
+          "org.scala-lang.modules" %% "scala-swing" % "1.0.0"
+        else
+          "org.scala-lang" % "scala-swing" % sv
       }
     )
   )

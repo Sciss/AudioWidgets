@@ -20,11 +20,9 @@ object DualRangeModel {
   def apply(minimum: Int = 0, maximum: Int = 100): DualRangeModel = new Impl(minimum, maximum)
 
   private final class Impl(private var _minimum: Int, private var _maximum: Int) extends DualRangeModel {
-    var adjusting = false
-    // var rangeIsAdjusting = false
-
-    private var _value  = _minimum
-    private var _range  = (_minimum, _minimum)
+    private var _adjusting  = false
+    private var _value      = _minimum
+    private var _range      = (_minimum, _minimum)
 
     private val sync      = new AnyRef
     private var listeners = Vec.empty[ChangeListener]
@@ -46,17 +44,21 @@ object DualRangeModel {
 
     def value = _value
 
-    def value_=(value: Int): Unit = {
+    def value_=(value: Int): Unit = if (setValue(value)) fire()
+
+    private def setValue(value: Int): Boolean = {
       val clip = math.max(_minimum, math.min(_maximum, value))
       if (_value != clip) {
         _value = clip
-        fire()
-      }
+        true
+      } else false
     }
 
     def range = _range
 
-    def range_=(value: (Int, Int)): Unit = {
+    def range_=(value: (Int, Int)): Unit = if (setRange(value)) fire()
+
+    private def setRange(value: (Int, Int)): Boolean = {
       val lo0   = math.min(value._1, value._2)
       val hi0   = math.max(value._1, value._2)
       val lo    = math.max(_minimum, math.min(_maximum, lo0))
@@ -64,25 +66,29 @@ object DualRangeModel {
       val clip  = (lo, hi)
       if (_range != clip) {
         _range = clip
-        fire()
-      }
+        true
+      } else false
     }
 
     def minimum = _minimum
 
-    def minimum_=(value: Int): Unit =
+    def minimum_=(value: Int): Unit = if (setMinimum(value)) fire()
+
+    private def setMinimum(value: Int): Boolean =
       if (_minimum != value) {
         _minimum = value
         if (value > _maximum ) _maximum = value
         if (value > _value   ) _value   = value
         if (value > _range._1) _range   = (value, math.max(value, _range._2))
 
-        fire()
-      }
+        true
+      } else false
 
     def maximum = _maximum
 
-    def maximum_=(value: Int): Unit =
+    def maximum_=(value: Int): Unit = if (setMaximum(value)) fire()
+
+    private def setMaximum(value: Int): Boolean =
       if (_maximum != value) {
         _maximum = value
 
@@ -90,8 +96,28 @@ object DualRangeModel {
         if (value < _value   ) _value   = value
         if (value < _range._2) _range   = (math.min(value, _range._1), value)
 
+        true
+      } else false
+
+    def adjusting = _adjusting
+    def adjusting_=(value: Boolean): Unit = if (setAdjusting(value)) fire()
+
+    private def setAdjusting(value: Boolean): Boolean =
+      if (_adjusting != value) {
+        _adjusting = value
+        true
+      } else false
+
+    def setRangeProperties(value: Int, range: (Int, Int), minimum: Int, maximum: Int, adjusting: Boolean): Unit = {
+      val dirty = setMinimum  (minimum  ) |
+                  setMaximum  (maximum  ) |
+                  setRange    (range    ) |
+                  setValue    (value    )
+      if (dirty) {
+        setAdjusting(adjusting)
         fire()
       }
+    }
   }
 }
 trait DualRangeModel {
@@ -104,7 +130,9 @@ trait DualRangeModel {
   /** Range value of the model. Changing this fires an event. */
   var range: (Int, Int)
 
-  /** Flag to indicate whether user is currently dragging the slider. Changing this will not fire an event. */
+  /** Flag to indicate whether user is currently dragging the slider.
+    * Changing this fires an event.
+    */
   var adjusting: Boolean
 
   /** Queries the extent of the range, which is `maximum - minimum`. */
@@ -116,4 +144,19 @@ trait DualRangeModel {
 
   def addChangeListener   (l: ChangeListener): Unit
   def removeChangeListener(l: ChangeListener): Unit
+
+  /** Adjusts all the properties. If any property constitutes a model change, fires an event.
+    *
+    * __Note:__  The `adjusting` parameter is treated specially: If it is the only property
+    * that would change, then this method does nothing. For example, if the method is called
+    * with default arguments, setting only `value = x` and `adjusting = true`, this performs
+    * a check for `x`. If `x` is different from the current value, then both the model's
+    * `value` and `adjusting` properties are set; otherwise nothing is changed (ignoring the
+    * `adjusting` argument).
+    */
+  def setRangeProperties(value    : Int         = this.value,
+                         range    : (Int, Int)  = this.range,
+                         minimum  : Int         = this.minimum,
+                         maximum  : Int         = this.maximum,
+                         adjusting: Boolean     = this.adjusting): Unit
 }

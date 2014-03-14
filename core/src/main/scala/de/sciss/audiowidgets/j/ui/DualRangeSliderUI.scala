@@ -188,7 +188,8 @@ class DualRangeSliderUI(slider: DualRangeSlider) extends ComponentUI {
           if (hit) {
             focusHandle = ValueHandle
           } else {
-            m.value = screenToValue(mx)
+            val v = screenToValue(mx)
+            m.setRangeProperties(value = v, adjusting = true)
           }
           dragHandle = ValueHandle
           slider.repaint()
@@ -210,11 +211,12 @@ class DualRangeSliderUI(slider: DualRangeSlider) extends ComponentUI {
           if (!hitLo && !hitHi) {
             val r = m.range
             val v = screenToValue(mx)
-            if (valueOk) m.value = v
-            m.range = if (isLo)
+            val newV  = if (valueOk) v else m.value
+            val rNew = if (isLo)
               r.copy(_1 = v)
             else
               r.copy(_2 = v)
+            m.setRangeProperties(value = newV, range = rNew, adjusting = true)
           }
           dragHandle = if (isLo) LowHandle else HighHandle
           slider.repaint()
@@ -228,23 +230,23 @@ class DualRangeSliderUI(slider: DualRangeSlider) extends ComponentUI {
         slider.model.adjusting = false
       }
 
-    def mouseDragged (e: MouseEvent): Unit =
+    def mouseDragged(e: MouseEvent): Unit =
       if (dragHandle != NoHandle) {
         calcGeometry()
         val mx    = e.getX
         val v     = screenToValue(mx)
-        adjustValue(dragHandle, v)
+        adjustValue(dragHandle, v, a = true)
       }
 
-    private def adjustValue(h: MaybeHandle, v: Int): Unit = {
+    private def adjustValue(h: MaybeHandle, v: Int, a: Boolean): Unit = {
       val m = slider.model
       if (slider.valueVisible && slider.valueEditable)
-        m.value = v
+        m.setRangeProperties(value = v, adjusting = a)
       if (slider.rangeVisible && slider.rangeEditable) {
         if (h == LowHandle)
-          m.range = (v, math.max(v, m.range._2))
+          m.setRangeProperties(range = (v, math.max(v, m.range._2)), adjusting = a)
         else if (h == HighHandle)
-          m.range = (math.min(v, m.range._1), v)
+          m.setRangeProperties(range = (math.min(v, m.range._1), v), adjusting = a)
       }
     }
 
@@ -258,7 +260,7 @@ class DualRangeSliderUI(slider: DualRangeSlider) extends ComponentUI {
 
     private def incValue(amt: Int): Unit =
       focusHandle.valueOption(slider.model).foreach { v =>
-        adjustValue(focusHandle, v + amt)
+        adjustValue(focusHandle, v + amt, a = false)
       }
 
     private def expandRange(): Unit =

@@ -1,6 +1,6 @@
 lazy val baseName = "AudioWidgets"
 
-version         in ThisBuild := "1.4.0"
+version         in ThisBuild := "1.5.0-SNAPSHOT"
 
 organization    in ThisBuild := "de.sciss"
 
@@ -12,7 +12,9 @@ licenses        in ThisBuild := Seq("GPL v2+" -> url("http://www.gnu.org/license
 
 scalaVersion    in ThisBuild := "2.10.3"
 
-retrieveManaged in ThisBuild := true
+crossScalaVersions in ThisBuild := Seq("2.11.0-RC1", "2.10.3")
+
+// retrieveManaged in ThisBuild := true
 
 scalacOptions   in ThisBuild ++= Seq("-deprecation", "-unchecked", "-feature")
 
