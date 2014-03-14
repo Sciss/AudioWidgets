@@ -49,31 +49,31 @@ object DualRangeSliderUI {
 
   private final val shpValue: Shape = {
     val gp = new GeneralPath()
-    gp.moveTo( 0.5f , 6.5f)
-    gp.lineTo(-4.25f, 0.5f)
-    gp.lineTo( 5.25f, 0.5f)
+    gp.moveTo( 0.5f ,  2.5f)
+    gp.lineTo(-4.25f, -4.5f)
+    gp.lineTo( 5.25f, -4.5f)
     gp.closePath()
     gp
   }
 
   private final val shpLow: Shape = {
     val gp = new GeneralPath()
-    gp.moveTo( 0.5f ,  8.5f)
-    gp.lineTo( 0.5f , 16.5f)
-    gp.lineTo(-7.5f , 16.5f)
-    gp.lineTo(-7.5f , 13.5f)
-    gp.lineTo(-4.25f, 13.5f)
+    gp.moveTo( 0.5f ,  4.5f)
+    gp.lineTo( 0.5f , 12.5f)
+    gp.lineTo(-7.5f , 12.5f)
+    gp.lineTo(-7.5f ,  9.5f)
+    gp.lineTo(-4.25f,  9.5f)
     gp.closePath()
     gp
   }
 
   private final val shpHigh: Shape = {
     val gp = new GeneralPath()
-    gp.moveTo( 0.5f ,  8.5f)
-    gp.lineTo( 0.5f , 16.5f)
-    gp.lineTo( 8.5f , 16.5f)
-    gp.lineTo( 8.5f , 13.5f)
-    gp.lineTo( 5.25f, 13.5f)
+    gp.moveTo( 0.5f ,  4.5f)
+    gp.lineTo( 0.5f , 12.5f)
+    gp.lineTo( 8.5f , 12.5f)
+    gp.lineTo( 8.5f ,  9.5f)
+    gp.lineTo( 5.25f,  9.5f)
     gp.closePath()
     gp
   }
@@ -142,14 +142,17 @@ class DualRangeSliderUI(slider: DualRangeSlider) extends ComponentUI {
   }
 
   private def calcGeometry(): Unit = {
-    val cw  = slider.getWidth - (_insets.left + _insets.right)
-    val m   = slider.model
-    trackRect.setBounds(8 + _insets.left, 4 + _insets.top, cw - 16, 8)
-    scale   = (trackRect.width - 1).toDouble / (m.maximum - m.minimum)
-    xVal    = ((m.value - m.minimum) * scale + 0.5).toInt + trackRect.x
-    val r   = m.range
-    xLo     = ((r._1    - m.minimum) * scale + 0.5).toInt + trackRect.x
-    xHi     = ((r._2    - m.minimum) * scale + 0.5).toInt + trackRect.x
+    val cw    = slider.getWidth  - (_insets.left + _insets.right )
+    val ch    = slider.getHeight - (_insets.top  + _insets.bottom)
+    val m     = slider.model
+    val yOff  = (ch - 17) >> 1
+    // println(yOff)
+    trackRect.setBounds(8 + _insets.left, yOff + 4 + _insets.top, cw - 16, 8)
+    scale     = (trackRect.width - 1).toDouble / (m.maximum - m.minimum)
+    xVal      = ((m.value - m.minimum) * scale + 0.5).toInt + trackRect.x
+    val r     = m.range
+    xLo       = ((r._1    - m.minimum) * scale + 0.5).toInt + trackRect.x
+    xHi       = ((r._2    - m.minimum) * scale + 0.5).toInt + trackRect.x
   }
 
   private def screenToValue(x: Int): Int = {
@@ -373,31 +376,31 @@ class DualRangeSliderUI(slider: DualRangeSlider) extends ComponentUI {
       g2.drawLine(xHi, trackRect.y, xHi, ty2)
 
       g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE     )
-      g2.translate( xLo,  _insets.top)
+      g2.translate(xLo, trackRect.y) //  _insets.top)
       val fLo = focused && focusHandle == LowHandle
       g2.setPaint(if (fLo) pntFillRangeSel else pntFillRange)
       g2.fill(shpLow)
       g2.setColor(if (fLo) colrDrawHandleSel else colrDrawHandle)
       g2.draw(shpLow)
-      g2.translate( xHi - xLo, 0)
+      g2.translate(xHi - xLo, 0)
       val fHi = focused && focusHandle == HighHandle
       g2.setPaint(if (fHi) pntFillRangeSel else pntFillRange)
       g2.fill(shpHigh)
       g2.setColor(if (fHi) colrDrawHandleSel else colrDrawHandle)
       g2.draw(shpHigh)
-      g2.translate(-xHi, -_insets.top)
+      g2.translate(-xHi, -trackRect.y) // -_insets.top)
       g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE)
     }
 
     if (slider.valueVisible) {
-      g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE     )
-      g2.translate( xVal,  _insets.top)
+      g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE)
+      g2.translate(xVal, trackRect.y) // _insets.top)
       val fVal = focused && focusHandle == ValueHandle
       g2.setPaint(if (fVal) pntFillValueSel else pntFillValue)
       g2.fill(shpValue)
       g2.setColor(if (fVal) colrDrawHandleSel else colrDrawHandle)
       g2.draw(shpValue)
-      g2.translate(-xVal, -_insets.top)
+      g2.translate(-xVal, -trackRect.y) // -_insets.top)
       g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE)
 
       g2.setColor(colrDrawHandleSel)
