@@ -46,10 +46,12 @@ object DualRangeModel {
 
     def value_=(value: Int): Unit = if (setValue(value)) fire()
 
+    private def clip(value: Int) = math.max(_minimum, math.min(_maximum, value))
+
     private def setValue(value: Int): Boolean = {
-      val clip = math.max(_minimum, math.min(_maximum, value))
-      if (_value != clip) {
-        _value = clip
+      val vc = clip(value)
+      if (_value != vc) {
+        _value = vc
         true
       } else false
     }
@@ -59,13 +61,14 @@ object DualRangeModel {
     def range_=(value: (Int, Int)): Unit = if (setRange(value)) fire()
 
     private def setRange(value: (Int, Int)): Boolean = {
-      val lo0   = math.min(value._1, value._2)
-      val hi0   = math.max(value._1, value._2)
-      val lo    = math.max(_minimum, math.min(_maximum, lo0))
-      val hi    = math.max(_minimum, math.min(_maximum, hi0))
-      val clip  = (lo, hi)
-      if (_range != clip) {
-        _range = clip
+      // val lo0   = math.min(value._1, value._2)
+      // val hi0   = math.max(value._1, value._2)
+      val (lo0, hi0) = value
+      val lo    = clip(lo0)
+      val hi    = clip(hi0)
+      val rc    = (lo, hi)
+      if (_range != rc) {
+        _range = rc
         true
       } else false
     }
@@ -79,7 +82,7 @@ object DualRangeModel {
         _minimum = value
         if (value > _maximum ) _maximum = value
         if (value > _value   ) _value   = value
-        if (value > _range._1) _range   = (value, math.max(value, _range._2))
+        if (value > rangeLo  ) _range   = (clip(_range._1), clip(_range._2))
 
         true
       } else false
@@ -94,7 +97,7 @@ object DualRangeModel {
 
         if (value < _minimum ) _minimum = value
         if (value < _value   ) _value   = value
-        if (value < _range._2) _range   = (math.min(value, _range._1), value)
+        if (value < rangeHi  ) _range   = (clip(_range._1), clip(_range._2))
 
         true
       } else false
@@ -130,17 +133,29 @@ trait DualRangeModel {
   /** Range value of the model. Changing this fires an event. */
   var range: (Int, Int)
 
+  /** Logical range lower value, which is `min(range._1, range._2)`. */
+  def rangeLo: Int = {
+    val (r1, r2) = range
+    math.min(r1, r2)
+  }
+
+  /** Logical range higher value, which is `min(range._1, range._2)`. */
+  def rangeHi: Int = {
+    val (r1, r2) = range
+    math.max(r1, r2)
+  }
+
   /** Flag to indicate whether user is currently dragging the slider.
     * Changing this fires an event.
     */
   var adjusting: Boolean
 
-  /** Queries the extent of the range, which is `maximum - minimum`. */
-  def extent: Int = range._2 - range._1
+  /** Queries the extent of the range, which is `abs(range._2 - range._1)`. */
+  def extent: Int = math.abs(range._2 - range._1)
 
-  /** Adjusts the extent of the range, which is `maximum - minimum`. Fires an event. */
+  /** Adjusts the extent of the range, which is `abs(range._2 - range._1)`. Fires an event. */
   def extent_=(value: Int): Unit =
-    range = (range._1, range._1 + math.max(0, value))
+    range = (range._1, range._1 + value) // math.max(0, value)
 
   def addChangeListener   (l: ChangeListener): Unit
   def removeChangeListener(l: ChangeListener): Unit
