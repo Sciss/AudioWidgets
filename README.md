@@ -2,7 +2,9 @@
 
 ## statement
 
-AudioWidgets is a library providing specialized widgets for audio applications. It is Swing based and written in the Scala programming language. (C)opyright 2011&ndash;2014 by Hanns Holger Rutz. All rights reserved. It is released under the [GNU General Public License](http://github.com/Sciss/AudioWidgets/blob/master/licenses/AudioWidgets-License.txt) v2+ and comes with absolutely no warranties. To contact the author, send an email to `contact at sciss.de`.
+AudioWidgets is a library providing specialized widgets for audio applications. It is Swing based and written in the Scala programming language. (C)opyright 2011&ndash;2014 by Hanns Holger Rutz. All rights reserved. It is released under the [GNU Lesser General Public License](http://github.com/Sciss/AudioWidgets/blob/master/licenses/AudioWidgets-License.txt) v3+ and comes with absolutely no warranties. To contact the author, send an email to `contact at sciss.de`.
+
+The included font "Familida Mono" is based on a font by darunio123456789 and released under a [Creative Commons CC BY-SA 3.0 license](http://github.com/Sciss/AudioWidgets/blob/master/licenses/FamiliadaMono-License.txt).
 
 ## requirements / installation
 
@@ -18,7 +20,7 @@ To use the library in your project:
     "de.sciss" %% "audiowidgets-swing" % v
     "de.sciss" %% "audiowidgets-app"   % v
 
-The current stable version `v` is `"1.4.+"`. The current snapshot version is `"1.5.+"`.
+The current version `v` is `"1.5.+"`.
 
 To view a demo of the widgets from the sbt console:
 
@@ -41,5 +43,6 @@ The following components are available:
  - `Transport` -- A tool bar for transport controls
  - `WavePainter` -- A painter class for waveforms, along with sub types for multi resolution display
  - `DualRangeSlider` -- A QuickTime Player style slider combining single value and a range thumb
+ - `RotaryKnob` -- A single value slider styled as a rotary knob
 
 The API docs are currently the only source of documentation (`sbt doc`).

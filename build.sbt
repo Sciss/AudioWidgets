@@ -1,6 +1,6 @@
 lazy val baseName = "AudioWidgets"
 
-version         in ThisBuild := "1.5.0-SNAPSHOT"
+version         in ThisBuild := "1.5.0"
 
 organization    in ThisBuild := "de.sciss"
 
@@ -8,7 +8,7 @@ description     in ThisBuild := "Specialized Swing widgets for audio application
 
 homepage        in ThisBuild := Some(url("https://github.com/Sciss/" + baseName))
 
-licenses        in ThisBuild := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt"))
+licenses        in ThisBuild := Seq("LGPL v3+" -> url("http://www.gnu.org/licenses/lgpl-3.0.txt"))
 
 scalaVersion    in ThisBuild := "2.10.3"
 

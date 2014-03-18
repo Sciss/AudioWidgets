@@ -5,7 +5,7 @@ import sbtbuildinfo.Plugin._
 object Build extends sbt.Build {
   def baseID = "audiowidgets"
 
-  lazy val desktopVersion = "0.4.+"
+  lazy val desktopVersion = "0.4.2+"
   lazy val spanVersion    = "1.2.+"
 
   lazy val audiowidgets: Project = Project(

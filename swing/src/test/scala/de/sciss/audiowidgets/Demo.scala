@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2011-2014 Hanns Holger Rutz. All rights reserved.
  *
- *	This software is published under the GNU General Public License v2+
+ *	This software is published under the GNU Lesser General Public License v3+
  *
  *
  *	For further information, please contact Hanns Holger Rutz at
@@ -46,7 +46,18 @@ object Demo extends SimpleSwingApplication {
         new Label {
           text = "00:00:0" + idx
           peer.putClientProperty("JComponent.sizeVariant", "small")
+          font = LCDFont()
           fg.foreach(foreground = _)
+
+          //          override protected def paintComponent(g: _root_.scala.swing.Graphics2D): Unit = {
+          //            import java.awt.RenderingHints
+          //            g.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON)
+          //            // g.setRenderingHint(RenderingHints.KEY_TEXT_LCD_CONTRAST, 250)
+          //            // g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HBGR)
+          //            // g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC)
+          //            // g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE)
+          //            super.paintComponent(g)
+          //          }
         }
     }
 
