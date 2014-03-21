@@ -1,6 +1,6 @@
 lazy val baseName = "AudioWidgets"
 
-version         in ThisBuild := "1.5.0"
+version         in ThisBuild := "1.5.1-SNAPSHOT"
 
 organization    in ThisBuild := "de.sciss"
 
@@ -10,9 +10,9 @@ homepage        in ThisBuild := Some(url("https://github.com/Sciss/" + baseName)
 
 licenses        in ThisBuild := Seq("LGPL v3+" -> url("http://www.gnu.org/licenses/lgpl-3.0.txt"))
 
-scalaVersion    in ThisBuild := "2.10.3"
+scalaVersion    in ThisBuild := "2.11.0-RC3"
 
-crossScalaVersions in ThisBuild := Seq("2.11.0-RC1", "2.10.3")
+crossScalaVersions in ThisBuild := Seq("2.11.0-RC3", "2.10.4")
 
 // retrieveManaged in ThisBuild := true
 

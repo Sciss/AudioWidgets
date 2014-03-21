@@ -5,7 +5,7 @@ import sbtbuildinfo.Plugin._
 object Build extends sbt.Build {
   def baseID = "audiowidgets"
 
-  lazy val desktopVersion = "0.4.2+"
+  lazy val desktopVersion = "0.4.3+"
   lazy val spanVersion    = "1.2.+"
 
   lazy val audiowidgets: Project = Project(
@@ -43,7 +43,7 @@ object Build extends sbt.Build {
     settings      = Project.defaultSettings ++ Seq(
       libraryDependencies += { val sv = scalaVersion.value
         if (sv startsWith "2.11")
-          "org.scala-lang.modules" %% "scala-swing" % "1.0.0"
+          "org.scala-lang.modules" %% "scala-swing" % "1.0.1"
         else
           "org.scala-lang" % "scala-swing" % sv
       }
