@@ -226,7 +226,7 @@ object WavePainter {
         k += 1
         var f3 = in(k)
         k += 1
-        var m = 1;
+        var m = 1
         while (m < factor) {
           val f5 = in(k)
           k += 1
@@ -266,7 +266,7 @@ object WavePainter {
         var f1 = f
         var f2 = f
         var f3 = f * f
-        var m = 1;
+        var m = 1
         while (m < factor) {
           val g = in(k)
           k += 1
@@ -275,11 +275,11 @@ object WavePainter {
           f3 += g * g
           m += 1
         }
-        out(j) = f1 // positive halfwave peak
+        out(j) = f1 // positive half-wave peak
         j += 1
-        out(j) = f2 // negative halfwave peak
+        out(j) = f2 // negative half-wave peak
         j += 1
-        out(j) = f3 / factor // fullwave mean square
+        out(j) = f3 / factor // full-wave mean square
         j += 1
       }
     }
