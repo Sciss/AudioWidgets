@@ -15,7 +15,7 @@ object App extends SwingApplicationImpl("AudioWidgets") {
 
   def sampleRate = 44100
 
-  override protected def init() {
+  override protected def init(): Unit = {
     new WindowImpl {
       def handler = App.windowHandler
 
@@ -29,7 +29,7 @@ object App extends SwingApplicationImpl("AudioWidgets") {
         lazy val canvasComponent = new Component {
           preferredSize = (800, 400)
 
-          override protected def paintComponent(g: Graphics2D) {
+          override protected def paintComponent(g: Graphics2D): Unit = {
             g.setPaint(TimelineCanvasImpl.pntChecker)
             val w = this.width
             val h = this.height

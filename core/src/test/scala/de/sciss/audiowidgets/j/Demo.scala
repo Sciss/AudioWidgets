@@ -9,7 +9,7 @@ import java.awt.{Color, GridLayout, EventQueue, BorderLayout}
 object Demo extends App with Runnable {
   EventQueue.invokeLater(this)
 
-  def run() {
+  def run(): Unit = {
     val f   = new JFrame("AudioWidgets")
     f.getRootPane.putClientProperty("apple.awt.brushMetalLook", java.lang.Boolean.TRUE)
     val cp  = f.getContentPane
@@ -80,7 +80,7 @@ object Demo extends App with Runnable {
       var peak  = 0.5f
       var rms   = 0f
 
-      def actionPerformed(e: ActionEvent) {
+      def actionPerformed(e: ActionEvent): Unit = {
         peak  = math.max(0f, math.min(1f, peak + math.pow(rnd.nextFloat() * 0.5, 2).toFloat * (if (rnd.nextBoolean()) 1 else -1)))
         rms   = math.max(0f, math.min(peak, rms * 0.98f + (rnd.nextFloat() * 0.02f * (if (rnd.nextBoolean()) 1 else -1))))
         m.update(Vec(peak, rms))
@@ -89,7 +89,7 @@ object Demo extends App with Runnable {
     val t2 = new Timer(1000, new ActionListener {
       var cnt = 0
 
-      def actionPerformed(e: ActionEvent) {
+      def actionPerformed(e: ActionEvent): Unit = {
         cnt += 1
         val secs  = cnt % 60
         val mins  = (cnt / 60) % 60
@@ -100,12 +100,12 @@ object Demo extends App with Runnable {
       }
     })
     f.addWindowListener(new WindowAdapter {
-      override def windowOpened(e: WindowEvent) {
+      override def windowOpened(e: WindowEvent): Unit = {
         t .start()
         t2.start()
       }
 
-      override def windowClosing(e: WindowEvent) {
+      override def windowClosing(e: WindowEvent): Unit = {
         t .stop()
         t2.stop()
       }

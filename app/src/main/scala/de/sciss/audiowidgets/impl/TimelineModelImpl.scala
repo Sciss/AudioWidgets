@@ -30,7 +30,7 @@ final class TimelineModelImpl(bounds0: Span, val sampleRate: Double)
   private var _sel    = Span.Void: SpanOrVoid
 
   def visible = _visi
-  def visible_=(value: Span) {
+  def visible_=(value: Span): Unit = {
     val oldSpan = _visi
     if (oldSpan != value) {
       _visi = value
@@ -44,7 +44,7 @@ final class TimelineModelImpl(bounds0: Span, val sampleRate: Double)
   }
 
   def position = _pos
-  def position_=(value: Long) {
+  def position_=(value: Long): Unit = {
     val oldPos = _pos
     if (oldPos != value) {
       _pos      = value
@@ -54,7 +54,7 @@ final class TimelineModelImpl(bounds0: Span, val sampleRate: Double)
   }
 
   def selection = _sel
-  def selection_=(value: SpanOrVoid) {
+  def selection_=(value: SpanOrVoid): Unit = {
     val oldSel = _sel
     if (oldSel != value) {
       _sel  = value
@@ -64,7 +64,7 @@ final class TimelineModelImpl(bounds0: Span, val sampleRate: Double)
   }
 
   def bounds = _total
-  def bounds_=(value: Span) {
+  def bounds_=(value: Span): Unit = {
     val oldTot = _total
     if (oldTot != value) {
       _total = value

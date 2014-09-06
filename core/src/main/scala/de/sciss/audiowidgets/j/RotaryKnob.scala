@@ -39,12 +39,11 @@ class RotaryKnob(m: BoundedRangeModel) extends JSlider(m) with RotaryKnobLike {
 
   def centered: Boolean = _centered
 
-  def centered_=(value: Boolean) {
+  def centered_=(value: Boolean): Unit =
     if (_centered != value) {
       _centered = value
       firePropertyChange("centered", !value, value)
     }
-  }
 
   def knobColor: Color = colrKnob
 

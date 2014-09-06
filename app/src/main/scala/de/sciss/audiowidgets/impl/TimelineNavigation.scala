@@ -22,7 +22,7 @@ import de.sciss.span.Span
 import scala.swing.event.Key
 
 object TimelineNavigation {
-  def install(model: TimelineModel.Modifiable, component: Component) {
+  def install(model: TimelineModel.Modifiable, component: Component): Unit = {
     import KeyStrokes._
     import desktop.Implicits._
     import FocusType.{Window => Focus}
@@ -57,7 +57,7 @@ object TimelineNavigation {
 
     accelerator = Some(stroke)
 
-    def apply() {
+    def apply(): Unit = {
       val visiSpan    = model.visible
       val visiLen     = visiSpan.length
       val pos         = model.position
@@ -102,7 +102,7 @@ object TimelineNavigation {
 
     accelerator = Some(stroke)
 
-    def apply() {
+    def apply(): Unit = {
       model.selection match {
         case sel @ Span(selStart, _) =>
           if (deselect) model.selection = Span.Void
@@ -131,7 +131,7 @@ object TimelineNavigation {
 
     import ActionScroll._
 
-    def apply() {
+    def apply(): Unit = {
       val pos       = model.position
       val visiSpan  = model.visible
       val wholeSpan = model.bounds
@@ -199,7 +199,7 @@ object TimelineNavigation {
 
    import ActionSelect._
 
-   def apply() {
+   def apply(): Unit = {
      val pos      = model.position
      val selSpan  = model.selection match {
        case sp @ Span(_, _) => sp

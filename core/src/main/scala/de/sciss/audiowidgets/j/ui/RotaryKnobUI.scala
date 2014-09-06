@@ -96,7 +96,7 @@ class RotaryKnobUI(knob: RotaryKnob) extends BasicSliderUI(knob) {
     g2.fill(shpHand)
   }
 
-  override def paintTrack(g: Graphics) {
+  override def paintTrack(g: Graphics): Unit = {
     val g2        = g.asInstanceOf[Graphics2D]
     val hintsOld  = g2.getRenderingHints
     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING  , RenderingHints.VALUE_ANTIALIAS_ON)

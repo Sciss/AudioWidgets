@@ -507,7 +507,7 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
     }
   }
 
-  private def triggerRedisplay() {
+  private def triggerRedisplay(): Unit = {
     doRecalc = true
     //		if( host.isDefined ) {
     //			host.get.update( this )

@@ -1,6 +1,6 @@
 lazy val baseName = "AudioWidgets"
 
-version         in ThisBuild := "1.6.2"
+version         in ThisBuild := "1.7.0"
 
 organization    in ThisBuild := "de.sciss"
 
@@ -10,13 +10,13 @@ homepage        in ThisBuild := Some(url("https://github.com/Sciss/" + baseName)
 
 licenses        in ThisBuild := Seq("LGPL v2.1+" -> url("http://www.gnu.org/licenses/lgpl-2.1.txt"))
 
-scalaVersion    in ThisBuild := "2.11.0"
+scalaVersion    in ThisBuild := "2.11.2"
 
-crossScalaVersions in ThisBuild := Seq("2.11.0", "2.10.4")
+crossScalaVersions in ThisBuild := Seq("2.11.2", "2.10.4")
 
 retrieveManaged in ThisBuild := true
 
-scalacOptions   in ThisBuild ++= Seq("-deprecation", "-unchecked", "-feature")
+scalacOptions   in ThisBuild ++= Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture")
 
 initialCommands in console in ThisBuild := """
   |import de.sciss.audiowidgets._""".stripMargin
@@ -39,7 +39,7 @@ initialCommands in console in ThisBuild := """
 publishMavenStyle in ThisBuild := true
 
 publishTo in ThisBuild :=
-  Some(if (version.value endsWith "-SNAPSHOT")
+  Some(if (isSnapshot.value)
     "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
   else
     "Sonatype Releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2"

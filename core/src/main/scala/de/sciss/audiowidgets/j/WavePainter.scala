@@ -514,7 +514,7 @@ object WavePainter {
       def perform(): Unit = hZoom(zoom, display, factor, 0)
     }
 
-    private def vMaxZoom(zoom: HasZoom, display: Display, factor: Double) {
+    private def vMaxZoom(zoom: HasZoom, display: Display, factor: Double): Unit = {
       val min = zoom.magLow
       val max = zoom.magHigh
 

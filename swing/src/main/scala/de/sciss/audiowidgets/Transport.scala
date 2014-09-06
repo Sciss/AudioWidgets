@@ -15,7 +15,7 @@ package de.sciss.audiowidgets
 
 import j.TransportCompanion
 import swing.{Button, Orientation, BoxPanel, AbstractButton, Component}
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 
 object Transport extends TransportCompanion {
   type ComponentType      = Component
@@ -26,9 +26,8 @@ object Transport extends TransportCompanion {
 
   private final class SButtonStripImpl(protected val actions: Seq[Action], protected val scheme: ColorScheme)
     extends BoxPanel(Orientation.Horizontal) with ButtonStripImpl {
-    protected def addButtons(seq: IIdxSeq[AbstractButton]) {
-      seq.foreach(contents += _)
-    }
+
+    protected def addButtons(seq: Vec[AbstractButton]): Unit = seq.foreach(contents += _)
 
     protected def makeButton(pos: String, action: Action): AbstractButton = {
       val b = new Button(action)
@@ -50,9 +49,6 @@ object Transport extends TransportCompanion {
     def element: Element = icn.element
     def scale  : Float   = icn.scale
 
-    def apply() {
-      fun
-    }
+    def apply(): Unit = fun
   }
-
 }

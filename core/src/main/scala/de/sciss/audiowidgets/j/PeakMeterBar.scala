@@ -600,7 +600,7 @@ class PeakMeterBar(orient: Int = SwingConstants.VERTICAL)
     result
   }
 
-  private def recalcPaint() {
+  private def recalcPaint(): Unit = {
     val imgLen		  = (recentLength + 1) & ~1
     val imgBreadth  = recentBreadth
     var imgW        = 0
