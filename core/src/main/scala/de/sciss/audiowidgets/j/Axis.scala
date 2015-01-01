@@ -2,7 +2,7 @@
  *  Axis.scala
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2014 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2015 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is published under the GNU Lesser General Public License v2.1+
  *
@@ -21,18 +21,17 @@ import annotation.switch
 import java.awt.{Font, Color, Dimension, FontMetrics, Graphics, Graphics2D, Rectangle, RenderingHints, TexturePaint}
 import javax.swing.{UIManager, SwingConstants, JComponent}
 
-/**
- *  A GUI element for displaying
- *  the timeline's axis (ruler)
- *  which is used to display the
- *  time indices and to allow the
- *  user to position and select the
- *  timeline.
- *
- *	@todo		FIXEDBOUNDS is ignored in logarithmic mode now
- *	@todo		new label width calculation not performed in logarithmic mode
- *	@todo    detect font property changes
- */
+/** A GUI element for displaying
+  * the timeline's axis (ruler)
+  * which is used to display the
+  * time indices and to allow the
+  * user to position and select the
+  * timeline.
+  *
+  * @todo		FIXEDBOUNDS is ignored in logarithmic mode now
+  * @todo		new label width calculation not performed in logarithmic mode
+  * @todo    detect font property changes
+  */
 object Axis {
   private final val DECIMAL_RASTER  = Array(100000000L, 10000000L, 1000000L, 100000L, 10000L, 1000L, 100L, 10L, 1L)
   private final val INTEGERS_RASTER = Array(100000000L, 10000000L, 1000000L, 100000L, 10000L, 1000L)
@@ -92,16 +91,16 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
   private var pntBackground: TexturePaint = null
 
   private def orientUpdated(): Unit = {
-    (_orient: @switch) match {
+    _orient match {
       case HORIZONTAL =>
-        setMaximumSize  (new Dimension(getMaximumSize.width, barExtent))
-        setMinimumSize  (new Dimension(getMinimumSize.width, barExtent))
+        setMaximumSize  (new Dimension(getMaximumSize  .width, barExtent))
+        setMinimumSize  (new Dimension(getMinimumSize  .width, barExtent))
         setPreferredSize(new Dimension(getPreferredSize.width, barExtent))
         imgWidth  = 1
         imgHeight = barExtent
       case VERTICAL =>
-        setMaximumSize  (new Dimension(barExtent, getMaximumSize.height))
-        setMinimumSize  (new Dimension(barExtent, getMinimumSize.height))
+        setMaximumSize  (new Dimension(barExtent, getMaximumSize  .height))
+        setMinimumSize  (new Dimension(barExtent, getMinimumSize  .height))
         setPreferredSize(new Dimension(barExtent, getPreferredSize.height))
         imgWidth  = barExtent
         imgHeight = 1
@@ -113,24 +112,12 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
     triggerRedisplay()
   }
 
-  //     private var viewPortVar: Option[ JViewport ] = None
-
   // ---- constructor ----
   orientUpdated()
   flagsUpdated()
 
   setFont(Axis.DefaultFont)
   setOpaque(true)
-
-  //   def viewport : Option[ JViewport ] = viewPortVar
-  //   def viewport_=( v: JViewport ): Unit = viewPortVar = v
-
-  //   def flags = flagsVar
-  //	def flags_=( newFlags: Int ): Unit = {
-  //		if( flagsVar == newFlags ) return
-  //        flagsVar = newFlags
-  //        flagsUpdated()
-  //    }
 
   def orientation: Int = _orient
   def orientation_=(orient: Int): Unit = if (_orient != orient) {
@@ -139,22 +126,20 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
     orientUpdated()
   }
 
-  /**
-   * Flag: Defines the axis to have flipped min/max values.
-   * I.e. for horizontal orient, the maximum value
-   * corresponds to the left edge, for vertical orient
-   * the maximum corresponds to the bottom edge
-   */
+  /** Flag: Defines the axis to have flipped min/max values.
+    * I.e. for horizontal orient, the maximum value
+    * corresponds to the left edge, for vertical orient
+    * the maximum corresponds to the bottom edge
+    */
   def inverted: Boolean = flMirror
   def inverted_=(b: Boolean): Unit = if (flMirror != b) {
     flMirror = b
     flagsUpdated()
   }
 
-  /*
-   *	Flag: Requests that the space's min and max are always displayed
-   *		  and hence subdivision are made according to the bounds
-   */
+  /** Flag: Requests that the space's min and max are always displayed
+    * and hence subdivision are made according to the bounds
+    */
   def fixedBounds: Boolean = flFixedBounds
   def fixedBounds_=(b: Boolean): Unit = if (flFixedBounds != b) {
     flFixedBounds = b
@@ -179,29 +164,6 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
     }
     flagsUpdated()
   }
-
-  //   /**
-  //    *	Flag: Requests the labels to be formatted as MIN:SEC.MILLIS
-  //    */
-  //   def timeFormat : Boolean = flTimeFormat
-  //   def timeFormat_=( b: Boolean ): Unit = {
-  //      if( flTimeFormat != b ) {
-  //         flTimeFormat = b
-  //         flagsUpdated()
-  //      }
-  //   }
-  //
-  //	/*
-  //	 *	Flag: Requests that the label values be integers
-  //	 */
-  //   def intFormat : Boolean = flIntegers
-  //   def intFormat_=( b: Boolean ): Unit = {
-  //      if( flIntegers != b ) {
-  //         flIntegers = b
-  //         if( b ) flTimeFormat = false
-  //         flagsUpdated()
-  //      }
-  //   }
 
   private def flagsUpdated(): Unit = {
     //	   flMirroir		= (flags & MIRROIR) != 0
@@ -231,11 +193,6 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
     triggerRedisplay()
   }
 
-  //   protected def setSpaceNoRepaint( newSpace: VectorSpace ): Unit = {
-  //      spaceVar = newSpace
-  //		doRecalc = true
-  //   }
-
   private val normalRect = new Rectangle
 
   private def normalBounds: Rectangle = {
@@ -245,18 +202,6 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
     normalRect.height = getHeight
     normalRect
   }
-
-  //   private def portBounds: Rectangle = {
-  //      val r = viewPortVar.get.getViewRect
-  //      if( r != normalRect ) {
-  //          normalRect.setBounds( r )
-  //          viewRectChanged( r )
-  //      }
-  //      normalRect
-  //   }
-
-  //   // subclasses might want to use this
-  //   protected def viewRectChanged( r: Rectangle ) = ()
 
   override def paintComponent(g: Graphics): Unit = {
     super.paintComponent(g)

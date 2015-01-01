@@ -2,7 +2,7 @@
 
 ## statement
 
-AudioWidgets is a library providing specialized widgets for audio applications. It is Swing based and written in the Scala programming language. (C)opyright 2011&ndash;2014 by Hanns Holger Rutz. All rights reserved. It is released under the [GNU Lesser General Public License](http://github.com/Sciss/AudioWidgets/blob/master/licenses/AudioWidgets-License.txt) v2.1+ and comes with absolutely no warranties. To contact the author, send an email to `contact at sciss.de`.
+AudioWidgets is a library providing specialized widgets for audio applications. It is Swing based and written in the Scala programming language. (C)opyright 2011&ndash;2015 by Hanns Holger Rutz. All rights reserved. It is released under the [GNU Lesser General Public License](http://github.com/Sciss/AudioWidgets/blob/master/licenses/AudioWidgets-License.txt) v2.1+ and comes with absolutely no warranties. To contact the author, send an email to `contact at sciss.de`.
 
 The included font "Familida Mono" is based on a font by darunio123456789 and released under a [Creative Commons CC BY-SA 3.0 license](http://github.com/Sciss/AudioWidgets/blob/master/licenses/FamiliadaMono-License.txt).
 
