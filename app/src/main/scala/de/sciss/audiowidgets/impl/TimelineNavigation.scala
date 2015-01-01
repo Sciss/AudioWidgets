@@ -22,6 +22,9 @@ import de.sciss.span.Span
 import scala.swing.event.Key
 
 object TimelineNavigation {
+  /** Installs standard keyboard commands for navigating a timeline model.
+    * These commands are enabled when the `component` is inside the focused window.
+    */
   def install(model: TimelineModel.Modifiable, component: Component): Unit = {
     import KeyStrokes._
     import desktop.Implicits._

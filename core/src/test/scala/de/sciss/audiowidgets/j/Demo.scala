@@ -46,6 +46,7 @@ object Demo extends App with Runnable {
     p.add(Box.createHorizontalStrut(20), BorderLayout.CENTER)
     val p2 = new JPanel(new BorderLayout())
     p2.add(lcdGrid, BorderLayout.NORTH)
+    p2.add(new Jog, BorderLayout.SOUTH)
 
     //    p2.add(new JLabel {
     //      setText("00:00:00")
