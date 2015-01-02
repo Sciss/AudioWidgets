@@ -1,5 +1,5 @@
 /*
- *  ParamFormat.scala
+ *  ParamFieldLike.scala
  *  (AudioWidgets)
  *
  *  Copyright (c) 2011-2015 Hanns Holger Rutz. All rights reserved.
@@ -13,18 +13,16 @@
 
 package de.sciss.audiowidgets
 
-import javax.swing.JFormattedTextField
+import scala.collection.immutable.{Seq => ISeq}
 
-//object ParamFormat {
-//
-//}
-trait ParamFormat[A] {
-  def unit: UnitView
+trait ParamFieldLike[A] {
+  var value: A
 
-  def format(value: A): String
-  def parse(s: String): Option[A]
+  var formats: ISeq[ParamFormat[A]]
 
-  def formatter: JFormattedTextField.AbstractFormatter
+  var prototypeDisplayValues: ISeq[A]
 
-  def adjust(in: A, inc: Int): A
+  var selectedFormat: Option[ParamFormat[A]]
+
+  var editable: Boolean
 }

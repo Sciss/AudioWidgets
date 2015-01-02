@@ -14,18 +14,12 @@
 package de.sciss.audiowidgets
 package impl
 
-import java.awt.Color
-
-import de.sciss.audiowidgets.j.ParamField
-import de.sciss.icons.raphael
-
-import scala.swing.{FlowPanel, Label, Action, Component}
-import de.sciss.desktop.{OptionPane, FocusType, KeyStrokes}
+import scala.swing.{Action, Component}
+import de.sciss.desktop.{FocusType, KeyStrokes}
 import de.sciss.desktop
-import javax.swing.{Icon, KeyStroke}
+import javax.swing.KeyStroke
 import de.sciss.span.Span
 import scala.swing.event.Key
-import scala.util.Try
 
 object TimelineNavigation {
   /** Installs standard keyboard commands for navigating a timeline model.

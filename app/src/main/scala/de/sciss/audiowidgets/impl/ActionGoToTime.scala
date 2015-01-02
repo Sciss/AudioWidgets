@@ -1,19 +1,33 @@
-package de.sciss.audiowidgets.impl
+/*
+ *  ActionGoToTime.scala
+ *  (AudioWidgets)
+ *
+ *  Copyright (c) 2011-2015 Hanns Holger Rutz. All rights reserved.
+ *
+ *	This software is published under the GNU Lesser General Public License v2.1+
+ *
+ *
+ *	For further information, please contact Hanns Holger Rutz at
+ *	contact@sciss.de
+ */
+
+package de.sciss.audiowidgets
+package impl
 
 import java.awt.Color
+import java.awt.geom.Path2D
 import java.text.{NumberFormat, ParseException}
 import java.util.Locale
-import javax.swing.JFormattedTextField.AbstractFormatter
 import javax.swing.KeyStroke
 import javax.swing.text.{NumberFormatter, MaskFormatter}
 
-import de.sciss.audiowidgets.j.ParamField
-import de.sciss.audiowidgets.{Shapes, UnitView, AxisFormat, ParamFormat, TimelineModel}
-import de.sciss.desktop.OptionPane
+import de.sciss.desktop
+import de.sciss.desktop.{KeyStrokes, FocusType, OptionPane}
 import de.sciss.icons.raphael
-import de.sciss.span.Span
+import de.sciss.swingplus.DoClickAction
 
-import scala.swing.{Component, Label, FlowPanel, Action}
+import scala.swing.event.Key
+import scala.swing.{Swing, Orientation, BoxPanel, Panel, Button, Component, FlowPanel, Action}
 import scala.util.Try
 
 class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
@@ -21,20 +35,44 @@ class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
 
   accelerator = Option(stroke)
 
-  def apply(): Unit = {
-    val pos      = model.position
+  import model.bounds
 
-    val selSpan  = model.selection match {
-      case sp @ Span(_, _) => sp
-      case _               => Span(pos, pos)
+  private def framesToMillis (n: Long): Double =  n / model.sampleRate * 1000
+  private def millisToFrames (m: Double): Long = (m * model.sampleRate / 1000 + 0.5).toLong
+  private def framesToPercent(n: Long): Double = (n - bounds.start).toDouble / bounds.length
+  private def percentToFrames(p: Double): Long = (p * bounds.length + bounds.start + 0.5).toLong
+
+  private def mkBut(shape: Path2D => Unit, key: KeyStroke, fun: => Long): Button = {
+    val action = new Action(null) {
+      icon = raphael.Icon(extent = 20, fill = raphael.TexturePaint(24), shadow = raphael.WhiteShadow)(shape)
+
+      def apply(): Unit = {
+        ggTime.value = fun
+        ggFocus.requestFocus()
+      }
     }
+    val but = new Button(action)
+    import desktop.Implicits._
+    val clickCurr = DoClickAction(but)
+    clickCurr.accelerator = Some(key)
+    but.addAction("param-current", clickCurr, FocusType.Window)
+    but
+  }
 
-    def framesToMillis(n: Long): Double = n / model.sampleRate * 1000
+  private lazy val butPane: Panel = {
+    import KeyStrokes.menu1
+    // meta-left and meta-right would have been better, but
+    // somehow the textfield blocks these inputs
+    val ggStart   = mkBut(raphael.Shapes.TransportBegin, menu1 + Key.Comma , bounds.start  )
+    val ggCurrent = mkBut(raphael.Shapes.Location      , menu1 + Key.Period, model.position)
+    val ggEnd     = mkBut(raphael.Shapes.TransportEnd  , menu1 + Key.Slash , bounds.stop   )
+    val res       = new FlowPanel(ggStart, ggCurrent, ggEnd)
+    res.hGap = 0
+    res.vGap = 0
+    res
+  }
 
-    def millisToFrames(m: Double): Long = (m * model.sampleRate / 1000).toLong
-
-    val bounds = model.bounds
-
+  private lazy val ggTime: ParamField[Long] = {
     val fmtTime = new ParamFormat[Long] {
       private val axis = AxisFormat.Time(hours = true, millis = true)
 
@@ -125,24 +163,71 @@ class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
       }
 
       private def tryParse(s: String): Long =
+      try {
+        bounds.clip(millisToFrames(s.toLong))
+      } catch {
+        case _: NumberFormatException => throw new ParseException(s, 0)
+      }
+
+      def parse(s: String): Option[Long] = Try(tryParse(s)).toOption
+
+      def format(value: Long): String = (framesToMillis(value) + 0.5).toLong.toString
+    }
+
+    val fmtPercent = new ParamFormat[Long] {
+      val unit = UnitView("percent", "%")
+
+      private val numFmt = NumberFormat.getIntegerInstance(Locale.US)
+      numFmt.setGroupingUsed(false)
+      val formatter = new NumberFormatter(numFmt) {
+        override def valueToString(value: Any   ): String = format(value.asInstanceOf[Long])
+        override def stringToValue(text : String): AnyRef = tryParse(text).asInstanceOf[AnyRef]
+      }
+      formatter.setMinimum(  0.0)
+      formatter.setMaximum(100.0)
+
+      private def tryParse(s: String): Long =
         try {
-          bounds.clip(millisToFrames(s.toLong))
+          bounds.clip(percentToFrames(s.toDouble * 0.01))
         } catch {
           case _: NumberFormatException => throw new ParseException(s, 0)
         }
 
+      def adjust(in: Long, inc: Int): Long = {
+        val n = percentToFrames(framesToPercent(in) + inc * 0.0001)
+        model.bounds.clip(n)
+      }
+
       def parse(s: String): Option[Long] = Try(tryParse(s)).toOption
 
-      def format(value: Long): String = framesToMillis(value).toLong.toString
+      def format(value: Long): String = f"${framesToPercent(value) * 100}%1.3f"
     }
 
-    val fmt     = List(fmtTime, fmtFrames, fmtMilli)
-    val ggTime  = new ParamField(pos, fmt)
-    val pane    = new FlowPanel(Component.wrap(ggTime))
+    val fmt = List(fmtTime, fmtFrames, fmtMilli, fmtPercent)
+    val res = new ParamField(bounds.start /* model.position */, fmt)
+    //    val iMap = res.getInputMap
+    //    iMap.remove(KeyStrokes.menu1 + Key.Left )
+    //    iMap.remove(KeyStrokes.menu1 + Key.Right)
 
+    res.prototypeDisplayValues = bounds.start :: bounds.stop :: Nil
+    res
+  }
+
+  private def ggFocus: Component = ggTime.textField
+
+  private lazy val pane = new BoxPanel(Orientation.Vertical) {
+    contents += butPane
+    contents += Swing.VStrut(8)
+    contents += ggTime
+    contents += Swing.VStrut(12)
+  }
+
+  def apply(): Unit = {
     val opt = OptionPane.confirmation(message = pane, messageType = OptionPane.Message.Question,
-      optionType = OptionPane.Options.OkCancel, focus = None)
+      optionType = OptionPane.Options.OkCancel, focus = Some(ggFocus))
     val res = opt.show(None, title)  // XXX TODO - find window
-    println(res)
+    if (res == OptionPane.Result.Ok) {
+      model.position = ggTime.value
+    }
   }
 }
