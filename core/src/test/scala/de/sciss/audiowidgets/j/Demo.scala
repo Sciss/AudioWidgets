@@ -2,11 +2,21 @@ package de.sciss.audiowidgets
 package j
 
 import java.awt.event.{WindowEvent, WindowAdapter, ActionEvent, ActionListener}
+import java.text.NumberFormat
+import java.util.Locale
+import javax.swing.JFormattedTextField.AbstractFormatter
+import javax.swing.text.NumberFormatter
+
+import com.alee.laf.WebLookAndFeel
+
 import collection.immutable.{IndexedSeq => Vec}
 import javax.swing.{JComponent, Box, JLabel, BorderFactory, JFrame, JPanel, Timer, WindowConstants}
 import java.awt.{Color, GridLayout, EventQueue, BorderLayout}
 
+import scala.util.Try
+
 object Demo extends App with Runnable {
+  WebLookAndFeel.install()
   EventQueue.invokeLater(this)
 
   def run(): Unit = {
@@ -46,7 +56,25 @@ object Demo extends App with Runnable {
     p.add(Box.createHorizontalStrut(20), BorderLayout.CENTER)
     val p2 = new JPanel(new BorderLayout())
     p2.add(lcdGrid, BorderLayout.NORTH)
-    p2.add(new Jog, BorderLayout.SOUTH)
+
+    val unitMs = new ParamFormat[Int] {
+      val unit = UnitView("milliseconds", "ms")
+
+      val formatter = new NumberFormatter(NumberFormat.getIntegerInstance(Locale.US))
+
+      def adjust(in: Int, inc: Int): Int = {
+        val res = in + inc
+        if      (inc < 0 && res > in) Int.MinValue
+        else if (inc > 0 && res < in) Int.MaxValue
+        else res
+      }
+
+      def parse(s: String): Option[Int] = Try(s.toInt).toOption
+
+      def format(value: Int): String = value.toString
+    }
+
+    p2.add(new ParamField(0, unitMs :: Nil), BorderLayout.SOUTH)
 
     //    p2.add(new JLabel {
     //      setText("00:00:00")

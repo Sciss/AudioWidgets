@@ -138,8 +138,10 @@ object AxisFormat {
 sealed trait AxisFormat {
   /** Formats a given value as a string with a given number of decimal digits.
     *
-    * @param value        the value to format
-    * @param decimals  the number of decimals. this must be >= 0 and <= 3, otherwise throws an exception
+    * @param value      the value to format
+    * @param decimals   the number of decimals. this must be >= 0 and <= 3, otherwise throws an exception
+    * @param pad        if greater than zero, the number of characters to pad the output string to,
+    *                   possibly prepending white-space
     */
   def format(value: Double, decimals: Int = 3, pad: Int = 0): String
 }

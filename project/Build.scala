@@ -7,6 +7,8 @@ object Build extends sbt.Build {
 
   lazy val desktopVersion = "0.6.0"
   lazy val spanVersion    = "1.2.1"
+  lazy val raphaelVersion = "1.0.2"
+  lazy val webLaFVersion  = "1.28"
 
   lazy val audiowidgets: Project = Project(
     id        = baseID,
@@ -21,6 +23,7 @@ object Build extends sbt.Build {
     id        = baseID + "-core",
     base      = file("core"),
     settings  = Project.defaultSettings ++ buildInfoSettings ++ Seq(
+      libraryDependencies += "de.sciss" % "weblaf" % webLaFVersion % "test",
       //         scalaVersion := "2.10.0",
       // buildInfoSettings
       sourceGenerators in Compile <+= buildInfo,
@@ -41,11 +44,15 @@ object Build extends sbt.Build {
     base          = file("swing"),
     dependencies  = Seq(core),
     settings      = Project.defaultSettings ++ Seq(
-      libraryDependencies += { val sv = scalaVersion.value
-        if (sv startsWith "2.11")
+      libraryDependencies ++= { val sv = scalaVersion.value
+        val swing = if (sv startsWith "2.11")
           "org.scala-lang.modules" %% "scala-swing" % "1.0.1"
         else
           "org.scala-lang" % "scala-swing" % sv
+        Seq(
+          "de.sciss" % "weblaf" % webLaFVersion % "test",
+          swing
+        )
       }
     )
   )
@@ -56,8 +63,10 @@ object Build extends sbt.Build {
     dependencies  = Seq(swing),
     settings      = Project.defaultSettings ++ Seq(
       libraryDependencies ++= Seq(
-        "de.sciss" %% "desktop"   % desktopVersion,
-        "de.sciss" %% "span"      % spanVersion
+        "de.sciss" %% "desktop"       % desktopVersion,
+        "de.sciss" %% "raphael-icons" % raphaelVersion,
+        "de.sciss" %% "span"          % spanVersion,
+        "de.sciss" % "weblaf" % webLaFVersion % "test"
       )
     )
   )

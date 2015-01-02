@@ -268,10 +268,10 @@ trait TransportCompanion {
     }
   }
 
-  private val segmentFirst   = "first"
+  private val segmentFirst  = "first"
   private val segmentMiddle = "middle"
-  private val segmentLast = "last"
-  private val segmentOnly = "only"
+  private val segmentLast   = "last"
+  private val segmentOnly   = "only"
 
   trait ButtonStrip {
     def buttons: Seq[AbstractButtonType]

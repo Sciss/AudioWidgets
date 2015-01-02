@@ -14,6 +14,8 @@
 package de.sciss.audiowidgets
 
 import java.awt.event.{ActionEvent, ActionListener}
+import com.alee.laf.WebLookAndFeel
+
 import scala.swing.event.{ValueChanged, WindowClosing, WindowOpened}
 import collection.immutable.{IndexedSeq => Vec}
 import java.awt.Color
@@ -22,9 +24,11 @@ import javax.swing.Timer
 import Swing._
 
 object Demo extends SimpleSwingApplication {
+  WebLookAndFeel.install()
+
   lazy val top = new MainFrame {
     title = "ScalaAudioWidgets"
-    peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", java.lang.Boolean.TRUE)
+    // peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", java.lang.Boolean.TRUE)
 
     val m = new PeakMeter {
       numChannels   = 2

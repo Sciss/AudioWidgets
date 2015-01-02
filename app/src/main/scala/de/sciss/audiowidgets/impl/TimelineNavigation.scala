@@ -14,12 +14,18 @@
 package de.sciss.audiowidgets
 package impl
 
-import scala.swing.{Action, Component}
-import de.sciss.desktop.{FocusType, KeyStrokes}
+import java.awt.Color
+
+import de.sciss.audiowidgets.j.ParamField
+import de.sciss.icons.raphael
+
+import scala.swing.{FlowPanel, Label, Action, Component}
+import de.sciss.desktop.{OptionPane, FocusType, KeyStrokes}
 import de.sciss.desktop
-import javax.swing.KeyStroke
+import javax.swing.{Icon, KeyStroke}
 import de.sciss.span.Span
 import scala.swing.event.Key
+import scala.util.Try
 
 object TimelineNavigation {
   /** Installs standard keyboard commands for navigating a timeline model.
@@ -31,28 +37,30 @@ object TimelineNavigation {
     import FocusType.{Window => Focus}
 
     // ---- zoom ----
-    component.addAction("timeline-inch1"  , new ActionSpanWidth(model, 2.0, ctrl  + Key.Left        ), Focus)
-    component.addAction("timeline-inch2"  , new ActionSpanWidth(model, 2.0, menu1 + Key.OpenBracket ), Focus)
-    component.addAction("timeline-dech1"  , new ActionSpanWidth(model, 0.5, ctrl  + Key.Right       ), Focus)
-    component.addAction("timeline-dech2"  , new ActionSpanWidth(model, 0.5, menu1 + Key.CloseBracket), Focus)
+    component.addAction("timeline-inc-h1"  , new ActionSpanWidth(model, 2.0, ctrl  + Key.Left        ), Focus)
+    component.addAction("timeline-inc-h2"  , new ActionSpanWidth(model, 2.0, menu1 + Key.OpenBracket ), Focus)
+    component.addAction("timeline-dec-h1"  , new ActionSpanWidth(model, 0.5, ctrl  + Key.Right       ), Focus)
+    component.addAction("timeline-dec-h2"  , new ActionSpanWidth(model, 0.5, menu1 + Key.CloseBracket), Focus)
 
-    component.addAction("timeline-possel1", new ActionSelToPos(model, 0.0, deselect = true,  plain + Key.Up  ), Focus)
-    component.addAction("timeline-possel2", new ActionSelToPos(model, 1.0, deselect = true,  plain + Key.Down), Focus)
-    component.addAction("timeline-possel3", new ActionSelToPos(model, 0.0, deselect = false, alt   + Key.Up  ), Focus)
-    component.addAction("timeline-possel4", new ActionSelToPos(model, 1.0, deselect = false, alt   + Key.Down), Focus)
+    component.addAction("timeline-pos-sel1", new ActionSelToPos(model, 0.0, deselect = true,  plain + Key.Up  ), Focus)
+    component.addAction("timeline-pos-sel2", new ActionSelToPos(model, 1.0, deselect = true,  plain + Key.Down), Focus)
+    component.addAction("timeline-pos-sel3", new ActionSelToPos(model, 0.0, deselect = false, alt   + Key.Up  ), Focus)
+    component.addAction("timeline-pos-sel4", new ActionSelToPos(model, 1.0, deselect = false, alt   + Key.Down), Focus)
 
     import ActionScroll._
-    component.addAction("timeline-retn"   , new ActionScroll(model, BoundsStart   , plain + Key.Enter), Focus)
-    component.addAction("timeline-left"   , new ActionScroll(model, SelectionStart, plain + Key.Left ), Focus)
-    component.addAction("timeline-right"  , new ActionScroll(model, SelectionStop , plain + Key.Right), Focus)
-    component.addAction("timeline-fit"    , new ActionScroll(model, FitToSelection, alt   + Key.F    ), Focus)
-    component.addAction("timeline-entire1", new ActionScroll(model, EntireBounds  , alt   + Key.A    ), Focus)
-    component.addAction("timeline-entire2", new ActionScroll(model, EntireBounds  , menu2 + Key.Left ), Focus)
+    component.addAction("timeline-return"  , new ActionScroll(model, BoundsStart   , plain + Key.Enter), Focus)
+    component.addAction("timeline-left"    , new ActionScroll(model, SelectionStart, plain + Key.Left ), Focus)
+    component.addAction("timeline-right"   , new ActionScroll(model, SelectionStop , plain + Key.Right), Focus)
+    component.addAction("timeline-fit"     , new ActionScroll(model, FitToSelection, alt   + Key.F    ), Focus)
+    component.addAction("timeline-entire1" , new ActionScroll(model, EntireBounds  , alt   + Key.A    ), Focus)
+    component.addAction("timeline-entire2" , new ActionScroll(model, EntireBounds  , menu2 + Key.Left ), Focus)
 
     import ActionSelect._
-    component.addAction("timeline-seltobeg", new ActionSelect(model, ExtendToBoundsStart, shift + Key.Enter), Focus)
-    component.addAction("timeline-seltoend", new ActionSelect(model, ExtendToBoundsStop , shift + alt + Key.Enter), Focus)
-    component.addAction("timeline-selall"  , new ActionSelect(model, All, menu1 + Key.A), FocusType.Default)
+    component.addAction("timeline-sel-to-beg", new ActionSelect(model, ExtendToBoundsStart, shift + Key.Enter), Focus)
+    component.addAction("timeline-sel-to-end", new ActionSelect(model, ExtendToBoundsStop , shift + alt + Key.Enter), Focus)
+    component.addAction("timeline-sel-all"   , new ActionSelect(model, All, menu1 + Key.A), FocusType.Default)
+
+    component.addAction("timeline-go-to-time", new ActionGoToTime(model, plain + Key.G), Focus)
   }
 
   private class ActionSpanWidth(model: TimelineModel.Modifiable, factor: Double, stroke: KeyStroke)

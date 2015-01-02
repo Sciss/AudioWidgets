@@ -1,5 +1,6 @@
 package de.sciss.audiowidgets
 
+import com.alee.laf.WebLookAndFeel
 import de.sciss.desktop.impl.{WindowImpl, SwingApplicationImpl}
 import de.sciss.desktop.{Window, Menu}
 import de.sciss.audiowidgets.impl.TimelineCanvasImpl
@@ -16,6 +17,7 @@ object App extends SwingApplicationImpl("AudioWidgets") {
   def sampleRate = 44100
 
   override protected def init(): Unit = {
+    WebLookAndFeel.install()
     new WindowImpl {
       def handler = App.windowHandler
 

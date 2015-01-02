@@ -6,6 +6,7 @@ import java.awt.event.{ActionEvent, ActionListener, MouseAdapter, MouseEvent}
 import java.beans.{PropertyChangeEvent, PropertyChangeListener}
 import javax.swing.{SwingConstants, AbstractAction, Action, ButtonGroup, Icon, JCheckBoxMenuItem, JLabel, JPopupMenu, MenuElement}
 
+import scala.collection.immutable.{Seq => ISeq}
 import scala.math.{max, Pi}
 
 /** This class extends <code>JLabel</code> by adding support
@@ -87,8 +88,9 @@ class UnitLabel extends JLabel with Icon { label =>
       if (isEnabled && units.size > 1) {
         requestFocus()
         if (_cycle) {
-          units((_selectedIdx + 1) % units.size).setLabel()
-          pop.getComponent(_selectedIdx).asInstanceOf[JCheckBoxMenuItem].setSelected(true)
+          val a = units((_selectedIdx + 1) % units.size)
+          a.setLabel()
+          a.menuItem.setSelected(true)
         } else {
           pop.show(label, 0, label.getHeight)
         }
@@ -99,20 +101,25 @@ class UnitLabel extends JLabel with Icon { label =>
   addPropertyChangeListener("enabled", prop)
   addPropertyChangeListener("insets" , prop)
 
+  def this(entries0: ISeq[UnitView]) = {
+    this()
+    entries = entries0
+  }
+
   /** Queries the action for a given index. This
     * action may contain a <code>NAME</code> or <code>ICON</code> field.
     *
     * @return	the action at the given index
     */
-  def getUnit(idx: Int): Action = units(idx)
+  def getUnitView(idx: Int): UnitView = units(idx).entry
 
   /** Queries the action for selected index. This
     * action may contain a <code>NAME</code> or <code>ICON</code> field.
     *
     * @return	the action at the selected index or <code>null</code> if no unit is selected
     */
-  def selectedUnit: Option[Action] =
-    if ((_selectedIdx < 0) || (_selectedIdx >= units.size)) None else Some(units(_selectedIdx))
+  def selectedUnitView: Option[UnitView] =
+    if ((_selectedIdx < 0) || (_selectedIdx >= units.size)) None else Some(units(_selectedIdx).entry)
 
   /** Queries the index of the currently selected unit.
     *
@@ -129,35 +136,32 @@ class UnitLabel extends JLabel with Icon { label =>
   def selectedIndex_=(idx: Int): Unit = {
     _selectedIdx = idx
     if (idx >= 0 && idx < units.size) {
-      units(idx).setLabel()
-      pop.getComponent(idx).asInstanceOf[JCheckBoxMenuItem].setSelected(true)
+      val a = units(idx)
+      a.setLabel()
+      a.menuItem.setSelected(true)
     }
   }
-
-  /** Adds a new unit (text label) to the end
-    * of the label list. If the unit list had been
-    * empty, this new label will be selected.
-    *
-    * @param	name	the name of the new label.
-    */
-  def addUnit(name: String): Unit = addUnit(new UnitAction(name))
-
-  /** Adds a new unit (icon label) to the end
-    * of the label list. If the unit list had been
-    * empty, this new label will be selected.
-    *
-    * @param	icon	the icon view of the new label.
-    */
-  def addUnit(icon: Icon): Unit = addUnit(new UnitAction(icon))
 
   /** Adds a new unit (text/icon combo label) to the end
     * of the label list. If the unit list had been
     * empty, this new label will be selected.
-    *
-    * @param	name	the name of the new label.
-    * @param	icon	the icon view of the new label.
     */
-  def addUnit(name: String, icon: Icon): Unit = addUnit(new UnitAction(name, icon))
+  def addUnitView(entry: UnitView): Unit = addUnit(entry, update = true)
+  
+  def removeUnitView(entry: UnitView): Boolean = {
+    val idx = units.indexWhere(_.entry == entry)
+    if (idx < 0) return false
+    removeUnit(idx, update = true)
+    true
+  }
+
+  def entries: ISeq[UnitView] = units.map(_.entry)
+
+  def entries_=(xs: ISeq[UnitView]): Unit = {
+    clear()
+    xs.foreach(addUnit(_, update = false))
+    updatePreferredSize()
+  }
 
   def cycling: Boolean = _cycle
 
@@ -166,17 +170,43 @@ class UnitLabel extends JLabel with Icon { label =>
       _cycle = b
       repaint()
     }
-  
-  private def addUnit(a: UnitAction): Unit = {
-    val mi: JCheckBoxMenuItem = new JCheckBoxMenuItem(a)
-    bg.add(mi)
+
+  private def clear(): Unit = {
+    var idx = units.size
+    while (idx > 0) {
+      idx -= 1
+      removeUnit(idx, update = false)
+    }
+  }
+
+  private def addUnit(entry: UnitView, update: Boolean): Unit = {
+    val a   = new UnitAction(entry)
+    val mi  = a.menuItem
+    bg .add(mi)
     pop.add(mi)
+    val wasEmpty = units.isEmpty
     units :+= a
-    if (units.size == 1) {
+    if (wasEmpty) {
+      selectedIndex = -1
       a.setLabel()
       mi.setSelected(true)
     }
-    updatePreferredSize()
+    if (update) updatePreferredSize()
+  }
+
+  private def removeUnit(idx: Int, update: Boolean): Unit = {
+    val a   = units(idx)
+    val mi  = a.menuItem
+    bg.remove(mi)
+    pop.remove(mi)
+    units = units.patch(idx, Nil, 1)
+    if (units.isEmpty) {
+      _selectedIdx = -1
+      label.setText(null)
+      label.setIcon(null)
+      label.setToolTipText(null)
+    }
+    if (update) updatePreferredSize()
   }
 
   private def updatePreferredSize(): Unit = {
@@ -189,13 +219,15 @@ class UnitLabel extends JLabel with Icon { label =>
 
     units.foreach { ua =>
       ua.getPreferredSize(fntMetrics, d)
-      w = max(w, d.width)
+      w = max(w, d.width )
       h = max(h, d.height)
     }
-    d.width  = w + in.left + in.right
-    d.height = h + in.top + in.bottom
+    d.width  = w + in.left + in.right // + label.getIconTextGap
+    d.height = h + in.top  + in.bottom
     setMinimumSize  (d)
     setPreferredSize(d)
+
+    // println(s"preferredSize: w = ${d.width}, h = ${d.height}")
   }
 
   private def fireUnitChanged(): Unit = {
@@ -243,24 +275,22 @@ class UnitLabel extends JLabel with Icon { label =>
     g2.setTransform(atOrig)
   }
 
-  private class UnitAction(name: String, icon0: Icon) extends AbstractAction(name) { act =>
+  private class UnitAction(val entry: UnitView) 
+    extends AbstractAction(entry.label.orNull) { act =>
     
-    private val icon = new CompoundIcon(icon0, label, label.getIconTextGap)
-    putValue(Action.SMALL_ICON, icon)
+    val menuItem = new JCheckBoxMenuItem(this)
     
-    def this(name: String) {
-      this(name, null)
-    }
-
-    def this(icon: Icon) {
-      this(null, icon)
-    }
-
+    private val icon  = entry.icon.orNull
+    private val iconC = new CompoundIcon(icon, label, label.getIconTextGap)
+    if (icon != null) putValue(Action.SMALL_ICON, icon)
+    putValue(Action.SHORT_DESCRIPTION, entry.name)
+    
     def actionPerformed(e: ActionEvent): Unit = setLabel()
 
     def setLabel(): Unit = {
-      label.setText(name)
-      label.setIcon(icon)
+      label.setText(entry.label.orNull)
+      label.setIcon(iconC)
+      label.setToolTipText(entry.name)
       val newIndex = label.units.indexOf(act)
       if (newIndex != label._selectedIdx) {
         _selectedIdx = newIndex
@@ -269,15 +299,13 @@ class UnitLabel extends JLabel with Icon { label =>
     }
 
     def getPreferredSize(fntMetrics: FontMetrics, d0: Dimension): Dimension = {
-      var w = 0
-      var h = 0
-      if (name != null) {
-        w = fntMetrics.stringWidth(name) + label.getIconTextGap
-        h = fntMetrics.getHeight
-      }
       val d = if (d0 == null) new Dimension else d0
-      d.width  = w + icon.getIconWidth
-      d.height = max(h, icon.getIconHeight)
+      d.width   = iconC.getIconWidth + label.getIconTextGap
+      d.height  = iconC.getIconHeight
+      entry.label.foreach { name =>
+        d.width  += fntMetrics.stringWidth(name) + 4 // + label.getIconTextGap
+        d.height  = math.max(d.height, fntMetrics.getHeight)
+      }
       d
     }
   }

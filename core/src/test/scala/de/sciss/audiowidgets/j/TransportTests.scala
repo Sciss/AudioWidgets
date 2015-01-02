@@ -3,13 +3,16 @@ package de.sciss.audiowidgets.j
 import java.awt.{BorderLayout, Dimension, RenderingHints, Graphics2D, Graphics, EventQueue}
 import javax.swing.{JComponent, WindowConstants, JPanel, JFrame}
 
+import com.alee.laf.WebLookAndFeel
+
 object TransportTests extends App with Runnable {
-   EventQueue.invokeLater( this )
+  WebLookAndFeel.install()
+  EventQueue.invokeLater(this)
 
   def run(): Unit = {
     val f = new JFrame()
     val p = new JComponent {
-      setPreferredSize(new Dimension(260, 70))
+      setPreferredSize(new Dimension(280, 70))
 
       override def paintComponent(g: Graphics): Unit = {
         import Transport.{paint => pnt, _}

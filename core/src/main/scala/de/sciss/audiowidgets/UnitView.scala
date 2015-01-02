@@ -1,0 +1,19 @@
+package de.sciss.audiowidgets
+
+import javax.swing.Icon
+
+object UnitView {
+  def apply(name: String, label: String            ): UnitView = new Impl(name, Some(label), None      )
+  def apply(name: String,                icon: Icon): UnitView = new Impl(name, None       , Some(icon))
+  def apply(name: String, label: String, icon: Icon): UnitView = new Impl(name, Some(label), Some(icon))
+
+  private final class Impl(val name: String, val label: Option[String], val icon: Option[Icon]) extends UnitView {
+    override def toString = s"UnitView($name${label.fold("")(s => s", label = $s")})"
+  }
+}
+trait UnitView {
+  def label: Option[String]
+  def icon : Option[Icon]
+  
+  def name : String
+}
