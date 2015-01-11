@@ -1,6 +1,6 @@
 lazy val baseName = "AudioWidgets"
 
-version         in ThisBuild := "1.7.2"
+version         in ThisBuild := "1.7.3-SNAPSHOT"
 
 organization    in ThisBuild := "de.sciss"
 
@@ -10,9 +10,9 @@ homepage        in ThisBuild := Some(url("https://github.com/Sciss/" + baseName)
 
 licenses        in ThisBuild := Seq("LGPL v2.1+" -> url("http://www.gnu.org/licenses/lgpl-2.1.txt"))
 
-scalaVersion    in ThisBuild := "2.11.4"
+scalaVersion    in ThisBuild := "2.11.5"
 
-crossScalaVersions in ThisBuild := Seq("2.11.4", "2.10.4")
+crossScalaVersions in ThisBuild := Seq("2.11.5", "2.10.4")
 
 scalacOptions   in ThisBuild ++= Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture")
 
