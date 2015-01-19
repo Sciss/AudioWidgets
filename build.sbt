@@ -1,6 +1,6 @@
 lazy val baseName = "AudioWidgets"
 
-version         in ThisBuild := "1.7.3-SNAPSHOT"
+version         in ThisBuild := "1.8.0"
 
 organization    in ThisBuild := "de.sciss"
 

@@ -6,7 +6,7 @@ object Build extends sbt.Build {
   def baseID = "audiowidgets"
 
   lazy val desktopVersion = "0.6.0"
-  lazy val spanVersion    = "1.2.1"
+  lazy val spanVersion    = "1.3.0"
   lazy val raphaelVersion = "1.0.2"
   lazy val webLaFVersion  = "1.28"
 
