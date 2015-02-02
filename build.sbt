@@ -1,6 +1,8 @@
 lazy val baseName = "AudioWidgets"
 
-version         in ThisBuild := "1.8.0"
+lazy val baseNameL = baseName.toLowerCase
+
+version         in ThisBuild := "1.9.0"
 
 organization    in ThisBuild := "de.sciss"
 
@@ -16,21 +18,68 @@ crossScalaVersions in ThisBuild := Seq("2.11.5", "2.10.4")
 
 scalacOptions   in ThisBuild ++= Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture")
 
+// ---- dependencies ----
+
+lazy val desktopVersion = "0.7.0"
+
+lazy val spanVersion    = "1.3.0"
+
+lazy val raphaelVersion = "1.0.2"
+
+// ---- test dependencies ----
+
+lazy val webLaFVersion  = "1.28"
+
+// ----
+
 initialCommands in console in ThisBuild := """
   |import de.sciss.audiowidgets._""".stripMargin
 
-// ---- build info ----
+lazy val audiowidgets: Project = Project(
+  id        = baseNameL,
+  base      = file("."),
+  aggregate = Seq(core, swing, app),
+  settings  = Project.defaultSettings ++ Seq(
+    packagedArtifacts := Map.empty           // prevent publishing anything!
+  )
+)
 
-// buildInfoSettings
-// 
-// sourceGenerators in Compile <+= buildInfo
-// 
-// buildInfoKeys := Seq( name, organization, version, scalaVersion, description,
-//    BuildInfoKey.map( homepage ) { case (k, opt) => k -> opt.get },
-//    BuildInfoKey.map( licenses ) { case (_, Seq( (lic, _) )) => "license" -> lic }
-// )
-// 
-// buildInfoPackage := "de.sciss.gui.j"
+lazy val core = Project(
+  id        = s"$baseName-core",
+  base      = file("core"),
+  settings  = Project.defaultSettings ++ /* buildInfoSettings ++ */ Seq(
+    libraryDependencies += "de.sciss" % "weblaf" % webLaFVersion % "test"
+  )
+)
+
+lazy val swing = Project(
+  id            = s"$baseNameL-swing",
+  base          = file("swing"),
+  dependencies  = Seq(core),
+  settings      = Project.defaultSettings ++ Seq(
+    libraryDependencies ++= { val sv = scalaVersion.value
+      val swing = if (sv startsWith "2.11")
+        "org.scala-lang.modules" %% "scala-swing" % "1.0.1"
+      else
+        "org.scala-lang" % "scala-swing" % sv
+      Seq("de.sciss" % "weblaf" % webLaFVersion % "test", swing)
+    }
+  )
+)
+
+lazy val app = Project(
+  id            = s"$baseNameL-app",
+  base          = file("app"),
+  dependencies  = Seq(swing),
+  settings      = Project.defaultSettings ++ Seq(
+    libraryDependencies ++= Seq(
+      "de.sciss" %% "desktop"       % desktopVersion,
+      "de.sciss" %% "raphael-icons" % raphaelVersion,
+      "de.sciss" %% "span"          % spanVersion,
+      "de.sciss" % "weblaf" % webLaFVersion % "test"
+    )
+  )
+)
 
 // ---- publishing ----
 

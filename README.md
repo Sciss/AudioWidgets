@@ -20,7 +20,7 @@ To use the library in your project:
     "de.sciss" %% "audiowidgets-swing" % v
     "de.sciss" %% "audiowidgets-app"   % v
 
-The current version `v` is `"1.8.0"`.
+The current version `v` is `"1.9.0"`.
 
 To view a demo of the widgets from the sbt console:
 
