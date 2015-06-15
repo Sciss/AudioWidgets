@@ -63,6 +63,7 @@ class PeakMeter(orient: Int = SwingConstants.VERTICAL)
       }
     }
   })
+  updateBorders()
 
   def orientation_=(value: Int): Unit = if (orientVar != value) {
     if (value != HORIZONTAL && value != VERTICAL) throw new IllegalArgumentException(value.toString)
@@ -177,7 +178,6 @@ class PeakMeter(orient: Int = SwingConstants.VERTICAL)
 
   def borderVisible_=(b: Boolean): Unit = if (borderVisibleVar != b) {
     borderVisibleVar = b
-    setBorder(if (b) new RecessedBorder() else null)
     updateBorders()
   }
 
@@ -257,18 +257,18 @@ class PeakMeter(orient: Int = SwingConstants.VERTICAL)
   private def rebuildMeters(): Unit = {
     removeAll()
 
-    val b1 = if (caption)
-      BorderFactory.createEmptyBorder(captionComp.ascent, 1, captionComp.descent, 1)
-    else
-      null
+    //    val b1 = if (caption)
+    //      BorderFactory.createEmptyBorder(captionComp.ascent, 1, captionComp.descent, 1)
+    //    else
+    //      null
 
     val b2 = if (caption)
       BorderFactory.createEmptyBorder(captionComp.ascent, 1, captionComp.descent, 0)
     else
       BorderFactory.createEmptyBorder(1, 1, if (vertical) 1 else 0, if (vertical) 0 else 1)
 
-		val s1 = if (!borderVisibleVar || (captionVisibleVar && captionPositionVar == RIGHT)) numChannelsVar - 1 else -1
-		val s2 = if (captionVisibleVar && captionPositionVar == CENTER) numChannelsVar >> 1 else -1
+//		val s1 = if (!borderVisibleVar || (captionVisibleVar && captionPositionVar == RIGHT)) numChannelsVar - 1 else -1
+//		val s2 = if (captionVisibleVar && captionPositionVar == CENTER) numChannelsVar >> 1 else -1
 
     val newMeters = new Array[PeakMeterBar](numChannels)
     val numChans  = numChannelsVar
@@ -278,11 +278,11 @@ class PeakMeter(orient: Int = SwingConstants.VERTICAL)
       m.refreshParent = true
       m.rmsPainted    = rmsPaintedVar
       m.holdPainted   = holdPaintedVar
-      if ((ch == s1) || (ch == s2)) {
-        if (b1 != null) m.setBorder(b1)
-      } else {
+//      if ((ch == s1) || (ch == s2)) {
+//        if (b1 != null) m.setBorder(b1)
+//      } else {
         m.setBorder(b2)
-      }
+//      }
       m.ticks = ticksVar // if( caption != null ) ticksVar else 0
       add(m)
       newMeters(ch) = m
@@ -301,23 +301,31 @@ class PeakMeter(orient: Int = SwingConstants.VERTICAL)
 	}
 
 	private def updateBorders(): Unit = {
-		val b1		= if(caption)
-      BorderFactory.createEmptyBorder(captionComp.ascent, 1, captionComp.descent, 1)
+    // top left bottom right
+    val b0 = if (borderVisibleVar)
+      new RecessedBorder()
     else
-      BorderFactory.createEmptyBorder(1, 1, 1, 1)
+      BorderFactory.createMatteBorder(0, 0, if (vertical) 0 else 1, if (vertical) 1 else 0, Color.black)
+    setBorder(b0)
+
+    //
+    //		val b1		= if(caption)
+    //      BorderFactory.createEmptyBorder(captionComp.ascent, 1, captionComp.descent, 1)
+    //    else
+    //      BorderFactory.createEmptyBorder(1, 1, 1, 1)
 
     val b2 = if (caption)
       BorderFactory.createEmptyBorder(captionComp.ascent, 1, captionComp.descent, 0)
     else
       BorderFactory.createEmptyBorder(1, 1, if (vertical) 1 else 0, if (vertical) 0 else 1)
 
-    val s1 = if (!borderVisibleVar || (captionVisibleVar && captionPositionVar == RIGHT)) numChannelsVar - 1 else -1
-		val s2 = if (captionVisibleVar && captionPositionVar == CENTER) numChannelsVar >> 1 else -1
+    //    val s1 = if (!borderVisibleVar || (captionVisibleVar && captionPositionVar == RIGHT)) numChannelsVar - 1 else -1
+    //		val s2 = if (captionVisibleVar && captionPositionVar == CENTER) numChannelsVar >> 1 else -1
 
     var ch = 0
     while (ch < numChannelsVar) {
-      val b = if ((ch == s1) || (ch == s2)) b1 else b2
-      meters(ch).setBorder(b)
+      // val b = if ((ch == s1) || (ch == s2)) b1 else b2
+      meters(ch).setBorder(b2) // (b)
       ch += 1
     }
   }

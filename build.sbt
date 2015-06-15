@@ -1,7 +1,7 @@
 lazy val baseName       = "AudioWidgets"
 lazy val baseNameL      = baseName.toLowerCase
 
-lazy val projectVersion = "1.10.0-SNAPSHOT"
+lazy val projectVersion = "1.9.1"
 
 lazy val commonSettings = Seq(
   version             := projectVersion,
@@ -18,14 +18,15 @@ lazy val commonSettings = Seq(
 
 // ---- dependencies ----
 
-lazy val desktopVersion = "0.7.0"
-lazy val spanVersion    = "1.4.0-SNAPSHOT"
-lazy val raphaelVersion = "1.0.2"
+lazy val desktopVersion     = "0.7.0"
+lazy val spanVersion        = "1.3.1"
+lazy val raphaelVersion     = "1.0.2"
+lazy val scalaSwingVersion  = "1.0.2"
 
 // ---- test dependencies ----
 
-lazy val xstreamVersion = "1.4.8"  // 1.4.7 corrupt sha1 on Maven Central
-lazy val webLaFVersion  = "1.28"
+lazy val xstreamVersion     = "1.4.8"  // 1.4.7 corrupt sha1 on Maven Central
+lazy val webLaFVersion      = "1.28"
 
 // ----
 
@@ -51,7 +52,7 @@ lazy val swing = Project(id = s"$baseNameL-swing", base = file("swing")).
   settings(
     libraryDependencies ++= { val sv = scalaVersion.value
       val swing = if (sv startsWith "2.11")
-        "org.scala-lang.modules" %% "scala-swing" % "1.0.1"
+        "org.scala-lang.modules" %% "scala-swing" % scalaSwingVersion
       else
         "org.scala-lang" % "scala-swing" % sv
       //
