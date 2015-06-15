@@ -1,5 +1,8 @@
 # AudioWidgets
 
+[![Build Status](https://travis-ci.org/Sciss/AudioWidgets.svg?branch=master)](https://travis-ci.org/Sciss/AudioWidgets)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.sciss/audiowidgets_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.sciss/audiowidgets_2.11)
+
 ## statement
 
 AudioWidgets is a library providing specialized widgets for audio applications. It is Swing based and written in the Scala programming language. (C)opyright 2011&ndash;2015 by Hanns Holger Rutz. All rights reserved. It is released under the [GNU Lesser General Public License](http://github.com/Sciss/AudioWidgets/blob/master/licenses/AudioWidgets-License.txt) v2.1+ and comes with absolutely no warranties. To contact the author, send an email to `contact at sciss.de`.
