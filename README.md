@@ -1,7 +1,7 @@
 # AudioWidgets
 
 [![Build Status](https://travis-ci.org/Sciss/AudioWidgets.svg?branch=master)](https://travis-ci.org/Sciss/AudioWidgets)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.sciss/audiowidgets_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.sciss/audiowidgets_2.11)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.sciss/audiowidgets-core_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.sciss/audiowidgets-core_2.11)
 
 ## statement
 
