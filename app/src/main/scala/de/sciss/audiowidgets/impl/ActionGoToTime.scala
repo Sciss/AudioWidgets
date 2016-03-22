@@ -2,7 +2,7 @@
  *  ActionGoToTime.scala
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2015 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2016 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is published under the GNU Lesser General Public License v2.1+
  *
@@ -109,7 +109,7 @@ class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
       private def tryParse(s: String): Long = {
         // HH:MM:SS.mmm
         val arr = s.replace(' ', '0').split(':')
-        if (arr.size != 3) throw new ParseException(s, 0)
+        if (arr.length != 3) throw new ParseException(s, 0)
         try {
           val hours   = arr(0).toLong
           val minutes = arr(1).toLong

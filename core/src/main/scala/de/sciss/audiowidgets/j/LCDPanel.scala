@@ -2,7 +2,7 @@
  *  LCDPanel.java
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2015 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2016 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is published under the GNU Lesser General Public License v2.1+
  *
@@ -14,7 +14,7 @@
 package de.sciss.audiowidgets
 package j
 
-import javax.swing.JPanel
+import javax.swing.{UIManager, JPanel}
 import java.beans.{PropertyChangeEvent, PropertyChangeListener}
 import java.awt.{Rectangle, RenderingHints, Graphics2D, LinearGradientPaint, Insets, Color, Graphics}
 
@@ -48,7 +48,7 @@ class LCDPanel extends JPanel {
   private final val inV = 0 // 1
   //   private val strkSh = new BasicStroke( 2f )
 
-  setBackground(LCDColors.defaultBg)
+  setBackground(if (UIManager.getBoolean("dark-skin")) LCDColors.blueBg else LCDColors.defaultBg)
   recalcColors()
 
   addPropertyChangeListener("background", new PropertyChangeListener {

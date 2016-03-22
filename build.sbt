@@ -1,7 +1,7 @@
 lazy val baseName       = "AudioWidgets"
 lazy val baseNameL      = baseName.toLowerCase
 
-lazy val projectVersion = "1.9.1"
+lazy val projectVersion = "1.9.2-SNAPSHOT"
 
 lazy val commonSettings = Seq(
   version             := projectVersion,
@@ -9,8 +9,8 @@ lazy val commonSettings = Seq(
   description         := "Specialized Swing widgets for audio applications in Scala",
   homepage            := Some(url(s"https://github.com/Sciss/$baseName")),
   licenses            := Seq("LGPL v2.1+" -> url("http://www.gnu.org/licenses/lgpl-2.1.txt")),
-  scalaVersion        := "2.11.6",
-  crossScalaVersions  := Seq("2.11.6", "2.10.5"),
+  scalaVersion        := "2.11.8",
+  crossScalaVersions  := Seq("2.11.8", "2.10.6"),
   scalacOptions      ++= Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture"),
   initialCommands in console := """
     |import de.sciss.audiowidgets._""".stripMargin
@@ -18,7 +18,7 @@ lazy val commonSettings = Seq(
 
 // ---- dependencies ----
 
-lazy val desktopVersion     = "0.7.0"
+lazy val desktopVersion     = "0.7.1"
 lazy val spanVersion        = "1.3.1"
 lazy val raphaelVersion     = "1.0.2"
 lazy val scalaSwingVersion  = "1.0.2"
@@ -26,7 +26,14 @@ lazy val scalaSwingVersion  = "1.0.2"
 // ---- test dependencies ----
 
 lazy val xstreamVersion     = "1.4.8"  // 1.4.7 corrupt sha1 on Maven Central
-lazy val webLaFVersion      = "1.28"
+lazy val webLaFVersion      = "1.29-SNAPSHOT"
+
+lazy val testSettings = Seq(
+  libraryDependencies ++= Seq(
+    "com.thoughtworks.xstream" % "xstream" % xstreamVersion % "test",   // PROBLEM WITH MAVEN CENTRAL
+    "de.sciss" % "weblaf-submin" % webLaFVersion % "test"
+  )
+)
 
 // ----
 
@@ -37,43 +44,33 @@ lazy val root = Project(id = baseNameL, base = file(".")).
     packagedArtifacts := Map.empty           // prevent publishing anything!
   )
 
-lazy val core = Project(id = s"$baseName-core", base = file("core")).
-  settings(commonSettings).
-  settings(
-    libraryDependencies ++= Seq(
-      "com.thoughtworks.xstream" % "xstream" % xstreamVersion % "test",   // PROBLEM WITH MAVEN CENTRAL
-      "de.sciss" % "weblaf" % webLaFVersion % "test"
-    )
-  )
+lazy val core = Project(id = s"$baseName-core", base = file("core"))
+  .settings(commonSettings)
+  .settings(testSettings)
 
-lazy val swing = Project(id = s"$baseNameL-swing", base = file("swing")).
-  dependsOn(core).
-  settings(commonSettings).
-  settings(
-    libraryDependencies ++= { val sv = scalaVersion.value
+lazy val swing = Project(id = s"$baseNameL-swing", base = file("swing"))
+  .dependsOn(core)
+  .settings(commonSettings)
+  .settings(testSettings)
+  .settings(
+    libraryDependencies += { val sv = scalaVersion.value
       val swing = if (sv startsWith "2.11")
         "org.scala-lang.modules" %% "scala-swing" % scalaSwingVersion
       else
         "org.scala-lang" % "scala-swing" % sv
-      //
-      Seq(
-        "com.thoughtworks.xstream" % "xstream" % xstreamVersion % "test",   // PROBLEM WITH MAVEN CENTRAL
-        "de.sciss" % "weblaf" % webLaFVersion % "test", 
-        swing
-      )
+      swing
     }
   )
 
-lazy val app = Project(id = s"$baseNameL-app", base = file("app")).
-  dependsOn(swing).
-  settings(commonSettings).
-  settings(
+lazy val app = Project(id = s"$baseNameL-app", base = file("app"))
+  .dependsOn(swing)
+  .settings(commonSettings)
+  .settings(testSettings)
+  .settings(
     libraryDependencies ++= Seq(
       "de.sciss" %% "desktop"       % desktopVersion,
       "de.sciss" %% "raphael-icons" % raphaelVersion,
-      "de.sciss" %% "span"          % spanVersion,
-      "com.thoughtworks.xstream" % "xstream" % xstreamVersion % "test",   // PROBLEM WITH MAVEN CENTRAL
-      "de.sciss" % "weblaf" % webLaFVersion % "test"
+      "de.sciss" %% "span"          % spanVersion
     )
   )
 

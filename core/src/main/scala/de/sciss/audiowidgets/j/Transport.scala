@@ -2,7 +2,7 @@
  *  Transport.java
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2015 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2016 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is published under the GNU Lesser General Public License v2.1+
  *
@@ -13,12 +13,12 @@
 
 package de.sciss.audiowidgets.j
 
-import java.awt.{RenderingHints, Graphics, Component, Graphics2D, BasicStroke, Shape, Color, LinearGradientPaint, Paint}
-import scala.Array
-import java.awt.geom.{RoundRectangle2D, AffineTransform, Ellipse2D, Area, Rectangle2D, GeneralPath}
-import javax.swing.{AbstractAction, Icon, JComponent, JButton, AbstractButton, BoxLayout, Box}
-import collection.immutable.{IndexedSeq => Vec}
 import java.awt.event.ActionEvent
+import java.awt.geom.{AffineTransform, Area, Ellipse2D, GeneralPath, Rectangle2D, RoundRectangle2D}
+import java.awt.{BasicStroke, Color, Component, Graphics, Graphics2D, LinearGradientPaint, Paint, RenderingHints, Shape}
+import javax.swing.{UIManager, AbstractAction, AbstractButton, Box, BoxLayout, Icon, JButton, JComponent}
+
+import scala.collection.immutable.{IndexedSeq => Vec}
 
 trait TransportCompanion {
   // ---- abstract types and methods ----
@@ -29,7 +29,10 @@ trait TransportCompanion {
 
   protected def makeAction(icn: IconImpl, fun: => Unit): Action
 
-  def makeButtonStrip(actions: Seq[ActionElement], scale: Float = 0.8f, scheme: ColorScheme = DarkScheme): ComponentType with ButtonStrip
+  def defaultColorScheme: ColorScheme = if (UIManager.getBoolean("dark-skin")) LightScheme else DarkScheme
+
+  def makeButtonStrip(actions: Seq[ActionElement], scale: Float = 0.8f,
+                      scheme: ColorScheme = defaultColorScheme): ComponentType with ButtonStrip
 
   // ---- implemented ----
 
@@ -41,10 +44,11 @@ trait TransportCompanion {
 
   case object LightScheme extends ColorScheme {
     private[j] def fillPaint(scale: Float): Paint = new LinearGradientPaint(0f, 0f, 0f, scale * 19f, Array(0f, 0.25f, 1f),
-      Array(new Color(0xE8, 0xE8, 0xE8), new Color(0xFF, 0xFF, 0xFF), new Color(0xF0, 0xF0, 0xF0))
+//      Array(new Color(0xE8, 0xE8, 0xE8), new Color(0xFF, 0xFF, 0xFF), new Color(0xF0, 0xF0, 0xF0))
+      Array(new Color(0xA8, 0xA8, 0xA8), new Color(0xBF, 0xBF, 0xBF), new Color(0xB0, 0xB0, 0xB0))
     )
 
-    private[j] val shadowPaint: Paint = new Color(0, 0, 0, 0x50)
+    private[j] val shadowPaint : Paint = new Color(0, 0, 0, 0x50)
     private[j] val outlinePaint: Paint = new Color(0, 0, 0, 0xC0)
   }
 
@@ -53,7 +57,7 @@ trait TransportCompanion {
       Array(new Color(0x28, 0x28, 0x28), new Color(0x00, 0x00, 0x00), new Color(0x20, 0x20, 0x20))
     )
 
-    private[j] val shadowPaint: Paint = new Color(0xFF, 0xFF, 0xFF, 0x50)
+    private[j] val shadowPaint : Paint = new Color(0xFF, 0xFF, 0xFF, 0x50)
     private[j] val outlinePaint: Paint = Color.white
   }
 

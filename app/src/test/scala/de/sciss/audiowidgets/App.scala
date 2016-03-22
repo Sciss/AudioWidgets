@@ -4,6 +4,7 @@ import com.alee.laf.WebLookAndFeel
 import de.sciss.desktop.impl.{WindowImpl, SwingApplicationImpl}
 import de.sciss.desktop.{Window, Menu}
 import de.sciss.audiowidgets.impl.TimelineCanvasImpl
+import de.sciss.weblaf.submin.SubminSkin
 import scala.swing.{Swing, Component}
 import java.awt.Graphics2D
 import de.sciss.span.Span
@@ -17,7 +18,11 @@ object App extends SwingApplicationImpl("AudioWidgets") {
   def sampleRate = 44100
 
   override protected def init(): Unit = {
-    WebLookAndFeel.install()
+    if (args.contains("--submin")) {
+      SubminSkin.install()
+    } else {
+      WebLookAndFeel.install()
+    }
     new WindowImpl {
       def handler = App.windowHandler
 

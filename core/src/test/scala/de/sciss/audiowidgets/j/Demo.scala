@@ -8,15 +8,20 @@ import javax.swing.JFormattedTextField.AbstractFormatter
 import javax.swing.text.NumberFormatter
 
 import com.alee.laf.WebLookAndFeel
+import de.sciss.weblaf.submin.SubminSkin
 
 import collection.immutable.{IndexedSeq => Vec}
-import javax.swing.{JComponent, Box, JLabel, BorderFactory, JFrame, JPanel, Timer, WindowConstants}
+import javax.swing._
 import java.awt.{Color, GridLayout, EventQueue, BorderLayout}
 
 import scala.util.Try
 
 object Demo extends App with Runnable {
-  WebLookAndFeel.install()
+  if (args.contains("--submin")) {
+    SubminSkin.install()
+  } else {
+    WebLookAndFeel.install()
+  }
   EventQueue.invokeLater(this)
 
   def run(): Unit = {
@@ -33,7 +38,7 @@ object Demo extends App with Runnable {
 
     import LCDColors._
     val lcdColors = Vec(
-      (grayFg,  new Color(0, 0, 0, 0)),
+      (grayFg,  defaultBg /* new Color(0, 0, 0, 0) */),
       (blueFg,  blueBg),
       (grayFg,  grayBg),
       (redFg,   redBg),
@@ -44,9 +49,15 @@ object Demo extends App with Runnable {
       case ((fg, bg), idx) =>
         val lcd = new LCDPanel
         if (bg.getAlpha > 0) lcd.setBackground(bg)
-        val lb = new JLabel("00:00:0" + idx)
-        if (idx == 0) lb.setFont(LCDFont()) else
+        val lb = new JLabel(s"00:00:0$idx")
+        if (idx != 1 && idx != 4) {
+          lb.putClientProperty("styleId", "noshade")
+        }
+        if (idx == 0 || idx == 1) {
+          lb.setFont(LCDFont())
+        } else {
           lb.putClientProperty("JComponent.sizeVariant", "small")
+        }
         lb.setForeground(fg)
         lcd.add(lb)
         lcdGrid.add(lcd)

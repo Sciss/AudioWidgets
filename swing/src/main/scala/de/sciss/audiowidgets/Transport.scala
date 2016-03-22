@@ -2,7 +2,7 @@
  *  Transport.scala
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2015 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2016 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is published under the GNU Lesser General Public License v2.1+
  *
@@ -38,7 +38,8 @@ object Transport extends TransportCompanion {
     }
   }
 
-  def makeButtonStrip(actions: Seq[ActionElement], scale: Float, scheme: ColorScheme = DarkScheme): Component with ButtonStrip = {
+  def makeButtonStrip(actions: Seq[ActionElement], scale: Float,
+                      scheme: ColorScheme = defaultColorScheme): Component with ButtonStrip = {
     val a = actions.map(_.apply(scale, scheme))
     new SButtonStripImpl(a, scheme)
   }

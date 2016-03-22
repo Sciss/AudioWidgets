@@ -2,7 +2,7 @@
  *  Axis.scala
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2015 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2016 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is published under the GNU Lesser General Public License v2.1+
  *
@@ -14,12 +14,12 @@
 package de.sciss.audiowidgets
 package j
 
-import java.awt.geom.{ GeneralPath, AffineTransform }
-import java.awt.image.BufferedImage
+import java.awt.{Paint, Rectangle, Graphics2D, Graphics, FontMetrics, RenderingHints, Font, LinearGradientPaint, Dimension, Color}
+import java.awt.geom.{AffineTransform, GeneralPath}
 import java.util.Locale
-import annotation.switch
-import java.awt.{Font, Color, Dimension, FontMetrics, Graphics, Graphics2D, Rectangle, RenderingHints, TexturePaint}
-import javax.swing.{UIManager, SwingConstants, JComponent}
+import javax.swing.{JComponent, SwingConstants, UIManager}
+
+import scala.annotation.switch
 
 /** A GUI element for displaying
   * the timeline's axis (ruler)
@@ -38,12 +38,21 @@ object Axis {
   private final val TIME_RASTER     = Array( 60000000L,  6000000L,  600000L,  60000L, 10000L, 1000L, 100L, 10L, 1L)
   private final val MinLabelSpace   = 16
 
-  private final val pntBarGradientPixels = Array(
-    0xFFB8B8B8, 0xFFC0C0C0, 0xFFC8C8C8, 0xFFD3D3D3,
-    0xFFDBDBDB, 0xFFE4E4E4, 0xFFEBEBEB, 0xFFF1F1F1,
-    0xFFF6F6F6, 0xFFFAFAFA, 0xFFFBFBFB, 0xFFFCFCFC,
-    0xFFF9F9F9, 0xFFF4F4F4, 0xFFEFEFEF)
-  private final val barExtent = pntBarGradientPixels.length
+//  private final class ColorScheme(val top: Color, val mid: Color, val bot: Color)
+  private type ColorScheme = Array[Color]
+
+  private final val lightScheme: ColorScheme = Array(new Color(0xB8B8B8), new Color(0xFCFCFC), new Color(0xEFEFEF))
+  private final val darkScheme : ColorScheme = Array(new Color(37, 41, 46), new Color(29, 32, 36), new Color(32, 36, 40))
+
+  private final val gradFrac    = Array[Float](0.0f, 0.75f, 0.9375f)
+
+//  private final val pntBarGradientPixels = Array(
+//    0xFFB8B8B8, 0xFFC0C0C0, 0xFFC8C8C8, 0xFFD3D3D3,
+//    0xFFDBDBDB, 0xFFE4E4E4, 0xFFEBEBEB, 0xFFF1F1F1,
+//    0xFFF6F6F6, 0xFFFAFAFA, 0xFFFBFBFB, 0xFFFCFCFC,
+//    0xFFF9F9F9, 0xFFF4F4F4, 0xFFEFEFEF)
+
+  private final val barExtent = 15 // pntBarGradientPixels.length
 
   private class Label(val name: String, val pos: Int)
 
@@ -56,8 +65,9 @@ object Axis {
 class Axis(orient: Int = SwingConstants.HORIZONTAL)
   extends JComponent with AxisLike {
 
-  import Axis._
   import SwingConstants.{HORIZONTAL, VERTICAL}
+
+  import Axis._
 
   private var _orient = orient
 
@@ -85,30 +95,37 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
   private var flIntegers    = false
   private var flFixedBounds = false
 
-  private var imgWidth  = 0
-  private var imgHeight = 0
-  private var img: BufferedImage = null
-  private var pntBackground: TexturePaint = null
+//  private var imgWidth  = 0
+//  private var imgHeight = 0
+//  private var img: BufferedImage = null
+  private var pntBackground: Paint = null
+
+  private[this] final val isDark  = UIManager.getBoolean("dark-skin")
+  private[this] final val scheme  = if (isDark) darkScheme else lightScheme
 
   private def orientUpdated(): Unit = {
-    _orient match {
+    val isHoriz = _orient match {
       case HORIZONTAL =>
         setMaximumSize  (new Dimension(getMaximumSize  .width, barExtent))
         setMinimumSize  (new Dimension(getMinimumSize  .width, barExtent))
         setPreferredSize(new Dimension(getPreferredSize.width, barExtent))
-        imgWidth  = 1
-        imgHeight = barExtent
+//        imgWidth  = 1
+//        imgHeight = barExtent
+        true
       case VERTICAL =>
         setMaximumSize  (new Dimension(barExtent, getMaximumSize  .height))
         setMinimumSize  (new Dimension(barExtent, getMinimumSize  .height))
         setPreferredSize(new Dimension(barExtent, getPreferredSize.height))
-        imgWidth  = barExtent
-        imgHeight = 1
+//        imgWidth  = barExtent
+//        imgHeight = 1
+        false
     }
-    if (img != null) img.flush()
-    img = new BufferedImage(imgWidth, imgHeight, BufferedImage.TYPE_INT_ARGB)
-    img.setRGB(0, 0, imgWidth, imgHeight, pntBarGradientPixels, 0, imgWidth)
-    pntBackground = new TexturePaint(img, new Rectangle(0, 0, imgWidth, imgHeight))
+//    if (img != null) img.flush()
+//    img = new BufferedImage(imgWidth, imgHeight, BufferedImage.TYPE_INT_ARGB)
+//    img.setRGB(0, 0, imgWidth, imgHeight, pntBarGradientPixels, 0, imgWidth)
+//    pntBackground = new TexturePaint(img, new Rectangle(0, 0, imgWidth, imgHeight))
+    pntBackground = new LinearGradientPaint(0f, 0f, if (isHoriz) 0f else barExtent, if (isHoriz) barExtent else 0,
+      gradFrac, scheme)
     triggerRedisplay()
   }
 
@@ -233,11 +250,11 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
     } else {
       r.height - 2 /* 3 */ - fm.getMaxDescent
     }
-    g2.setColor(Color.lightGray)
+    g2.setColor(if (isDark) Color.gray else Color.lightGray)
     g2.draw(shpTicks)
 
     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-    g2.setColor(Color.black)
+    g2.setColor(getForeground)
 
     var i = 0
     while (i < labels.length) {
@@ -467,6 +484,6 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
   def dispose(): Unit = {
     labels = null
     shpTicks.reset()
-    img.flush()
+//    img.flush()
   }
 }

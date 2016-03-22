@@ -1,3 +1,16 @@
+/*
+ *  Jog.scala
+ *  (AudioWidgets)
+ *
+ *  Copyright (c) 2011-2016 Hanns Holger Rutz. All rights reserved.
+ *
+ *	This software is published under the GNU Lesser General Public License v2.1+
+ *
+ *
+ *	For further information, please contact Hanns Holger Rutz at
+ *	contact@sciss.de
+ */
+
 package de.sciss.audiowidgets
 package j
 
@@ -7,23 +20,39 @@ import java.awt.{RenderingHints, Graphics2D, Graphics, Dimension, BasicStroke, C
 import java.beans.{PropertyChangeEvent, PropertyChangeListener}
 import java.util.{EventObject, EventListener}
 import javax.swing.event.MouseInputAdapter
-import javax.swing.{JComponent, SwingUtilities}
+import javax.swing.{UIManager, JComponent, SwingUtilities}
 
 import scala.math.{Pi, sin, cos, min, max, atan2, sqrt}
 
 object Jog {
-  private val pntBack       : Paint   = new GradientPaint(10, 9, new Color(235, 235, 235), 10, 19, new Color(248, 248, 248))
-  private val colrOutline   : Color   = new Color(40, 40, 40)
-  private val colrLight     : Color   = new Color(251, 251, 251)
-  private val colrArcLight  : Color   = new Color(255, 255, 255)
-  private val pntArcShadow  : Paint   = new GradientPaint(12, 0, new Color(40, 40, 40, 0xA0), 8, 15, new Color(40, 40, 40, 0x00))
-  private val pntBelly      : Paint   = new GradientPaint(0, -3, new Color(0x58, 0x58, 0x58), 0, 3, new Color(0xD0, 0xD0, 0xD0))
-  private val pntBackD      : Paint   = new GradientPaint(10, 9, new Color(235, 235, 235, 0x7F), 10, 19, new Color(248, 248, 248, 0x7F))
-  private val colrOutlineD  : Color   = new Color(40, 40, 40, 0x7F)
-  private val colrLightD    : Color   = new Color(251, 251, 251, 0x7F)
-  private val colrArcLightD : Color   = new Color(255, 255, 255, 0x7F)
-  private val pntArcShadowD : Paint   = new GradientPaint(12, 0, new Color(40, 40, 40, 0x50), 8, 15, new Color(40, 40, 40, 0x00))
-  private val pntBellyD     : Paint   = new GradientPaint(0, -3, new Color(0x58, 0x58, 0x58, 0x7F), 0, 3, new Color(0xD0, 0xD0, 0xD0, 0x7F))
+
+  private final class ColorScheme(
+    val pntBack: Paint,
+    val pntOutline: Paint,
+    val pntLight: Paint,
+    val pntArcLight: Paint,
+    val pntArcShadow: Paint,
+    val pntBelly: Paint
+   )
+
+  private val lightScheme : ColorScheme = new Jog.ColorScheme(new GradientPaint(10, 9, new Color(235, 235, 235), 10, 19, new Color(248, 248, 248)), new Color(40, 40, 40), new Color(251, 251, 251), new Color(255, 255, 255), new GradientPaint(12, 0, new Color(40, 40, 40, 0xA0), 8, 15, new Color(40, 40, 40, 0x00)), new GradientPaint(0, -3, new Color(0x58, 0x58, 0x58), 0, 3, new Color(0xD0, 0xD0, 0xD0)))
+  private val lightSchemeD: ColorScheme = new Jog.ColorScheme(new GradientPaint(10, 9, new Color(235, 235, 235, 0x7F), 10, 19, new Color(248, 248, 248, 0x7F)), new Color(40, 40, 40, 0x7F), new Color(251, 251, 251, 0x7F), new Color(255, 255, 255, 0x7F), new GradientPaint(12, 0, new Color(40, 40, 40, 0x50), 8, 15, new Color(40, 40, 40, 0x00)), new GradientPaint(0, -3, new Color(0x58, 0x58, 0x58, 0x7F), 0, 3, new Color(0xD0, 0xD0, 0xD0, 0x7F)))
+  private val darkScheme  : ColorScheme = new Jog.ColorScheme(new GradientPaint(10, 9, new Color(24, 24, 24), 10, 19, new Color(32, 32, 32)), new Color(0, 0, 0), new GradientPaint(0, 1, new Color(72, 72, 72, 0x80), 0, 10, new Color(48, 48, 48, 0x40)), new Color(64, 64, 64), new GradientPaint(12, 0, new Color(16, 16, 16, 0xA0), 8, 15, new Color(16, 16, 16, 0x00)), new GradientPaint(0, -3, new Color(0x48, 0x48, 0x48), 0, 3, new Color(0xA0, 0xA0, 0xA0)))
+  private val darkSchemeD : ColorScheme = new Jog.ColorScheme(new GradientPaint(10, 9, new Color(24, 24, 24, 0x7F), 10, 19, new Color(32, 32, 32, 0x7F)), new Color(0, 0, 0, 0x7F), new GradientPaint(0, 1, new Color(72, 72, 72, 0x40), 0, 10, new Color(48, 48, 48, 0x20)), new Color(64, 64, 64), new GradientPaint(12, 0, new Color(16, 16, 16, 0x50), 8, 15, new Color(16, 16, 16, 0x00)), new GradientPaint(0, -3, new Color(0x48, 0x48, 0x48, 0x7F), 0, 3, new Color(0xA0, 0xA0, 0xA0, 0x7F)))
+
+//  private val pntBack       : Paint   = new GradientPaint(10, 9, new Color(235, 235, 235), 10, 19, new Color(248, 248, 248))
+//  private val colrOutline   : Color   = new Color(40, 40, 40)
+//  private val colrLight     : Color   = new Color(251, 251, 251)
+//  private val colrArcLight  : Color   = new Color(255, 255, 255)
+//  private val pntArcShadow  : Paint   = new GradientPaint(12, 0, new Color(40, 40, 40, 0xA0), 8, 15, new Color(40, 40, 40, 0x00))
+//  private val pntBelly      : Paint   = new GradientPaint(0, -3, new Color(0x58, 0x58, 0x58), 0, 3, new Color(0xD0, 0xD0, 0xD0))
+//  private val pntBackD      : Paint   = new GradientPaint(10, 9, new Color(235, 235, 235, 0x7F), 10, 19, new Color(248, 248, 248, 0x7F))
+//  private val colrOutlineD  : Color   = new Color(40, 40, 40, 0x7F)
+//  private val colrLightD    : Color   = new Color(251, 251, 251, 0x7F)
+//  private val colrArcLightD : Color   = new Color(255, 255, 255, 0x7F)
+//  private val pntArcShadowD : Paint   = new GradientPaint(12, 0, new Color(40, 40, 40, 0x50), 8, 15, new Color(40, 40, 40, 0x00))
+//  private val pntBellyD     : Paint   = new GradientPaint(0, -3, new Color(0x58, 0x58, 0x58, 0x7F), 0, 3, new Color(0xD0, 0xD0, 0xD0, 0x7F))
+
   private val strkOutline   : Stroke  = new BasicStroke(0.5f)
   private val strkArcShadow : Stroke  = new BasicStroke(1.2f)
   private val strkArcLight  : Stroke  = new BasicStroke(1.0f)
@@ -52,6 +81,10 @@ class Jog extends JComponent { me =>
   private var dragArc       = 0.0
   private var displayArc    = -2.356194
   private var propagateFire = false
+
+  private[this] final val isDark  = UIManager.getBoolean("dark-skin")
+  private[this] final val scheme  = if (isDark) Jog.darkScheme  else Jog.lightScheme
+  private[this] final val schemeD = if (isDark) Jog.darkSchemeD else Jog.lightSchemeD
 
   init()
   
@@ -163,22 +196,23 @@ class Jog extends JComponent { me =>
     g2.translate(0.5f + in.left, 0.5f + in.top)
 
     val en = isEnabled
-
-    g2.setPaint(if (en) pntBack else pntBackD)
+    val colors = if (isEnabled) scheme else schemeD
+    import colors._
+    g2.setPaint(pntBack)
     g2.fillOval(2, 3, 16, 16)
-    g2.setColor(if (en) colrLight else colrLightD)
+    g2.setPaint(pntLight)
     g2.fillOval(5, 1, 9, 10)
-    g2.setPaint(if (en) pntArcShadow else pntArcShadowD)
+    g2.setPaint(pntArcShadow)
     g2.setStroke(strkArcShadow)
     g2.drawOval(1, 1, 17, 17)
     g2.setStroke(strkArcLight)
-    g2.setColor(if (en) colrArcLight else colrArcLightD)
+    g2.setPaint(pntArcLight)
     g2.drawArc(1, 2, 17, 17, 180, 180)
-    g2.setColor(if (en) colrOutline else colrOutlineD)
+    g2.setPaint(pntOutline)
     g2.setStroke(strkOutline)
     g2.drawOval(1, 1, 17, 17)
     g2.translate(bellyPos.getX * 4 + 10.0, -bellyPos.getY * 4.5 + 10.0)
-    g2.setPaint(if (en) pntBelly else pntBellyD)
+    g2.setPaint(pntBelly)
     g2.fill(shpBelly)
 
     g2.setStroke(strkOrig)

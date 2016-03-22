@@ -4,9 +4,14 @@ import java.awt.{BorderLayout, Dimension, RenderingHints, Graphics2D, Graphics, 
 import javax.swing.{JComponent, WindowConstants, JPanel, JFrame}
 
 import com.alee.laf.WebLookAndFeel
+import de.sciss.weblaf.submin.SubminSkin
 
 object TransportTests extends App with Runnable {
-  WebLookAndFeel.install()
+  if (args.contains("--submin")) {
+    SubminSkin.install()
+  } else {
+    WebLookAndFeel.install()
+  }
   EventQueue.invokeLater(this)
 
   def run(): Unit = {
