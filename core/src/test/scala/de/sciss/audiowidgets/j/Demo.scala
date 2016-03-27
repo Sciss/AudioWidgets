@@ -1,34 +1,28 @@
 package de.sciss.audiowidgets
 package j
 
-import java.awt.event.{WindowEvent, WindowAdapter, ActionEvent, ActionListener}
+import java.awt.event.{ActionEvent, ActionListener, WindowAdapter, WindowEvent}
+import java.awt.{BorderLayout, EventQueue, GridLayout}
 import java.text.NumberFormat
 import java.util.Locale
-import javax.swing.JFormattedTextField.AbstractFormatter
+import javax.swing._
 import javax.swing.text.NumberFormatter
 
-import com.alee.laf.WebLookAndFeel
-import de.sciss.weblaf.submin.SubminSkin
+import de.sciss.submin.Submin
 
-import collection.immutable.{IndexedSeq => Vec}
-import javax.swing._
-import java.awt.{Color, GridLayout, EventQueue, BorderLayout}
-
+import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.util.Try
 
 object Demo extends App with Runnable {
-  if (args.contains("--submin")) {
-    SubminSkin.install()
-  } else {
-    WebLookAndFeel.install()
-  }
+  val isDark = args.contains("--dark")
+  Submin.install(isDark)
   EventQueue.invokeLater(this)
 
   def run(): Unit = {
-    val f   = new JFrame("AudioWidgets")
+    val f = new JFrame("AudioWidgets")
     f.getRootPane.putClientProperty("apple.awt.brushMetalLook", java.lang.Boolean.TRUE)
-    val cp  = f.getContentPane
-    val p   = new JPanel(new BorderLayout())
+    val cp = f.getContentPane
+    val p = new JPanel(new BorderLayout())
     p.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20))
 
     val m = new PeakMeter()
@@ -38,10 +32,10 @@ object Demo extends App with Runnable {
 
     import LCDColors._
     val lcdColors = Vec(
-      (grayFg,  defaultBg /* new Color(0, 0, 0, 0) */),
-      (blueFg,  blueBg),
-      (grayFg,  grayBg),
-      (redFg,   redBg),
+      (grayFg, defaultBg /* new Color(0, 0, 0, 0) */ ),
+      (blueFg, blueBg),
+      (grayFg, grayBg),
+      (redFg, redBg),
       (blackFg, blackBg)
     )
     val lcdGrid = new JPanel(new GridLayout(lcdColors.size, 1, 0, 6))
@@ -75,7 +69,7 @@ object Demo extends App with Runnable {
 
       def adjust(in: Int, inc: Int): Int = {
         val res = in + inc
-        if      (inc < 0 && res > in) Int.MinValue
+        if (inc < 0 && res > in) Int.MinValue
         else if (inc > 0 && res < in) Int.MaxValue
         else res
       }
@@ -92,37 +86,37 @@ object Demo extends App with Runnable {
     //      setFont(LCDFont())
     //    }, BorderLayout.SOUTH)
 
-    val axis      = new Axis
-    axis.format   = AxisFormat.Time()
-    axis.minimum  = 0.0
-    axis.maximum  = 34.56
+    val axis = new Axis
+    axis.format = AxisFormat.Time()
+    axis.minimum = 0.0
+    axis.maximum = 34.56
 
     lazy val trnspActions = Seq(
       Transport.GoToBegin, Transport.Play, Transport.Stop, Transport.GoToEnd, Transport.Loop).map {
-      case l @ Transport.Loop => l.apply {
-          trnsp.button(l).foreach(b => b.setSelected(!b.isSelected))
-        }
+      case l@Transport.Loop => l.apply {
+        trnsp.button(l).foreach(b => b.setSelected(!b.isSelected))
+      }
       case e => e.apply {}
     }
     lazy val trnsp: JComponent with Transport.ButtonStrip = Transport.makeButtonStrip(trnspActions)
 
-    p .add(p2   , BorderLayout.EAST  )
-    cp.add(p    , BorderLayout.CENTER)
-    cp.add(axis , BorderLayout.NORTH )
-    cp.add(trnsp, BorderLayout.SOUTH )
+    p.add(p2, BorderLayout.EAST)
+    cp.add(p, BorderLayout.CENTER)
+    cp.add(axis, BorderLayout.NORTH)
+    cp.add(trnsp, BorderLayout.SOUTH)
 
     f.pack()
     f.setLocationRelativeTo(null)
     f.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
 
     val t = new Timer(30, new ActionListener {
-      val rnd   = new util.Random()
-      var peak  = 0.5f
-      var rms   = 0f
+      val rnd = new util.Random()
+      var peak = 0.5f
+      var rms = 0f
 
       def actionPerformed(e: ActionEvent): Unit = {
-        peak  = math.max(0f, math.min(1f, peak + math.pow(rnd.nextFloat() * 0.5, 2).toFloat * (if (rnd.nextBoolean()) 1 else -1)))
-        rms   = math.max(0f, math.min(peak, rms * 0.98f + (rnd.nextFloat() * 0.02f * (if (rnd.nextBoolean()) 1 else -1))))
+        peak = math.max(0f, math.min(1f, peak + math.pow(rnd.nextFloat() * 0.5, 2).toFloat * (if (rnd.nextBoolean()) 1 else -1)))
+        rms = math.max(0f, math.min(peak, rms * 0.98f + (rnd.nextFloat() * 0.02f * (if (rnd.nextBoolean()) 1 else -1))))
         m.update(Vec(peak, rms))
       }
     })
@@ -131,8 +125,8 @@ object Demo extends App with Runnable {
 
       def actionPerformed(e: ActionEvent): Unit = {
         cnt += 1
-        val secs  = cnt % 60
-        val mins  = (cnt / 60) % 60
+        val secs = cnt % 60
+        val mins = (cnt / 60) % 60
         val hours = (cnt / 3600) % 100
         lb1.setText((hours + 100).toString.substring(1) + ":" +
           (mins + 100).toString.substring(1) + ":" +
@@ -141,12 +135,12 @@ object Demo extends App with Runnable {
     })
     f.addWindowListener(new WindowAdapter {
       override def windowOpened(e: WindowEvent): Unit = {
-        t .start()
+        t.start()
         t2.start()
       }
 
       override def windowClosing(e: WindowEvent): Unit = {
-        t .stop()
+        t.stop()
         t2.stop()
       }
     })

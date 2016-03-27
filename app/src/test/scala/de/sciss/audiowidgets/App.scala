@@ -1,15 +1,16 @@
 package de.sciss.audiowidgets
 
-import com.alee.laf.WebLookAndFeel
-import de.sciss.desktop.impl.{WindowImpl, SwingApplicationImpl}
-import de.sciss.desktop.{Window, Menu}
-import de.sciss.audiowidgets.impl.TimelineCanvasImpl
-import de.sciss.weblaf.submin.SubminSkin
-import scala.swing.{Swing, Component}
 import java.awt.Graphics2D
+
+import de.sciss.audiowidgets.impl.TimelineCanvasImpl
+import de.sciss.desktop.impl.{SwingApplicationImpl, WindowImpl}
+import de.sciss.desktop.{Menu, Window}
 import de.sciss.span.Span
-import Swing._
+import de.sciss.submin.Submin
 import de.sciss.swingplus.Implicits._
+
+import scala.swing.Component
+import scala.swing.Swing._
 
 object App extends SwingApplicationImpl("AudioWidgets") {
   protected lazy val menuFactory = Menu.Root()
@@ -18,13 +19,13 @@ object App extends SwingApplicationImpl("AudioWidgets") {
   def sampleRate = 44100
 
   override protected def init(): Unit = {
-    if (args.contains("--submin")) {
-      SubminSkin.install()
-    } else {
-      WebLookAndFeel.install()
-    }
+    val isDark = args.contains("--dark")
+    Submin.install(isDark)
+
     new WindowImpl {
       def handler = App.windowHandler
+
+      title = "Application Demo"
 
       // println("CREATE WIN")
       val canvas = new TimelineCanvasImpl {

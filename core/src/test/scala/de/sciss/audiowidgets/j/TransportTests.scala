@@ -4,11 +4,11 @@ import java.awt.{BorderLayout, Dimension, RenderingHints, Graphics2D, Graphics, 
 import javax.swing.{JComponent, WindowConstants, JPanel, JFrame}
 
 import com.alee.laf.WebLookAndFeel
-import de.sciss.weblaf.submin.SubminSkin
+import de.sciss.submin.SubminDarkSkin
 
 object TransportTests extends App with Runnable {
-  if (args.contains("--submin")) {
-    SubminSkin.install()
+  if (args.contains("--dark")) {
+    SubminDarkSkin.install()
   } else {
     WebLookAndFeel.install()
   }

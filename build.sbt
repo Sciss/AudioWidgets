@@ -26,12 +26,12 @@ lazy val scalaSwingVersion  = "1.0.2"
 // ---- test dependencies ----
 
 lazy val xstreamVersion     = "1.4.8"  // 1.4.7 corrupt sha1 on Maven Central
-lazy val webLaFVersion      = "1.29-SNAPSHOT"
+lazy val subminVersion      = "0.1.0-SNAPSHOT"
 
 lazy val testSettings = Seq(
   libraryDependencies ++= Seq(
     "com.thoughtworks.xstream" % "xstream" % xstreamVersion % "test",   // PROBLEM WITH MAVEN CENTRAL
-    "de.sciss" % "weblaf-submin" % webLaFVersion % "test"
+    "de.sciss" % "submin" % subminVersion % "test"
   )
 )
 
