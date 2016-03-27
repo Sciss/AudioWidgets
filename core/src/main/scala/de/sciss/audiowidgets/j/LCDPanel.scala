@@ -22,6 +22,8 @@ import java.awt.{Rectangle, RenderingHints, Graphics2D, LinearGradientPaint, Ins
  * Unfinished!
  */
 class LCDPanel extends JPanel {
+  private[this] final val isDark      = UIManager.getBoolean("dark-skin")
+
   private final val gradInnerColr     = new Array[Color](5)
   private final val gradInnerFrac     = Array(0f, -1f, 0.5f, -1f, 1f)
   private final val gradOuterLColr    = new Array[Color](3)
@@ -34,7 +36,8 @@ class LCDPanel extends JPanel {
   private final val gradInnerRFrac    = Array(0f, 0.5f)
   private final var colrTop: Color    = null
   private final var colrTopSh: Color  = null
-  private final val colrBot           = new Color(0xFF, 0xFF, 0xFF, 0x7F)
+  private final val colrBot           =
+    if (isDark) new Color(0x7F, 0x7F, 0x7F, 0x7F) else new Color(0xFF, 0xFF, 0xFF, 0x7F)
   private final var colrBotSh: Color  = null
   private final var recentHeight      = -1
   private final val in                = new Insets(0, 0, 0, 0)
@@ -48,7 +51,7 @@ class LCDPanel extends JPanel {
   private final val inV = 0 // 1
   //   private val strkSh = new BasicStroke( 2f )
 
-  setBackground(if (UIManager.getBoolean("dark-skin")) LCDColors.blueBg else LCDColors.defaultBg)
+  setBackground(if (isDark) LCDColors.blueBg else LCDColors.defaultBg)
   recalcColors()
 
   addPropertyChangeListener("background", new PropertyChangeListener {
