@@ -55,7 +55,7 @@ object NimbusHelper {
   }
 
   private def defaultBlueGreyColor(base: Color): Color =
-    adjustColor(base, 0.032459438f, -0.52518797f, 0.19607842f, 0)
+    if (isDark) base else adjustColor(base, 0.032459438f, -0.52518797f, 0.19607842f, 0)
   
   def adjustColor(c: Color, hueOffset: Float, satOffset: Float, briOffset: Float, alphaOffset: Int): Color = {
     val sameColor = hueOffset == 0f && satOffset == 0f && briOffset == 0f
@@ -101,18 +101,24 @@ object NimbusHelper {
     if (current.getName.toLowerCase == "nimbus") current.getDefaults else null
   }
 
-  private final val defaultFocusColor               : Color = new Color(115, 164, 209, 255) // new Color(162, 162, 162, 255)
+  def isNimbus: Boolean = nimbusDefaults != null
+
+  private final val isDark = UIManager.getBoolean("dark-skin")
+
+  def isDarkSkin: Boolean = isDark
+
+  private final val defaultFocusColor               : Color = if (isDark) new Color(48, 77, 130) else new Color(115, 164, 209, 255)
   private final val defaultSelectionBackgroundColor : Color = new Color(57, 105, 138, 255)
 
   // original Nimbus
-  private final val defaultBaseColor                : Color = new Color(51, 98, 140, 255)
-  private final val defaultControlHighlightColor    : Color = new Color(233, 236, 242, 255)
+  private final val defaultBaseColor                : Color = if (isDark) new Color(32, 36, 40) else new Color(51, 98, 140, 255)
+  private final val defaultControlHighlightColor    : Color = if (isDark) new Color(16, 16, 16) else new Color(233, 236, 242, 255)
 
   // desaturated to work better with generic LaFs
   //  private final val defaultBaseColor                : Color = new Color(95, 95, 95, 255)
   //  private final val defaultControlHighlightColor    : Color = new Color(237, 237, 237, 255)
 
-  private final val defaultTextColor                : Color = Color.black
-  private final val defaultSelectedTextColor        : Color = Color.white
+  private final val defaultTextColor                : Color = if (isDark) new Color(220, 220, 220) else Color.black
+  private final val defaultSelectedTextColor        : Color = if (isDark) Color.black else Color.white
   private final val hsbArr                                  = new Array[Float](3)
 }

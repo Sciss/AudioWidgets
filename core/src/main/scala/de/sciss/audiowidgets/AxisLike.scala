@@ -20,12 +20,3 @@ trait AxisLike {
   var maximum: Double
   var minimum: Double
 }
-
-//trait AxisCompanion {
-//   sealed trait Format
-//   object Format {
-//      case object Decimal extends Format
-//      case object Integer extends Format
-//      final case class Time( hours: Boolean = false, millis: Boolean = true ) extends Format
-//   }
-//}

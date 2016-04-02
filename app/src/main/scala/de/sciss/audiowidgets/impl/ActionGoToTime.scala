@@ -14,20 +14,19 @@
 package de.sciss.audiowidgets
 package impl
 
-import java.awt.Color
 import java.awt.geom.Path2D
 import java.text.{NumberFormat, ParseException}
 import java.util.Locale
 import javax.swing.KeyStroke
-import javax.swing.text.{NumberFormatter, MaskFormatter}
+import javax.swing.text.{MaskFormatter, NumberFormatter}
 
 import de.sciss.desktop
-import de.sciss.desktop.{KeyStrokes, FocusType, OptionPane}
+import de.sciss.desktop.{FocusType, KeyStrokes, OptionPane}
 import de.sciss.icons.raphael
 import de.sciss.swingplus.DoClickAction
 
 import scala.swing.event.Key
-import scala.swing.{Swing, Orientation, BoxPanel, Panel, Button, Component, FlowPanel, Action}
+import scala.swing.{Action, BoxPanel, Button, Component, FlowPanel, Orientation, Panel, Swing}
 import scala.util.Try
 
 class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
@@ -44,7 +43,7 @@ class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
 
   private def mkBut(shape: Path2D => Unit, key: KeyStroke, fun: => Long): Button = {
     val action = new Action(null) {
-      icon = raphael.Icon(extent = 20, fill = raphael.TexturePaint(24), shadow = raphael.WhiteShadow)(shape)
+      icon = raphael.TexturedIcon(20)(shape)
 
       def apply(): Unit = {
         ggTime.value = fun
@@ -62,7 +61,7 @@ class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
   private lazy val butPane: Panel = {
     import KeyStrokes.menu1
     // meta-left and meta-right would have been better, but
-    // somehow the textfield blocks these inputs
+    // somehow the text-field blocks these inputs
     val ggStart   = mkBut(raphael.Shapes.TransportBegin, menu1 + Key.Comma , bounds.start  )
     val ggCurrent = mkBut(raphael.Shapes.Location      , menu1 + Key.Period, model.position)
     val ggEnd     = mkBut(raphael.Shapes.TransportEnd  , menu1 + Key.Slash , bounds.stop   )
@@ -76,7 +75,7 @@ class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
     val fmtTime = new ParamFormat[Long] {
       private val axis = AxisFormat.Time(hours = true, millis = true)
 
-      val unit = UnitView("HH:MM:SS.mmm", raphael.Icon(20, Color.darkGray)(raphael.Shapes.WallClock))
+      val unit = UnitView("HH:MM:SS.mmm", raphael.Icon(20, raphael.DimPaint)(raphael.Shapes.WallClock))
 
       val formatter = new MaskFormatter("*#:##:##.###") {
         // setAllowsInvalid(true)
@@ -128,7 +127,7 @@ class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
     }
 
     val fmtFrames = new ParamFormat[Long] {
-      val unit = UnitView("sample frames", raphael.Icon(20, Color.darkGray)(Shapes.SampleFrames))
+      val unit = UnitView("sample frames", raphael.Icon(20, raphael.DimPaint)(Shapes.SampleFrames))
 
       private val numFmt = NumberFormat.getIntegerInstance(Locale.US)
       numFmt.setGroupingUsed(false)

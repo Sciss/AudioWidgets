@@ -1,7 +1,7 @@
 lazy val baseName       = "AudioWidgets"
 lazy val baseNameL      = baseName.toLowerCase
 
-lazy val projectVersion = "1.9.2-SNAPSHOT"
+lazy val projectVersion = "1.9.2"
 
 lazy val commonSettings = Seq(
   version             := projectVersion,
@@ -18,19 +18,19 @@ lazy val commonSettings = Seq(
 
 // ---- dependencies ----
 
-lazy val desktopVersion     = "0.7.1"
+lazy val desktopVersion     = "0.7.2"
 lazy val spanVersion        = "1.3.1"
-lazy val raphaelVersion     = "1.0.2"
+lazy val raphaelVersion     = "1.0.3"
 lazy val scalaSwingVersion  = "1.0.2"
 
 // ---- test dependencies ----
 
-lazy val xstreamVersion     = "1.4.8"  // 1.4.7 corrupt sha1 on Maven Central
-lazy val subminVersion      = "0.1.0-SNAPSHOT"
+// lazy val xstreamVersion     = "1.4.9"
+lazy val subminVersion      = "0.1.0"
 
 lazy val testSettings = Seq(
   libraryDependencies ++= Seq(
-    "com.thoughtworks.xstream" % "xstream" % xstreamVersion % "test",   // PROBLEM WITH MAVEN CENTRAL
+    // "com.thoughtworks.xstream" % "xstream" % xstreamVersion % "test",   // PROBLEM WITH MAVEN CENTRAL
     "de.sciss" % "submin" % subminVersion % "test"
   )
 )

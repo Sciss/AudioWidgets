@@ -67,6 +67,8 @@ class RotaryKnobUI(knob: RotaryKnob) extends BasicSliderUI(knob) {
     }
   }
 
+  private final val hoverHighlight = NimbusHelper.isNimbus
+
   private def handColor: Color = {
     val c = NimbusHelper.mixColorWithAlpha(NimbusHelper.textColor, knob.handColor)
     if (knob.isEnabled) c else NimbusHelper.adjustColor(c, 0f, 0f, 0f, -112)
@@ -78,7 +80,8 @@ class RotaryKnobUI(knob: RotaryKnob) extends BasicSliderUI(knob) {
   }
 
   private def rangeColor: Color = {
-    val c = NimbusHelper.mixColorWithAlpha(NimbusHelper.baseColor, knob.rangeColor)
+    val base  = if (NimbusHelper.isDarkSkin) Color.lightGray else NimbusHelper.baseColor
+    val c     = NimbusHelper.mixColorWithAlpha(base, knob.rangeColor)
     if (knob.isEnabled) c else NimbusHelper.adjustColor(c, 0f, 0f, 0f, -112)
   }
 
@@ -234,6 +237,7 @@ class RotaryKnobUI(knob: RotaryKnob) extends BasicSliderUI(knob) {
 
   protected override def installDefaults(slider: JSlider): Unit = {
     super.installDefaults(slider)
+    slider.setOpaque(false)
     focusInsets.left    = 0
     focusInsets.top     = 0
     focusInsets.right   = 0
@@ -309,7 +313,7 @@ class RotaryKnobUI(knob: RotaryKnob) extends BasicSliderUI(knob) {
       }
 
     override def mouseEntered(e: MouseEvent): Unit = {
-      if (!knob.isEnabled) return
+      if (!knob.isEnabled || !hoverHighlight) return
       mOver = true
       knob.repaint()
     }

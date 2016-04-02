@@ -42,17 +42,11 @@ object Axis {
   private type ColorScheme = Array[Color]
 
   private final val lightScheme: ColorScheme = Array(new Color(0xB8B8B8), new Color(0xFCFCFC), new Color(0xEFEFEF))
-  private final val darkScheme : ColorScheme = Array(new Color(37, 41, 46), new Color(29, 32, 36), new Color(32, 36, 40))
+  private final val darkScheme : ColorScheme = Array(new Color(0x080808), new Color(0x2E2E2E), new Color(0x272727))
 
   private final val gradFrac    = Array[Float](0.0f, 0.75f, 0.9375f)
 
-//  private final val pntBarGradientPixels = Array(
-//    0xFFB8B8B8, 0xFFC0C0C0, 0xFFC8C8C8, 0xFFD3D3D3,
-//    0xFFDBDBDB, 0xFFE4E4E4, 0xFFEBEBEB, 0xFFF1F1F1,
-//    0xFFF6F6F6, 0xFFFAFAFA, 0xFFFBFBFB, 0xFFFCFCFC,
-//    0xFFF9F9F9, 0xFFF4F4F4, 0xFFEFEFEF)
-
-  private final val barExtent = 15 // pntBarGradientPixels.length
+  private final val barExtent = 15
 
   private class Label(val name: String, val pos: Int)
 

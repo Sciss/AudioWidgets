@@ -37,7 +37,7 @@ class LCDPanel extends JPanel {
   private final var colrTop: Color    = null
   private final var colrTopSh: Color  = null
   private final val colrBot           =
-    if (isDark) new Color(0x7F, 0x7F, 0x7F, 0x7F) else new Color(0xFF, 0xFF, 0xFF, 0x7F)
+    if (isDark) new Color(0x3F, 0x3F, 0x3F, 0x7F) else new Color(0xFF, 0xFF, 0xFF, 0x7F)
   private final var colrBotSh: Color  = null
   private final var recentHeight      = -1
   private final val in                = new Insets(0, 0, 0, 0)
@@ -51,12 +51,12 @@ class LCDPanel extends JPanel {
   private final val inV = 0 // 1
   //   private val strkSh = new BasicStroke( 2f )
 
-  setBackground(if (isDark) LCDColors.blueBg else LCDColors.defaultBg)
-  recalcColors()
+  setBackground(if (isDark) LCDColors.blackBg else LCDColors.defaultBg)
+  recalculateColors()
 
   addPropertyChangeListener("background", new PropertyChangeListener {
     def propertyChange(e: PropertyChangeEvent): Unit = {
-      recalcColors()
+      recalculateColors()
       repaint()
     }
   })
@@ -83,7 +83,7 @@ class LCDPanel extends JPanel {
   //   private def changeAlpha( c: Color, alpha: Float ) =
   //      new Color( c.getRed, c.getGreen, c.getBlue, (alpha * 255).toInt )
 
-  private def recalcColors(): Unit = {
+  private def recalculateColors(): Unit = {
     val c   = getBackground
     val arr = Color.RGBtoHSB(c.getRed, c.getGreen, c.getBlue, null)
     val hue = arr(0)
@@ -139,7 +139,7 @@ class LCDPanel extends JPanel {
     gradInnerRColr(1) = mixColor2(0.003f, 0.02f, -0.025f)
   }
 
-  private def recalcGradients(h: Int): Unit = {
+  private def recalculateGradients(h: Int): Unit = {
     val hi            = math.max(1, h - 4)
     val fi1           = math.min(0.499f, 1f / hi)
     val fi3           = math.min(0.999f, 0.5f + 1f / hi)
@@ -172,7 +172,7 @@ class LCDPanel extends JPanel {
     val w1  = math.max(0, w - 2)
     val x2  = math.max(0, w - 4)
     val x3  = math.max(0, w - 3)
-    if (h != recentHeight) recalcGradients(h)
+    if (h != recentHeight) recalculateGradients(h)
     val g2 = g.asInstanceOf[Graphics2D]
 
     val atOrig = g2.getTransform

@@ -25,5 +25,5 @@ object LCDColors {
   final val redFg     = new Color(60, 30, 20)
   final val redBg     = new Color(200, 100, 100)
   final val blackFg   = new Color(0xE0, 0xE0, 0xE0)
-  final val blackBg   = new Color(0x20, 0x20, 0x20)
+  final val blackBg   = new Color(0x10, 0x10, 0x10)
 }

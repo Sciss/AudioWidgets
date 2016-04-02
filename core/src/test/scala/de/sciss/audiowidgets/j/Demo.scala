@@ -2,7 +2,7 @@ package de.sciss.audiowidgets
 package j
 
 import java.awt.event.{ActionEvent, ActionListener, WindowAdapter, WindowEvent}
-import java.awt.{BorderLayout, EventQueue, GridLayout}
+import java.awt.{BorderLayout, Color, EventQueue, GridLayout}
 import java.text.NumberFormat
 import java.util.Locale
 import javax.swing._
@@ -33,18 +33,19 @@ object Demo extends App with Runnable {
     import LCDColors._
     val lcdColors = Vec(
       (grayFg, defaultBg /* new Color(0, 0, 0, 0) */ ),
+      (blackFg, blackBg),
       (blueFg, blueBg),
       (grayFg, grayBg),
       (redFg, redBg),
       (blackFg, blackBg)
     )
     val lcdGrid = new JPanel(new GridLayout(lcdColors.size, 1, 0, 6))
-    val lb1 = lcdColors.zipWithIndex.map({
+    val Seq(lb1, lb2, _*) = lcdColors.zipWithIndex.map({
       case ((fg, bg), idx) =>
         val lcd = new LCDPanel
         if (bg.getAlpha > 0) lcd.setBackground(bg)
         val lb = new JLabel(s"00:00:0$idx")
-        if (idx != 1 && idx != 4) {
+        if (idx != 1 && idx != 5) {
           lb.putClientProperty("styleId", "noshade")
         }
         if (idx == 0 || idx == 1) {
@@ -56,7 +57,7 @@ object Demo extends App with Runnable {
         lcd.add(lb)
         lcdGrid.add(lcd)
         lb
-    }).head
+    })
     p.add(m, BorderLayout.WEST)
     p.add(Box.createHorizontalStrut(20), BorderLayout.CENTER)
     val p2 = new JPanel(new BorderLayout())
@@ -80,11 +81,6 @@ object Demo extends App with Runnable {
     }
 
     p2.add(new ParamField(0, unitMs :: Nil), BorderLayout.SOUTH)
-
-    //    p2.add(new JLabel {
-    //      setText("00:00:00")
-    //      setFont(LCDFont())
-    //    }, BorderLayout.SOUTH)
 
     val axis = new Axis
     axis.format = AxisFormat.Time()
@@ -125,12 +121,14 @@ object Demo extends App with Runnable {
 
       def actionPerformed(e: ActionEvent): Unit = {
         cnt += 1
-        val secs = cnt % 60
-        val mins = (cnt / 60) % 60
-        val hours = (cnt / 3600) % 100
-        lb1.setText((hours + 100).toString.substring(1) + ":" +
-          (mins + 100).toString.substring(1) + ":" +
-          (secs + 100).toString.substring(1))
+        val seconds = cnt % 60
+        val minutes = (cnt / 60) % 60
+        val hours   = (cnt / 3600) % 100
+        val text    = (hours + 100).toString.substring(1) + ":" +
+          (minutes + 100).toString.substring(1) + ":" +
+          (seconds + 100).toString.substring(1)
+        lb1.setText(text)
+        lb2.setText(text)
       }
     })
     f.addWindowListener(new WindowAdapter {

@@ -1,11 +1,13 @@
 package de.sciss.audiowidgets.j
 
 import java.awt.{BorderLayout, EventQueue}
-import javax.swing.{DefaultBoundedRangeModel, BoxLayout, JButton, BorderFactory, WindowConstants, JFrame}
-import de.sciss.audiowidgets.DualRangeModel
 import javax.swing.event.{ChangeEvent, ChangeListener}
+import javax.swing.{BorderFactory, DefaultBoundedRangeModel, JButton, JFrame, WindowConstants}
+
+import de.sciss.submin.Submin
 
 object RotaryTests extends App with Runnable {
+  Submin.install(args.contains("--dark"))
   EventQueue.invokeLater(this)
 
   def run(): Unit = {

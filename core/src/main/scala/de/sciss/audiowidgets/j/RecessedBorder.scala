@@ -13,17 +13,13 @@
 
 package de.sciss.audiowidgets.j
 
+import java.awt.geom.{Area, Rectangle2D, RoundRectangle2D}
+import java.awt.{Color, Component, Graphics, Graphics2D, Insets, RenderingHints, Shape}
 import javax.swing.border.AbstractBorder
-import java.awt.{RenderingHints, BasicStroke, Color, Component, Graphics, Graphics2D, Insets, Shape}
-import java.awt.geom.{Rectangle2D, Area, RoundRectangle2D}
 
 object RecessedBorder {
-  private final val diameter      = 4
-  private final val colorDark     = new Color(0x00, 0x00, 0x00, 0x88)
-  private final val colorLight    = new Color(0xFF, 0xFF, 0xFF, 0xD8)
-  private final val strokeOutline = new BasicStroke(1.0f)
-  private final val strokeInline  = new BasicStroke(2.0f)
-  private final val insets        = new Insets(3, 3, 4, 4)
+  private final val diameter = 6
+  private final val insets   = new Insets(3, 3, 4, 4)
 }
 
 class RecessedBorder(c: Color = Color.black)
@@ -33,8 +29,6 @@ class RecessedBorder(c: Color = Color.black)
 
   private final var colorVar = c
   private final var shpBg     : Shape = null
-  private final var shpInline : Shape = null
-  private final var shpOutline: Shape = null
 
   private final var recentWidth  = -1
   private final var recentHeight = -1
@@ -60,17 +54,13 @@ class RecessedBorder(c: Color = Color.black)
     g2.translate(x, y)
 
     if ((width != recentWidth) || (height != recentHeight)) {
-      val r        = new RoundRectangle2D.Float(1.0f, 0.5f, width - 2.0f, height - 1.5f, diameter, diameter)
-      val r2       = new RoundRectangle2D.Float(0.5f, 0.0f, width - 1.5f, height - 1.0f, diameter, diameter)
-      val a        = new Area(r)
+      val r = new RoundRectangle2D.Float(0.0f, 0.0f, width, height, diameter, diameter)
+      val a = new Area(r)
       a.subtract(new Area(new Rectangle2D.Float(
         insets.left,
         insets.top,
-        width - insets.left - insets.right,
-        height - insets.top - insets.bottom)))
-
-      shpOutline   = strokeOutline.createStrokedShape(r2)
-      shpInline    = strokeInline .createStrokedShape(r2)
+        width  - insets.left - insets.right,
+        height - insets.top  - insets.bottom)))
       shpBg        = a
 
       recentWidth  = width
@@ -78,12 +68,6 @@ class RecessedBorder(c: Color = Color.black)
     }
 
     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-    g2.setPaint(colorDark)
-    g2.fill(shpOutline)
-    g2.translate(1, 1)
-    g2.setPaint(colorLight)
-    g2.fill(shpInline)
-    g2.translate(-1, -1)
     g2.setPaint(colorVar)
     g2.fill(shpBg)
 

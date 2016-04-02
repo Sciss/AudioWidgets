@@ -33,8 +33,6 @@ import scala.math.{max, Pi}
 object UnitLabel {
   private val polyX: Array[Int] = Array(0, 4, 8)
   private val polyY: Array[Int] = Array(0, 4, 0)
-  private val colrTri : Color = new Color(0x00, 0x00, 0x00, 0xB0)
-  private val colrTriD: Color = new Color(0x00, 0x00, 0x00, 0x55)
 
   private final class CompoundIcon(iconWest: Icon, iconEast: Icon, gap: Int) extends Icon {
     def getIconWidth: Int =
@@ -52,9 +50,6 @@ object UnitLabel {
       }
     }
   }
-
-  private final val colrLab   = null
-  private final val colrLabD  = new Color(0x00, 0x00, 0x00, 0x7F)
 }
 
 class UnitLabel extends JLabel with Icon { label =>
@@ -63,6 +58,12 @@ class UnitLabel extends JLabel with Icon { label =>
   private final val pop       = new JPopupMenu
   private final val bg        = new ButtonGroup
   private final var units     = Vector.empty[UnitAction]
+
+  private[this] def setAlpha(in: Color, alpha: Int) = new Color(in.getRGB & 0x00FFFFFF | (alpha << 24), true)
+
+  private[this] val colrTri   = setAlpha(getForeground, 0xB0)
+  private[this] val colrTriD  = setAlpha(getForeground, 0x40)
+  private[this] val colrLabD  = setAlpha(getForeground, 0x60)
 
   private var al: ActionListener = null
 
@@ -86,7 +87,7 @@ class UnitLabel extends JLabel with Icon { label =>
         updatePreferredSize()
 
       } else if (e.getPropertyName == "enabled") {
-        setForeground(if (isEnabled) colrLab else colrLabD)
+        setForeground(if (isEnabled) null else colrLabD)
 
       } else if (e.getPropertyName == "insets") {
         updatePreferredSize()
@@ -210,7 +211,7 @@ class UnitLabel extends JLabel with Icon { label =>
   private def removeUnit(idx: Int, update: Boolean): Unit = {
     val a   = units(idx)
     val mi  = a.menuItem
-    bg.remove(mi)
+    bg .remove(mi)
     pop.remove(mi)
     units = units.patch(idx, Nil, 1)
     if (units.isEmpty) {
