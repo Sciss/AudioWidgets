@@ -1,7 +1,7 @@
 lazy val baseName       = "AudioWidgets"
 lazy val baseNameL      = baseName.toLowerCase
 
-lazy val projectVersion = "1.9.2"
+lazy val projectVersion = "1.9.3"
 
 lazy val commonSettings = Seq(
   version             := projectVersion,
@@ -25,12 +25,10 @@ lazy val scalaSwingVersion  = "1.0.2"
 
 // ---- test dependencies ----
 
-// lazy val xstreamVersion     = "1.4.9"
-lazy val subminVersion      = "0.1.0"
+lazy val subminVersion      = "0.2.0"
 
 lazy val testSettings = Seq(
   libraryDependencies ++= Seq(
-    // "com.thoughtworks.xstream" % "xstream" % xstreamVersion % "test",   // PROBLEM WITH MAVEN CENTRAL
     "de.sciss" % "submin" % subminVersion % "test"
   )
 )
@@ -101,10 +99,3 @@ lazy val publishSettings = Seq(
 </developers>
   }
 )
-
-// ---- ls.implicit.ly ----
-
-// seq(lsSettings :_*)
-// (LsKeys.tags   in LsKeys.lsync) := Seq("swing", "audio", "widgets")
-// (LsKeys.ghUser in LsKeys.lsync) := Some("Sciss")
-// (LsKeys.ghRepo in LsKeys.lsync) := Some(baseName)

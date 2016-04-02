@@ -1,17 +1,12 @@
 package de.sciss.audiowidgets.j
 
-import java.awt.{BorderLayout, Dimension, RenderingHints, Graphics2D, Graphics, EventQueue}
-import javax.swing.{JComponent, WindowConstants, JPanel, JFrame}
+import java.awt.{BorderLayout, Dimension, EventQueue, Graphics, Graphics2D, RenderingHints}
+import javax.swing.{JComponent, JFrame, JPanel, WindowConstants}
 
-import com.alee.laf.WebLookAndFeel
-import de.sciss.submin.SubminDarkSkin
+import de.sciss.submin.Submin
 
 object TransportTests extends App with Runnable {
-  if (args.contains("--dark")) {
-    SubminDarkSkin.install()
-  } else {
-    WebLookAndFeel.install()
-  }
+  Submin.install(args.contains("--dark"))
   EventQueue.invokeLater(this)
 
   def run(): Unit = {

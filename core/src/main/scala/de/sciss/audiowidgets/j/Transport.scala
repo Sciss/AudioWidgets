@@ -37,28 +37,28 @@ trait TransportCompanion {
   // ---- implemented ----
 
   sealed trait ColorScheme {
-    private[j] def shadowPaint: Paint
-    private[j] def outlinePaint: Paint
-    private[j] def fillPaint(scale: Float): Paint
+    def shadowPaint: Paint
+    def outlinePaint: Paint
+    def fillPaint(scale: Float): Paint
   }
 
   case object LightScheme extends ColorScheme {
-    private[j] def fillPaint(scale: Float): Paint = new LinearGradientPaint(0f, 0f, 0f, scale * 19f, Array(0f, 0.25f, 1f),
+    def fillPaint(scale: Float): Paint = new LinearGradientPaint(0f, 0f, 0f, scale * 19f, Array(0f, 0.25f, 1f),
 //      Array(new Color(0xE8, 0xE8, 0xE8), new Color(0xFF, 0xFF, 0xFF), new Color(0xF0, 0xF0, 0xF0))
       Array(new Color(0xA8, 0xA8, 0xA8), new Color(0xBF, 0xBF, 0xBF), new Color(0xB0, 0xB0, 0xB0))
     )
 
-    private[j] val shadowPaint : Paint = new Color(0, 0, 0, 0x50)
-    private[j] val outlinePaint: Paint = new Color(0, 0, 0, 0xC0)
+    val shadowPaint : Paint = new Color(0, 0, 0, 0x50)
+    val outlinePaint: Paint = new Color(0, 0, 0, 0xC0)
   }
 
   case object DarkScheme extends ColorScheme {
-    private[j] def fillPaint(scale: Float): Paint = new LinearGradientPaint(0f, 0f, 0f, scale * 19f, Array(0f, 0.25f, 1f),
+    def fillPaint(scale: Float): Paint = new LinearGradientPaint(0f, 0f, 0f, scale * 19f, Array(0f, 0.25f, 1f),
       Array(new Color(0x28, 0x28, 0x28), new Color(0x00, 0x00, 0x00), new Color(0x20, 0x20, 0x20))
     )
 
-    private[j] val shadowPaint : Paint = new Color(0xFF, 0xFF, 0xFF, 0x50)
-    private[j] val outlinePaint: Paint = Color.white
+    val shadowPaint : Paint = new Color(0xFF, 0xFF, 0xFF, 0x50)
+    val outlinePaint: Paint = Color.white
   }
 
   protected final class IconImpl(val element: Element, val scale: Float, scheme: ColorScheme)
@@ -343,6 +343,7 @@ object Transport extends TransportCompanion {
     protected def makeButton(pos: String, action: Action): AbstractButton = {
       val b = new JButton(action)
       b.setFocusable(false)
+      b.putClientProperty("styleId", "icon-space")
       b.putClientProperty("JButton.buttonType", "segmentedCapsule") // "segmented" "segmentedRoundRect" "segmentedCapsule" "segmentedTextured" "segmentedGradient"
       b.putClientProperty("JButton.segmentPosition", pos)
       //         b.setMinimumSize( new Dimension( 10, 50 ))
