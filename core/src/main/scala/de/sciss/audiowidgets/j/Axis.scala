@@ -94,8 +94,8 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
 //  private var img: BufferedImage = null
   private var pntBackground: Paint = null
 
-  private[this] final val isDark  = UIManager.getBoolean("dark-skin")
-  private[this] final val scheme  = if (isDark) darkScheme else lightScheme
+  private[this] final val scheme    = if (Util.isDarkSkin) darkScheme else lightScheme
+  private[this] final val colrTicks = if (Util.isDarkSkin) Color.gray else Color.lightGray
 
   private def orientUpdated(): Unit = {
     val isHoriz = _orient match {
@@ -244,7 +244,7 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
     } else {
       r.height - 2 /* 3 */ - fm.getMaxDescent
     }
-    g2.setColor(if (isDark) Color.gray else Color.lightGray)
+    g2.setColor(colrTicks)
     g2.draw(shpTicks)
 
     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)

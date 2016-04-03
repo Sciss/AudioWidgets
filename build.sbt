@@ -1,7 +1,7 @@
 lazy val baseName       = "AudioWidgets"
 lazy val baseNameL      = baseName.toLowerCase
 
-lazy val projectVersion = "1.9.3"
+lazy val projectVersion = "1.9.4"
 
 lazy val commonSettings = Seq(
   version             := projectVersion,
@@ -42,7 +42,7 @@ lazy val root = Project(id = baseNameL, base = file(".")).
     packagedArtifacts := Map.empty           // prevent publishing anything!
   )
 
-lazy val core = Project(id = s"$baseName-core", base = file("core"))
+lazy val core = Project(id = s"$baseNameL-core", base = file("core"))
   .settings(commonSettings)
   .settings(testSettings)
 

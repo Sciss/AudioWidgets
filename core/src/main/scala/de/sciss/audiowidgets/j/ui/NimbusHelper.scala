@@ -17,6 +17,8 @@ import javax.swing.UIDefaults
 import javax.swing.UIManager
 import java.awt.Color
 
+import de.sciss.audiowidgets.Util
+
 // straight from Java (SwingOSC)...
 object NimbusHelper {
   def focusColor: Color = {
@@ -103,7 +105,7 @@ object NimbusHelper {
 
   def isNimbus: Boolean = nimbusDefaults != null
 
-  private final val isDark = UIManager.getBoolean("dark-skin")
+  private final val isDark = Util.isDarkSkin
 
   def isDarkSkin: Boolean = isDark
 

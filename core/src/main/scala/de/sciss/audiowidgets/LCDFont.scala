@@ -14,24 +14,31 @@
 package de.sciss.audiowidgets
 
 import java.awt.Font
-import java.awt.geom.AffineTransform
+
+import scala.util.control.NonFatal
 
 object LCDFont {
-  //  private lazy val _fontOLD = {
-  //    val is = LCDFont.getClass.getResourceAsStream("Receiptional Receipt.ttf")
-  //    require(is != null, "Font resource not found") // !!
-  //    val res = Font.createFont(Font.TRUETYPE_FONT, is)
-  //    is.close()
-  //    res.deriveFont(11f)
-  //      .deriveFont(Font.PLAIN, AffineTransform.getTranslateInstance(0,4.0)) // problem with ascent
-  //  }
+  private[this] def fallBackFont = new Font(Font.MONOSPACED, Font.PLAIN, 10)
 
   private lazy val _font = {
-    val is = LCDFont.getClass.getResourceAsStream("FamiliadaMono.ttf")
-    if (is == null) sys.error("Font resource not found") // !!
-    val res = Font.createFont(Font.TRUETYPE_FONT, is)
-    is.close()
-    res.deriveFont(11.5f)
+    val url = LCDFont.getClass.getResource("FamiliadaMono.ttf")
+    if (url == null) {
+      Console.err.println("LCDFont: resource not found")
+      fallBackFont
+    } else try {
+      val is = url.openStream()
+      try {
+        val res = Font.createFont(Font.TRUETYPE_FONT, is)
+        res.deriveFont(11.5f)
+      } finally {
+        is.close()
+      }
+    } catch {
+      case NonFatal(e) =>
+        Console.err.println("LCDFont: Cannot create font")
+        e.printStackTrace()
+        fallBackFont
+    }
   }
 
   /** Returns a monospaced "LCD" style font, at size 11.5pt. Other sizes may be derived using `.deriveFont`. */

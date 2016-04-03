@@ -82,9 +82,8 @@ class Jog extends JComponent { me =>
   private var displayArc    = -2.356194
   private var propagateFire = false
 
-  private[this] final val isDark  = UIManager.getBoolean("dark-skin")
-  private[this] final val scheme  = if (isDark) Jog.darkScheme  else Jog.lightScheme
-  private[this] final val schemeD = if (isDark) Jog.darkSchemeD else Jog.lightSchemeD
+  private[this] final val scheme  = if (Util.isDarkSkin) Jog.darkScheme  else Jog.lightScheme
+  private[this] final val schemeD = if (Util.isDarkSkin) Jog.darkSchemeD else Jog.lightSchemeD
 
   init()
   

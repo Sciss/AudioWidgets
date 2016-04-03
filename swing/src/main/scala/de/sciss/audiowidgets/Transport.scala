@@ -13,16 +13,20 @@
 
 package de.sciss.audiowidgets
 
-import j.TransportCompanion
-import swing.{Button, Orientation, BoxPanel, AbstractButton, Component}
-import collection.immutable.{IndexedSeq => Vec}
+import javax.swing.Icon
+
+import de.sciss.audiowidgets.j.TransportCompanion
+
+import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.swing.{AbstractButton, BoxPanel, Button, Component, Orientation}
 
 object Transport extends TransportCompanion {
   type ComponentType      = Component
   type AbstractButtonType = AbstractButton
   type Action             = swing.Action with ActionLike
 
-  protected def makeAction(icn: IconImpl, fun: => Unit): Action = new ActionImpl(icn, fun)
+  protected def makeAction(icons: (Icon, Icon, Icon, Icon), element: Element, scale: Float, fun: => Unit): Action =
+    new ActionImpl(icons, element, scale, fun)
 
   private final class SButtonStripImpl(protected val actions: Seq[Action], protected val scheme: ColorScheme)
     extends BoxPanel(Orientation.Horizontal) with ButtonStripImpl {
@@ -31,7 +35,12 @@ object Transport extends TransportCompanion {
 
     protected def makeButton(pos: String, action: Action): AbstractButton = {
       val b = new Button(action)
+      val (_, iconSelected, iconPressed, iconDisabled) = action.icons
+      b.peer.setSelectedIcon(iconSelected)
+      b.peer.setPressedIcon (iconPressed )
+      b.peer.setDisabledIcon(iconDisabled)
       b.focusable = false
+      b.peer.putClientProperty("styleId", "icon-space")
       b.peer.putClientProperty("JButton.buttonType", "segmentedCapsule") // "segmented" "segmentedRoundRect" "segmentedCapsule" "segmentedTextured" "segmentedGradient"
       b.peer.putClientProperty("JButton.segmentPosition", pos)
       b
@@ -44,11 +53,11 @@ object Transport extends TransportCompanion {
     new SButtonStripImpl(a, scheme)
   }
 
-  private final class ActionImpl(icn: IconImpl, fun: => Unit) extends swing.Action(null) with ActionLike {
-    icon = icn
+  private final class ActionImpl(val icons: (Icon, Icon, Icon, Icon), val element: Element, val scale:
+                                 Float, fun: => Unit)
+    extends swing.Action(null) with ActionLike {
 
-    def element: Element = icn.element
-    def scale  : Float   = icn.scale
+    icon = icons._1
 
     def apply(): Unit = fun
   }

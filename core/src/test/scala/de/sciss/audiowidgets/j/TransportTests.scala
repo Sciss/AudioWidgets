@@ -20,7 +20,7 @@ object TransportTests extends App with Runnable {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
         def gaga(scheme: ColorScheme, yoff: Int): Unit =
-          Seq(GoToBegin, Rewind, Play, Stop, Pause, FastForward, GoToEnd, Record, Loop).zipWithIndex.foreach {
+          Seq(GoToBegin, Rewind, Stop, Pause, Play, FastForward, GoToEnd, Record, Loop).zipWithIndex.foreach {
             case (icn, idx) =>
               pnt(g2, icn, 10 + icn.defaultXOffset + (idx * 30), yoff + icn.defaultYOffset, 1f, scheme)
           }
@@ -30,8 +30,8 @@ object TransportTests extends App with Runnable {
       }
     }
 
-    val sq = IndexedSeq( Transport.GoToBegin, Transport.Rewind, Transport.Play, Transport.Stop,
-       Transport.FastForward, Transport.GoToEnd, Transport.Loop )
+    val sq = IndexedSeq(Transport.GoToBegin, Transport.Rewind, Transport.Stop,
+      Transport.Pause, Transport.Play, Transport.FastForward, Transport.GoToEnd, Transport.Record, Transport.Loop)
 
     val butP = new JPanel(new BorderLayout())
     def mkStrip(scheme: Transport.ColorScheme, layPos: String): Unit = {
@@ -56,7 +56,7 @@ object TransportTests extends App with Runnable {
       //         }
       butP.add(strip, layPos)
     }
-    mkStrip(Transport.DarkScheme, BorderLayout.NORTH)
+    mkStrip(Transport.DarkScheme , BorderLayout.NORTH)
     mkStrip(Transport.LightScheme, BorderLayout.SOUTH)
 
       val cp = f.getContentPane

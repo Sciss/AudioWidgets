@@ -15,23 +15,30 @@ package de.sciss.audiowidgets
 package j
 package ui
 
-import javax.swing.plaf.ComponentUI
-import javax.swing.{SwingUtilities, SwingConstants, UIManager, JComponent}
-import java.awt.{Rectangle, RenderingHints, Paint, LinearGradientPaint, Shape, Insets, Dimension, Graphics2D, Color, Graphics}
+import java.awt.event.{FocusEvent, FocusListener, KeyEvent, KeyListener, MouseEvent, MouseListener, MouseMotionListener}
 import java.awt.geom.GeneralPath
-import java.awt.event.{MouseEvent, MouseMotionListener, MouseListener, KeyEvent, KeyListener, FocusEvent, FocusListener}
+import java.awt.{Color, Dimension, GradientPaint, Graphics, Graphics2D, Insets, Paint, Rectangle, RenderingHints, Shape}
 import javax.swing.event.{ChangeEvent, ChangeListener}
+import javax.swing.plaf.ComponentUI
+import javax.swing.{JComponent, SwingConstants, SwingUtilities, UIManager}
+
 import scala.annotation.switch
 
 // XXX TODO: only handles horizontal orientation at the moment
 // XXX TODO: should have custom handle colour
 // XXX TODO: extentFixed not honoured
 object DualRangeSliderUI {
-  private final val colrFillTrack     = new Color(0x00, 0x00, 0x00, 0x26)
-  private final val colrDrawTrack     = new Color(0x00, 0x00, 0x00, 0x4C)
-  private final val colrFillSel       = new Color(0x00, 0x00, 0x00, 0x3B) // 0x59
-  private final val colrDrawHandle    = new Color(0x73, 0x76, 0x68) // XXX TODO: depends on user colour
-  private final val colrDrawHandleSel = new Color(0x33, 0x33, 0x33)
+  private final val colrFillTrackLight      = new Color(0x00, 0x00, 0x00, 0x26)
+  private final val colrDrawTrackLight      = new Color(0x00, 0x00, 0x00, 0x4C)
+  private final val colrFillSelLight        = new Color(0x00, 0x00, 0x00, 0x3B) // 0x59
+  private final val colrDrawHandleLight     = new Color(0x73, 0x76, 0x68) // XXX TODO: depends on user colour
+  private final val colrDrawHandleSelLight  = new Color(0x33, 0x33, 0x33)
+
+  private final val colrFillTrackDark       = new Color(0x00, 0x00, 0x00, 0x26)
+  private final val colrDrawTrackDark       = new Color(0xFF, 0xFF, 0xFF, 0x26)
+  private final val colrFillSelDark         = new Color(0xFF, 0xFF, 0xFF, 0x59)
+  private final val colrDrawHandleDark      = new Color(32, 32, 32)
+  private final val colrDrawHandleSelDark   = new Color(48, 77, 130)
 
   // private final var colrDrawValue   = new Color(0x00, 0x00, 0x00, 0x73)
   // HSB thumb outline un-selected: 73, 12, 46
@@ -78,21 +85,37 @@ object DualRangeSliderUI {
     gp
   }
 
-  private final val pntFillValue: Paint = new LinearGradientPaint(0f, 1f, 0f, 4f, Array(0f, 1f),
-    Array(new Color(0xDD, 0xE1, 0xC9), new Color(0xD9, 0xDE, 0xC4)) // XXX TODO: depends on user colour
-  )
+  private final val pntFillValueLight: Paint = new GradientPaint(
+    0f, 1f, new Color(0xDD, 0xE1, 0xC9),
+    0f, 4f, new Color(0xD9, 0xDE, 0xC4))
 
-  private final val pntFillValueSel: Paint = new LinearGradientPaint(0f, 1f, 0f, 4f, Array(0f, 1f),
-    Array(new Color(0x6A, 0x6A, 0x6A), new Color(0x4D, 0x4D, 0x4D))
-  )
+  private final val pntFillValueSelLight: Paint = new GradientPaint(
+    0f, 1f, new Color(0x6A, 0x6A, 0x6A),
+    0f, 4f, new Color(0x4D, 0x4D, 0x4D))
 
-  private final val pntFillRange: Paint = new LinearGradientPaint(0f, 11f, 0f, 15f, Array(0f, 1f),
-    Array(new Color(0xE2, 0xE5, 0xD1), new Color(0xD9, 0xDE, 0xC4)) // XXX TODO: depends on user colour
-  )
+  private final val pntFillRangeLight: Paint = new GradientPaint(
+    0f, 11f, new Color(0xE2, 0xE5, 0xD1),
+    0f, 15f, new Color(0xD9, 0xDE, 0xC4))
 
-  private final val pntFillRangeSel: Paint = new LinearGradientPaint(0f, 11f, 0f, 15f, Array(0f, 1f),
-    Array(new Color(0x6D, 0x6D, 0x6D), new Color(0x41, 0x41, 0x41))
-  )
+  private final val pntFillRangeSelLight: Paint = new GradientPaint(
+    0f, 11f, new Color(0x6D, 0x6D, 0x6D),
+    0f, 15f, new Color(0x41, 0x41, 0x41))
+
+  private final val pntFillValueDark: Paint = new GradientPaint(
+    0f, 1f, new Color(0x6A, 0x6A, 0x6A),
+    0f, 4f, new Color(0x4D, 0x4D, 0x4D))
+
+  private final val pntFillValueSelDark: Paint = new GradientPaint(
+    0f, 1f, new Color(0x5E, 0x97, 0xFF),
+    0f, 4f, new Color(0xC4, 0xC4, 0xC4))
+
+  private final val pntFillRangeDark: Paint = new GradientPaint(
+    0f, 11f, new Color(0x6D, 0x6D, 0x6D),
+    0f, 15f, new Color(0x41, 0x41, 0x41))
+
+  private final val pntFillRangeSelDark: Paint = new GradientPaint(
+    0f, 11f, new Color(0x5E, 0x97, 0xFF),
+    0f, 15f, new Color(0xC4, 0xC4, 0xC4))
 
   private sealed trait MaybeHandle {
     def valueOption(m: DualRangeModel): Option[Int]
@@ -124,15 +147,43 @@ class DualRangeSliderUI(slider: DualRangeSlider) extends ComponentUI {
   private var _insets: Insets = null
 
   private var dragHandle: MaybeHandle = NoHandle
+  
+  private[this] var colrFillTrack     : Color = _
+  private[this] var colrDrawTrack     : Color = _
+  private[this] var colrFillSel       : Color = _
+  private[this] var colrDrawHandle    : Color = _
+  private[this] var colrDrawHandleSel : Color = _
+  private[this] var pntFillValue      : Paint = _
+  private[this] var pntFillValueSel   : Paint = _
+  private[this] var pntFillRange      : Paint = _
+  private[this] var pntFillRangeSel   : Paint = _
 
   override def installUI(c: JComponent): Unit = {
     dragHandle = NoHandle
-    //    installDefaults()
     installListeners()
-    //    installKeyboardActions()
-
     _insets = slider.getInsets
-    // leftToRightCache = slider.getComponentOrientation.isLeftToRight
+    val isDark = Util.isDarkSkin
+    if (isDark) {
+      colrFillTrack     = colrFillTrackDark
+      colrDrawTrack     = colrDrawTrackDark
+      colrFillSel       = colrFillSelDark
+      colrDrawHandle    = colrDrawHandleDark
+      colrDrawHandleSel = colrDrawHandleSelDark
+      pntFillValue      = pntFillValueDark
+      pntFillValueSel   = pntFillValueSelDark
+      pntFillRange      = pntFillRangeDark
+      pntFillRangeSel   = pntFillRangeSelDark
+    } else {
+      colrFillTrack     = colrFillTrackLight
+      colrDrawTrack     = colrDrawTrackLight
+      colrFillSel       = colrFillSelLight
+      colrDrawHandle    = colrDrawHandleLight
+      colrDrawHandleSel = colrDrawHandleSelLight
+      pntFillValue      = pntFillValueLight
+      pntFillValueSel   = pntFillValueSelLight
+      pntFillRange      = pntFillRangeLight
+      pntFillRangeSel   = pntFillRangeSelLight
+    }
   }
 
   override def uninstallUI(c: JComponent): Unit = {
@@ -403,7 +454,7 @@ class DualRangeSliderUI(slider: DualRangeSlider) extends ComponentUI {
       g2.translate(-xVal, -trackRect.y) // -_insets.top)
       g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE)
 
-      g2.setColor(colrDrawHandleSel)
+      g2.setColor(if (focused) colrDrawHandleSel else colrDrawHandle)
       g2.drawLine(xVal, trackRect.y + 2, xVal, ty2)
     }
   }

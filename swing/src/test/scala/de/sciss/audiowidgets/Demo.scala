@@ -13,22 +13,26 @@
 
 package de.sciss.audiowidgets
 
-import java.awt.event.{ActionEvent, ActionListener}
-import com.alee.laf.WebLookAndFeel
-
-import scala.swing.event.{ValueChanged, WindowClosing, WindowOpened}
-import collection.immutable.{IndexedSeq => Vec}
 import java.awt.Color
-import scala.swing.{Orientation, BoxPanel, Component, Label, GridPanel, Swing, BorderPanel, MainFrame, SimpleSwingApplication}
+import java.awt.event.{ActionEvent, ActionListener}
 import javax.swing.Timer
-import Swing._
+
+import de.sciss.submin.Submin
+
+import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.swing.Swing._
+import scala.swing.event.{ValueChanged, WindowClosing, WindowOpened}
+import scala.swing.{BorderPanel, BoxPanel, Component, GridPanel, Label, MainFrame, Orientation, SimpleSwingApplication, Swing}
 
 object Demo extends SimpleSwingApplication {
-  WebLookAndFeel.install()
+
+  override def startup(args: Array[String]): Unit = {
+    Submin.install(args.contains("--dark"))
+    super.startup(args)
+  }
 
   lazy val top = new MainFrame {
     title = "ScalaAudioWidgets"
-    // peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", java.lang.Boolean.TRUE)
 
     val m = new PeakMeter {
       numChannels   = 2
@@ -49,6 +53,7 @@ object Demo extends SimpleSwingApplication {
       case ((fg, _), idx) =>
         new Label {
           text = "00:00:0" + idx
+          if (idx != 1 && idx != 4) peer.putClientProperty("styleId", "noshade")
           peer.putClientProperty("JComponent.sizeVariant", "small")
           font = LCDFont()
           fg.foreach(foreground = _)
@@ -84,7 +89,8 @@ object Demo extends SimpleSwingApplication {
     }
 
     lazy val trnspActions = Seq(
-      Transport.GoToBegin, Transport.Play, Transport.Stop, Transport.GoToEnd, Transport.Loop).map {
+      Transport.GoToBegin, Transport.Rewind     , Transport.Stop   , Transport.Pause, Transport.Play,
+      Transport.Record   , Transport.FastForward, Transport.GoToEnd, Transport.Loop).map {
 
       case l @ Transport.Loop => l.apply {
           trnsp.button(l).foreach(b => b.selected = !b.selected)
@@ -92,13 +98,17 @@ object Demo extends SimpleSwingApplication {
 
       case e => e.apply {}
     }
-    lazy val trnsp: Component with Transport.ButtonStrip = Transport.makeButtonStrip(trnspActions)
+    lazy val trnsp: Component with Transport.ButtonStrip = {
+      val res = Transport.makeButtonStrip(trnspActions)
+      res.button(Transport.Play).get.selected = true // peer.getModel.setPressed(true)
+      res
+    }
 
     lazy val timeSlid = {
       val fmt = AxisFormat.Time(hours = true, millis = false)
       val lb = new Label {
         text        = fmt.format(value = 0.0, decimals = 0)
-        foreground  = Color.darkGray
+        foreground  = LCDColors.foreground
         peer.putClientProperty("JComponent.sizeVariant", "small")
       }
       val slid = new DualRangeSlider(DualRangeModel(0, 360 * 4)) { me =>

@@ -16,7 +16,9 @@ package de.sciss.audiowidgets.j
 import java.awt.event.ActionEvent
 import java.awt.geom.{AffineTransform, Area, Ellipse2D, GeneralPath, Rectangle2D, RoundRectangle2D}
 import java.awt.{BasicStroke, Color, Component, Graphics, Graphics2D, LinearGradientPaint, Paint, RenderingHints, Shape}
-import javax.swing.{UIManager, AbstractAction, AbstractButton, Box, BoxLayout, Icon, JButton, JComponent}
+import javax.swing.{AbstractAction, AbstractButton, Box, BoxLayout, Icon, JButton, JComponent}
+
+import de.sciss.audiowidgets.{ShapeIcon, Util}
 
 import scala.collection.immutable.{IndexedSeq => Vec}
 
@@ -27,9 +29,9 @@ trait TransportCompanion {
   type AbstractButtonType <: ComponentType
   type Action <: ActionLike
 
-  protected def makeAction(icn: IconImpl, fun: => Unit): Action
+  protected def makeAction(icons: (Icon, Icon, Icon, Icon), element: Element, scale: Float, fun: => Unit): Action
 
-  def defaultColorScheme: ColorScheme = if (UIManager.getBoolean("dark-skin")) LightScheme else DarkScheme
+  def defaultColorScheme: ColorScheme = if (Util.isDarkSkin) LightScheme else DarkScheme
 
   def makeButtonStrip(actions: Seq[ActionElement], scale: Float = 0.8f,
                       scheme: ColorScheme = defaultColorScheme): ComponentType with ButtonStrip
@@ -44,11 +46,10 @@ trait TransportCompanion {
 
   case object LightScheme extends ColorScheme {
     def fillPaint(scale: Float): Paint = new LinearGradientPaint(0f, 0f, 0f, scale * 19f, Array(0f, 0.25f, 1f),
-//      Array(new Color(0xE8, 0xE8, 0xE8), new Color(0xFF, 0xFF, 0xFF), new Color(0xF0, 0xF0, 0xF0))
       Array(new Color(0xA8, 0xA8, 0xA8), new Color(0xBF, 0xBF, 0xBF), new Color(0xB0, 0xB0, 0xB0))
     )
 
-    val shadowPaint : Paint = new Color(0, 0, 0, 0x50)
+    val shadowPaint : Paint = new Color(0, 0, 0, 0x7F)
     val outlinePaint: Paint = new Color(0, 0, 0, 0xC0)
   }
 
@@ -57,7 +58,7 @@ trait TransportCompanion {
       Array(new Color(0x28, 0x28, 0x28), new Color(0x00, 0x00, 0x00), new Color(0x20, 0x20, 0x20))
     )
 
-    val shadowPaint : Paint = new Color(0xFF, 0xFF, 0xFF, 0x50)
+    val shadowPaint : Paint = new Color(0xFF, 0xFF, 0xFF, 0x7F)
     val outlinePaint: Paint = Color.white
   }
 
@@ -82,6 +83,23 @@ trait TransportCompanion {
     final def icon(scale: Float = 1f, colorScheme: ColorScheme = DarkScheme): Icon =
       new IconImpl(this, scale, colorScheme)
 
+    /** Icons: (normal, selected, pressed, disabled). */
+    final def icons(scale: Float = 1f, colorScheme: ColorScheme = DarkScheme): (Icon, Icon, Icon, Icon) = {
+      val shp           = shape(scale)
+      val isDark        = Util.isDarkSkin
+      val w             = math.ceil(24 * scale).toInt
+      val h             = math.ceil(22 * scale).toInt
+      // val shadow        = if (isDark) new Color(0x00, 0x00, 0x00, 0x7F) else new Color(0xFF, 0xFF, 0xFF, 0x7F)
+      val shadow        = colorScheme.shadowPaint
+      // val iconNorm      = new ShapeIcon(shp, if (isDark) new Color(200 , 200 , 200      ) else new Color(32  , 32  , 32      ), shadow, w, h)
+      val iconNorm      = new ShapeIcon(shp, colorScheme.fillPaint(scale), shadow, w, h)
+      val iconSel       = new ShapeIcon(shp, if (isDark) new Color(0x5E, 0x97, 0xFF     ) else new Color(0x3D, 0x3D, 0xB6    ), shadow, w, h)
+      val iconPressed   = new ShapeIcon(shp, if (isDark) new Color(180 , 180 , 180, 0x7F) else new Color(40  , 40  , 40, 0x7F), shadow, w, h)
+      val iconDisabled  = iconPressed
+
+      (iconNorm, iconSel, iconPressed, iconDisabled)
+    }
+
     final def apply(fun: => Unit): ActionElement = {
       new ActionElementImpl(this, fun)
     }
@@ -101,8 +119,8 @@ trait TransportCompanion {
   private final class ActionElementImpl(val element: Element, fun: => Unit)
     extends ActionElement {
     def apply(scale: Float, colorScheme: ColorScheme): Action = {
-      val icn = new IconImpl(element, scale, colorScheme)
-      makeAction(icn, fun)
+      val icons = element.icons(scale, colorScheme)
+      makeAction(icons, element, scale, fun)
     }
   }
 
@@ -111,6 +129,7 @@ trait TransportCompanion {
 
   trait ActionLike /* extends javax.swing.Action */ {
     def icon: Icon
+    def icons: (Icon, Icon, Icon, Icon)
     def element: Element
     def scale: Float
   }
@@ -180,8 +199,8 @@ trait TransportCompanion {
   }
 
   case object Record extends Element {
-    val defaultXOffset = 3f
-    val defaultYOffset = 2f
+    val defaultXOffset = 4f
+    val defaultYOffset = 3f
 
     def shape(scale: Float, xoff: Float, yoff: Float): Shape =
       new Ellipse2D.Float(scale * xoff, scale * yoff, scale * 16f, scale * 16f)
@@ -213,12 +232,12 @@ trait TransportCompanion {
   }
 
   case object FastForward extends Element {
-    val defaultXOffset = 0f
+    val defaultXOffset = 2f
     val defaultYOffset = 3f
 
     def shape(scale: Float, xoff: Float, yoff: Float): Shape = {
       val play = Play.shape(scale * 0.7f, xoff = xoff, yoff = yoff)
-      val p2 = AffineTransform.getTranslateInstance(scale * 11.5f, 0).createTransformedShape(play)
+      val p2 = AffineTransform.getTranslateInstance(scale * 10f, 0).createTransformedShape(play)
       val res = new Area(play)
       res.add(new Area(p2))
       res
@@ -226,7 +245,7 @@ trait TransportCompanion {
   }
 
   case object Rewind extends Element {
-    val defaultXOffset = 0f
+    val defaultXOffset = 1.5f
     val defaultYOffset = 3f
 
     def shape(scale: Float, xoff: Float, yoff: Float): Shape = {
@@ -238,12 +257,12 @@ trait TransportCompanion {
   }
 
   case object Loop extends Element {
-    private val doRotate = true
+    // private val doRotate = true
 
-    val defaultXOffset = 0f
-    val defaultYOffset = if (doRotate) 3f else 1.5f
+    val defaultXOffset = 2f
+    val defaultYOffset = 4f // if (doRotate) 3f else 1.5f
 
-    def shape(scale: Float = 1f, xoff: Float = 0f, yoff: Float = 3f): Shape = {
+    def shape(scale: Float = 1f, xoff: Float = defaultXOffset, yoff: Float = defaultYOffset): Shape = {
 
       val res = new Area(new RoundRectangle2D.Float(0f, scale * 4f, scale * 22f, scale * 14f, scale * 10f, scale * 10f))
       res.subtract(new Area(new RoundRectangle2D.Float(0f + scale * 3f, scale * 7f, scale * 16f, scale * 8f, scale * 8f, scale * 8f)))
@@ -257,17 +276,18 @@ trait TransportCompanion {
 
       gp.closePath()
       res.subtract(new Area(gp))
-      val play = Play.shape(scale * 0.5f, /* xoff + */ 9f, /* yoff - 2.5f */ 0.5f)
+      val play = Play.shape(scale * 0.5f, /* xoff + */ 8f, /* yoff - 2.5f */ 0.5f)
       res.add(new Area(play))
       val rot = AffineTransform.getRotateInstance(math.Pi, scale * 11f, scale * 12f).createTransformedShape(res)
       res.add(new Area(rot))
-      val at = AffineTransform.getScaleInstance(1f, 0.8f)
-      if (doRotate) {
+      // val at = AffineTransform.getScaleInstance(1f, 0.8f)
+      val at = AffineTransform.getScaleInstance(0.9f, 0.8f)
+      // if (doRotate) {
         at.rotate(math.Pi * -0.2, scale * 11f, scale * 12f)
         at.preConcatenate(AffineTransform.getTranslateInstance(xoff, yoff - 3f))
-      } else {
-        at.translate(xoff, yoff)
-      }
+      // } else {
+      //  at.translate(xoff, yoff)
+      // }
       at.createTransformedShape(res)
     }
   }
@@ -289,7 +309,6 @@ trait TransportCompanion {
 
     protected def scheme: ColorScheme
 
-    //      protected def add( c: ComponentType ) : Unit
     protected def makeButton(pos: String, action: Action): AbstractButtonType
 
     protected def addButtons(seq: Vec[AbstractButtonType]): Unit
@@ -334,7 +353,8 @@ object Transport extends TransportCompanion {
   type ComponentType = JComponent
   type Action = javax.swing.Action with ActionLike
 
-  protected def makeAction(icn: IconImpl, fun: => Unit): Action = new ActionImpl(icn, fun)
+  protected def makeAction(icons: (Icon, Icon, Icon, Icon), element: Element, scale: Float, fun: => Unit): Action =
+    new ActionImpl(icons, element, scale, fun)
 
   private final class JButtonStripImpl( protected val actions: Seq[ Action ], protected val scheme: ColorScheme )
     extends Box(BoxLayout.X_AXIS) with ButtonStripImpl {
@@ -342,6 +362,10 @@ object Transport extends TransportCompanion {
 
     protected def makeButton(pos: String, action: Action): AbstractButton = {
       val b = new JButton(action)
+      val (_, iconSelected, iconPressed, iconDisabled) = action.icons
+      b.setSelectedIcon(iconSelected)
+      b.setPressedIcon (iconPressed )
+      b.setDisabledIcon(iconDisabled)
       b.setFocusable(false)
       b.putClientProperty("styleId", "icon-space")
       b.putClientProperty("JButton.buttonType", "segmentedCapsule") // "segmented" "segmentedRoundRect" "segmentedCapsule" "segmentedTextured" "segmentedGradient"
@@ -357,10 +381,10 @@ object Transport extends TransportCompanion {
     new JButtonStripImpl(a, scheme)
   }
 
-  private final class ActionImpl(icn: IconImpl, fun: => Unit) extends AbstractAction(null, icn) with ActionLike {
-    def icon   : Icon     = icn
-    def element: Element  = icn.element
-    def scale  : Float    = icn.scale
+  private final class ActionImpl(val icons: (Icon, Icon, Icon, Icon), val element: Element, val scale: Float, fun: => Unit)
+    extends AbstractAction(null, icons._1) with ActionLike {
+
+    def icon   : Icon     = icons._1
 
     def actionPerformed(e: ActionEvent): Unit = fun
   }

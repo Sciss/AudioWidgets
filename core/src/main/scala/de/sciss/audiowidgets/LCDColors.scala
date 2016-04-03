@@ -16,6 +16,9 @@ package de.sciss.audiowidgets
 import java.awt.Color
 
 object LCDColors {
+  def background: Color = if (Util.isDarkSkin) blackBg else defaultBg
+  def foreground: Color = if (Util.isDarkSkin) blackFg else defaultFg
+
   final val defaultFg = Color.darkGray
   final val defaultBg = Color.getHSBColor(0.194f, 0.190f, 0.805f)
   final val blueFg    = new Color(205, 232, 254)
