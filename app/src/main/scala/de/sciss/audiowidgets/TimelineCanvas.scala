@@ -20,14 +20,23 @@ trait TimelineCanvas {
   /** The underlying model */
   def timelineModel: TimelineModel
 
-  /** The corresponding Swing component */
+  /** The corresponding (inner) Swing component */
   def canvasComponent: Component
+
+  /** The corresponding (outer) Swing component */
+  def component: Component
 
   /** Converts a model frame position to screen pixel location */
   def frameToScreen(frame: Long): Double
 
+  /** Converts a model frame duration to screen pixel width */
+  def framesToScreen(frame: Long): Double
+
   /** Converts a screen pixel location to model frame position */
   def screenToFrame(screen: Int): Double
+
+  /** Converts a screen pixel location to model frame duration */
+  def screenToFrames(screen: Int): Double
 
   /** Clips a model frame to the visible span */
   def clipVisible(frame: Double): Long

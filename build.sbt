@@ -1,7 +1,7 @@
 lazy val baseName       = "AudioWidgets"
 lazy val baseNameL      = baseName.toLowerCase
 
-lazy val projectVersion = "1.9.4"
+lazy val projectVersion = "1.10.0-SNAPSHOT"
 
 lazy val commonSettings = Seq(
   version             := projectVersion,
@@ -28,17 +28,15 @@ lazy val scalaSwingVersion  = "1.0.2"
 lazy val subminVersion      = "0.2.0"
 
 lazy val testSettings = Seq(
-  libraryDependencies ++= Seq(
-    "de.sciss" % "submin" % subminVersion % "test"
-  )
+  libraryDependencies += "de.sciss" % "submin" % subminVersion % "test"
 )
 
 // ----
 
-lazy val root = Project(id = baseNameL, base = file(".")).
-  aggregate(core, swing, app).
-  settings(commonSettings).
-  settings(
+lazy val root = Project(id = baseNameL, base = file("."))
+  .aggregate(core, swing, app)
+  .settings(commonSettings)
+  .settings(
     packagedArtifacts := Map.empty           // prevent publishing anything!
   )
 

@@ -142,23 +142,28 @@ trait TimelineCanvasImpl extends TimelineCanvas {
   }
 
   final def framesToScreen(numFrames: Long): Double = {
-    val visi = timelineModel.visible
-    numFrames.toDouble / visi.length * canvasComponent.peer.getWidth
+    val vis = timelineModel.visible
+    numFrames.toDouble / vis.length * canvasComponent.peer.getWidth
   }
 
   final def frameToScreen(frame: Long): Double = {
-    val visi = timelineModel.visible
-    (frame - visi.start).toDouble / visi.length * canvasComponent.peer.getWidth
+    val vis = timelineModel.visible
+    framesToScreen(frame - vis.start)
   }
 
   final def screenToFrame(screen: Int): Double = {
-    val visi = timelineModel.visible
-    screen.toDouble / canvasComponent.peer.getWidth * visi.length + visi.start
+    val vis = timelineModel.visible
+    screenToFrames(screen) + vis.start
+  }
+
+  final def screenToFrames(screen: Int): Double = {
+    val vis = timelineModel.visible
+    screen.toDouble / canvasComponent.peer.getWidth * vis.length
   }
 
   final def clipVisible(frame: Double): Long = {
-    val visi = timelineModel.visible
-    visi.clip(frame.toLong)
+    val vis = timelineModel.visible
+    vis.clip(frame.toLong)
   }
 
   private def updateScroll(): Unit = {
