@@ -13,10 +13,19 @@
 
 package de.sciss.audiowidgets
 
+import java.awt.Color
 import javax.swing.UIManager
 
 object Util {
   private[this] val isDark = UIManager.getBoolean("dark-skin")
 
   def isDarkSkin: Boolean = isDark
+
+  def colrSelection         : Color = if (isDark) colrSelectionDark  else colrSelectionLight
+  def colrInactiveSelection : Color = if (isDark) colrSelectionDarkI else colrSelectionLightI
+
+  private[this] final val colrSelectionDark   = new Color(95, 142, 255, 0x38)
+  private[this] final val colrSelectionLight  = new Color(0x00, 0x00, 0xFF, 0x2F)
+  private[this] final val colrSelectionDarkI  = new Color(0xE0, 0xE0, 0xE0, 0x30)
+  private[this] final val colrSelectionLightI = new Color(0x00, 0x00, 0x00, 0x20)
 }

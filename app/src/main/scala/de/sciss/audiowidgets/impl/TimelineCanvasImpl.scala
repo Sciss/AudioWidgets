@@ -29,11 +29,8 @@ object TimelineCanvasImpl {
   private case object AxisPosition extends AxisMouseAction
   private final case class AxisSelection(fix: Long) extends AxisMouseAction
 
-  private val colrSelection     = new Color(0x00, 0x00, 0xFF, 0x4F)
-  private val colrPositionXor   = Color.black // new Color(0x00, 0x00, 0xFF, 0x7F)
-  private val colrPosition      = Color.white // new Color(0x00, 0x00, 0xFF, 0x7F)
-  // private val colrSelection2    = new Color(0x00, 0x00, 0x00, 0x40)
-  // private val colrPlayHead      = new Color(0x00, 0xD0, 0x00, 0xC0)
+  private final val colrPositionXor   = Color.black // new Color(0x00, 0x00, 0xFF, 0x7F)
+  private final val colrPosition      = Color.white // new Color(0x00, 0x00, 0xFF, 0x7F)
 
   private val imgChecker = {
  		val img = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB)
@@ -57,11 +54,13 @@ trait TimelineCanvasImpl extends TimelineCanvas {
 
   import TimelineCanvasImpl._
 
-  private var axisMouseAction: AxisMouseAction = AxisPosition
+  private[this] final var axisMouseAction: AxisMouseAction = AxisPosition
 
   // this is an auxiliary object which may be used
   // by any method on the EDT
-  private val r = new Rectangle
+  private[this] final val r = new Rectangle
+
+  private[this] final val colrSelection = Util.colrSelection
 
   protected def paintPosAndSelection(g: Graphics2D, h: Int): Unit = {
     val pos = frameToScreen(timelineModel.position).toInt
@@ -69,13 +68,13 @@ trait TimelineCanvasImpl extends TimelineCanvas {
     val rr  = r.x + r.width
     timelineModel.selection match {
       case Span(start, stop) =>
-        val selx1 = frameToScreen(start).toInt
-        val selx2 = frameToScreen(stop ).toInt
-        if (selx1 < rr && selx2 > r.x) {
+        val selX1 = frameToScreen(start).toInt
+        val selX2 = frameToScreen(stop ).toInt
+        if (selX1 < rr && selX2 > r.x) {
           g.setColor(colrSelection)
-          g.fillRect(selx1, 0, selx2 - selx1, h)
-          if (r.x <= selx1) g.drawLine(selx1, 0, selx1, h)
-          if (selx2 > selx1 && rr >= selx2) g.drawLine(selx2 - 1, 0, selx2 - 1, h)
+          g.fillRect(selX1, 0, selX2 - selX1, h)
+          if (r.x <= selX1) g.drawLine(selX1, 0, selX1, h)
+          if (selX2 > selX1 && rr >= selX2) g.drawLine(selX2 - 1, 0, selX2 - 1, h)
         }
       case _ =>
     }
@@ -88,7 +87,7 @@ trait TimelineCanvasImpl extends TimelineCanvas {
   }
 
   // lazy because of `timelineModel`
-  private lazy val timeAxis = new Axis {
+  private[this] final lazy val timeAxis = new Axis {
     override protected def paintComponent(g: Graphics2D): Unit = {
       super.paintComponent(g)
       paintPosAndSelection(g, peer.getHeight)
@@ -110,11 +109,11 @@ trait TimelineCanvasImpl extends TimelineCanvas {
             m.selection = Span.Void
           }
           if ((mod & Key.Modifier.Shift) != 0) {
-            val otra = m.selection match {
+            val other = m.selection match {
               case Span.Void          => m.position
               case Span(start, stop)  => if (math.abs(frame - start) > math.abs(frame - stop)) start else stop
             }
-            axisMouseAction = AxisSelection(otra)
+            axisMouseAction = AxisSelection(other)
           } else {
             axisMouseAction = AxisPosition
           }
@@ -128,15 +127,15 @@ trait TimelineCanvasImpl extends TimelineCanvas {
   }
 
   private def updateAxis(): Unit = {
-    val visi          = timelineModel.visible
+    val vis           = timelineModel.visible
     val sr            = timelineModel.sampleRate
-    timeAxis.minimum  = visi.start / sr
-    timeAxis.maximum  = visi.stop  / sr
+    timeAxis.minimum  = vis.start / sr
+    timeAxis.maximum  = vis.stop  / sr
   }
 
   // final def canvasComponent: Component
 
-  private val scroll = new ScrollBar {
+  private[this] final val scroll = new ScrollBar {
     orientation   = Orientation.Horizontal
     unitIncrement = 4
   }
@@ -168,22 +167,21 @@ trait TimelineCanvasImpl extends TimelineCanvas {
 
   private def updateScroll(): Unit = {
     val trackWidth      = math.max(1, scroll.peer.getWidth - 32)  // TODO XXX stupid hard coded value. but how to read it?
-    val visi            = timelineModel.visible
+    val vis             = timelineModel.visible
     val total           = timelineModel.bounds
     val framesPerPixel  = math.max(1, ((total.length + (trackWidth >> 1)) / trackWidth).toInt)
     val max             = math.min(0x3FFFFFFFL, total.length / framesPerPixel).toInt
-    val pos             = math.min(max - 1, (visi.start - total.start) / framesPerPixel).toInt
-    val visiAmt         = math.min(max - pos, visi.length / framesPerPixel).toInt
-    val blockInc        = math.max(1, visiAmt * 4 / 5)
-    // val unitInc         = 4
+    val pos             = math.min(max - 1, (vis.start - total.start) / framesPerPixel).toInt
+    val visAmt          = math.min(max - pos, vis.length / framesPerPixel).toInt
+    val blockInc        = math.max(1, visAmt * 4 / 5)
 
     // __DO NOT USE deafTo and listenTo__ there must be a bug in scala-swing,
-    // because that quickly overloads the AWT event multicaster with stack overflows.
+    // because that quickly overloads the AWT event multi-caster with stack overflows.
     //    deafTo(scroll)
     val l = pane.isListeningP
     if (l) scroll.reactions -= scrollListener
     scroll.maximum        = max
-    scroll.visibleAmount  = visiAmt
+    scroll.visibleAmount  = visAmt
     scroll.value          = pos
     scroll.blockIncrement = blockInc
     //    listenTo(scroll)
@@ -191,25 +189,23 @@ trait TimelineCanvasImpl extends TimelineCanvas {
   }
 
   private def updateFromScroll(model: TimelineModel.Modifiable): Unit = {
-    val visi              = model.visible
-    val total             = model.bounds
-    val pos               = math.min(total.stop - visi.length,
+    val vis     = model.visible
+    val total   = model.bounds
+    val pos     = math.min(total.stop - vis.length,
       ((scroll.value.toDouble / scroll.maximum) * total.length + 0.5).toLong)
-    val l = pane.isListeningP
+    val l       = pane.isListeningP
     if (l) model.removeListener(timelineListener)
-    val newVisi = Span(pos, pos + visi.length)
-    // println(s"updateFromScroll : $newVisi")
-    model.visible = newVisi
+    val newVis  = Span(pos, pos + vis.length)
+    model.visible = newVis
     updateAxis()
     repaint()
     if (l) model.addListener(timelineListener)
   }
 
-  private lazy val timePane = new BoxPanel(Orientation.Horizontal) {
-    // contents += HStrut(meterPane.preferredSize.width)
+  private[this] final lazy val timePane = new BoxPanel(Orientation.Horizontal) {
     contents += timeAxis
   }
-  private val scrollPane = new BoxPanel(Orientation.Horizontal) {
+  private[this] final val scrollPane = new BoxPanel(Orientation.Horizontal) {
     contents += scroll
     contents += HStrut(16)
     listenTo(this)
@@ -225,15 +221,12 @@ trait TimelineCanvasImpl extends TimelineCanvas {
     scroll.reactions -= scrollListener
   }
 
-  private object pane extends BorderPanel with DynamicComponentImpl {
-    // println("INIT PANE")
-    // protected val timelineModel = view.timelineModel
+  private[this] object pane extends BorderPanel with DynamicComponentImpl {
 
     def component = this
 
     def isListeningP = isListening
 
-    // add(meterPane,  BorderPanel.Position.West  )
     add(timePane,         BorderPanel.Position.North )
     add(canvasComponent,  BorderPanel.Position.Center)
     add(scrollPane,       BorderPanel.Position.South )
@@ -273,12 +266,11 @@ trait TimelineCanvasImpl extends TimelineCanvas {
       repaint()
   }
 
-  private val scrollListener: Reactions.Reaction = {
+  private[this] final val scrollListener: Reactions.Reaction = {
     case UIElementResized(_) =>
       updateScroll()
 
     case ValueChanged(_) =>
-      // println(s"ScrollBar Value ${scroll.value}")
       timelineModel.modifiableOption.foreach(updateFromScroll)
   }
 
