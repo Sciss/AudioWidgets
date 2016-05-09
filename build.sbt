@@ -1,7 +1,7 @@
 lazy val baseName       = "AudioWidgets"
 lazy val baseNameL      = baseName.toLowerCase
 
-lazy val projectVersion = "1.10.0-SNAPSHOT"
+lazy val projectVersion = "1.10.0"
 
 lazy val commonSettings = Seq(
   version             := projectVersion,
@@ -25,7 +25,7 @@ lazy val scalaSwingVersion  = "1.0.2"
 
 // ---- test dependencies ----
 
-lazy val subminVersion      = "0.2.0"
+lazy val subminVersion      = "0.2.1"
 
 lazy val testSettings = Seq(
   libraryDependencies += "de.sciss" % "submin" % subminVersion % "test"

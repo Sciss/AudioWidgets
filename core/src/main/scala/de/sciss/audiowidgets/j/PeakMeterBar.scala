@@ -14,10 +14,10 @@
 package de.sciss.audiowidgets
 package j
 
-import java.beans.{PropertyChangeListener, PropertyChangeEvent}
+import java.beans.{PropertyChangeEvent, PropertyChangeListener}
 import javax.swing.{BorderFactory, JComponent, SwingConstants}
 import java.awt.image.BufferedImage
-import java.awt.{Color, Rectangle, TexturePaint, Graphics2D, Graphics, Container, Paint, Dimension, Insets}
+import java.awt.{Color, Container, Dimension, Graphics, Graphics2D, Insets, Paint, Rectangle, TexturePaint}
 
 /** A level (volume) meter GUI component. The component
   * is a vertical bar displaying a green-to-reddish bar
@@ -222,51 +222,51 @@ class PeakMeterBar(orient: Int = SwingConstants.VERTICAL)
   import PeakMeterBar._
   import SwingConstants._
 
-  private final var holdDurationVar	       = PeakMeter.DefaultHoldDuration   // milliseconds peak hold
+  private[this] final var holdDurationVar	       = PeakMeter.DefaultHoldDuration   // milliseconds peak hold
 
-  private final val nInf                   = Float.NegativeInfinity
-  private final var	peakDB                 = nInf
-  private final var rmsDB                  = nInf
-  private final var	peakLin                = 0f
-  private final var rmsLin                 = 0f
-  private final var holdDB                 = nInf
-  private final var holdLin                = 0f
-  private final var peakToPaint            = 0f
-  private final var rmsToPaint             = 0f
-  private final var holdToPaint            = 0f
-  private final var peakNorm               = 0f
-  private final var rmsNorm                = 0f
-  private final var holdNorm               = 0f
+  private[this] final val nInf                   = Float.NegativeInfinity
+  private[this] final var	peakDB                 = nInf
+  private[this] final var rmsDB                  = nInf
+  private[this] final var	peakLin                = 0f
+  private[this] final var rmsLin                 = 0f
+  private[this] final var holdDB                 = nInf
+  private[this] final var holdLin                = 0f
+  private[this] final var peakToPaint            = 0f
+  private[this] final var rmsToPaint             = 0f
+  private[this] final var holdToPaint            = 0f
+  private[this] final var peakNorm               = 0f
+  private[this] final var rmsNorm                = 0f
+  private[this] final var holdNorm               = 0f
 
-  private final var recentLength	         = 0
-  private final var recentBreadth	         = 0
-  private final var calcedLength	         = -1			// recentHeight snapshot in recalcPaint()
-  private final var calcedBreadth	         = -1			// recentWidth snapshot in recalcPaint()
-  private final var lastUpdate		         = currentTime()
-  private final var holdEnd                = 0L
+  private[this] final var recentLength	         = 0
+  private[this] final var recentBreadth	         = 0
+  private[this] final var calculatedLength	     = -1			// recentHeight snapshot in recalculatePaint()
+  private[this] final var calculatedBreadth	     = -1			// recentWidth snapshot in recalculatePaint()
+  private[this] final var lastUpdate		         = currentTime()
+  private[this] final var holdEnd                = 0L
 
-  private final var holdPaintedVar		     = true
-  private final var rmsPaintedVar		       = true
+  private[this] final var holdPaintedVar		     = true
+  private[this] final var rmsPaintedVar		       = true
 
-  private final var pntBg: Paint			     = null
-  private final var imgBg  : BufferedImage = null
-  private final var imgRMS : BufferedImage = null
-  private final var imgPeak: BufferedImage = null
+  private[this] final var pntBg: Paint			     = null
+  private[this] final var imgBg  : BufferedImage = null
+  private[this] final var imgRMS : BufferedImage = null
+  private[this] final var imgPeak: BufferedImage = null
 
-  private final val ins                    = new Insets(0, 0, 0, 0)
+  private[this] final val ins                    = new Insets(0, 0, 0, 0)
 
-  private final var holdPixPos             = 0
-  private final var peakPixPos             = 0
-  private final var rmsPixPos              = 0
+  private[this] final var holdPixPos             = 0
+  private[this] final var peakPixPos             = 0
+  private[this] final var rmsPixPos              = 0
 
-  private final var peakPixPosP	           = 0
-  private final var rmsPixPosP	           = 0
-  private final var holdPixPosP	           = 0
+  private[this] final var peakPixPosP	           = 0
+  private[this] final var rmsPixPosP	           = 0
+  private[this] final var holdPixPosP	           = 0
 
   var refreshParent                        = false
 
-  private final var ticksVar = 101
-  private final var vertical = {
+  private[this] final var ticksVar = 101
+  private[this] final var vertical = {
     val res = orient == VERTICAL
     if (!res && orient != HORIZONTAL) throw new IllegalArgumentException(orient.toString)
     res
@@ -275,9 +275,9 @@ class PeakMeterBar(orient: Int = SwingConstants.VERTICAL)
   // ---- constructor ----
   setOpaque(true)
   setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1))
-  recalcPrefSize()
+  recalculatePrefSize()
   addPropertyChangeListener("border", new PropertyChangeListener {
-    def propertyChange(e: PropertyChangeEvent): Unit = recalcPrefSize()
+    def propertyChange(e: PropertyChangeEvent): Unit = recalculatePrefSize()
   })
   clearMeter()
 
@@ -290,7 +290,7 @@ class PeakMeterBar(orient: Int = SwingConstants.VERTICAL)
     if (newVertical != vertical) {
       vertical = newVertical
       disposeImages()
-      recalcPrefSize()
+      recalculatePrefSize()
       clearMeter()
     }
   }
@@ -332,8 +332,8 @@ class PeakMeterBar(orient: Int = SwingConstants.VERTICAL)
     *	for the bars to fall down.
     */
   def clearMeter(): Unit = {
-    val w1      = getWidth - (ins.left + ins.right)
-    val h1      = getHeight - (ins.top + ins.bottom)
+    val w1      = getWidth  - (ins.left + ins.right )
+    val h1      = getHeight - (ins.top  + ins.bottom)
     val len1    = if (vertical) h1 else w1
     val rLen1   = (len1 - 1) & ~1
 
@@ -366,7 +366,7 @@ class PeakMeterBar(orient: Int = SwingConstants.VERTICAL)
 
   def ticks_=(num: Int): Unit = if (ticksVar != num) {
     ticksVar = num
-    recalcPrefSize()
+    recalculatePrefSize()
   }
 
   def ticks: Int = ticksVar
@@ -396,7 +396,7 @@ class PeakMeterBar(orient: Int = SwingConstants.VERTICAL)
     holdNorm = 0f
   }
 
-  protected def recalcPrefSize(): Unit = {
+  protected def recalculatePrefSize(): Unit = {
     var minDim : Dimension = null
     var prefDim: Dimension = null
     getInsets(ins)
@@ -482,12 +482,12 @@ class PeakMeterBar(orient: Int = SwingConstants.VERTICAL)
       peakLin = math.exp(peakDB / logPeakCorr).toFloat
     }
 
-    val newRMSDB = (math.log(newRMS) * logRMSCorr).toFloat
-    if (newRMSDB > rmsDB) {
+    val newRmsDb = (math.log(newRMS) * logRMSCorr).toFloat
+    if (newRmsDb > rmsDB) {
       rmsLin = newRMS
-      rmsDB  = newRMSDB
+      rmsDB  = newRmsDb
     } else {
-      rmsDB  = math.max(newRMSDB, rmsDB - (time - lastUpdate) * (if (rmsDB > -20f) 0.013333333333333f else 0.016f))
+      rmsDB  = math.max(newRmsDb, rmsDB - (time - lastUpdate) * (if (rmsDB > -20f) 0.013333333333333f else 0.016f))
     }
 
     if (peakDB >= holdDB) {
@@ -590,6 +590,7 @@ class PeakMeterBar(orient: Int = SwingConstants.VERTICAL)
       } else {
         c.repaint(offX + minPixPos, offY, maxPixPos - minPixPos + 2, h1)
       }
+      if (Util.needsSync) getToolkit.sync()
 
     } else {
       peakToPaint = nInf
@@ -600,7 +601,7 @@ class PeakMeterBar(orient: Int = SwingConstants.VERTICAL)
     result
   }
 
-  private def recalcPaint(): Unit = {
+  private def recalculatePaint(): Unit = {
     val imgLen		  = (recentLength + 1) & ~1
     val imgBreadth  = recentBreadth
     var imgW        = 0
@@ -657,8 +658,8 @@ class PeakMeterBar(orient: Int = SwingConstants.VERTICAL)
     imgPeak  = new BufferedImage(imgW, imgH, BufferedImage.TYPE_INT_ARGB)
     imgPeak.setRGB(0, 0, imgW, imgH, pix2, 0, imgW)
 
-    calcedLength  = recentLength
-    calcedBreadth = recentBreadth
+    calculatedLength  = recentLength
+    calculatedBreadth = recentBreadth
   }
 
   override def paintComponent(g: Graphics): Unit = {
@@ -689,8 +690,8 @@ class PeakMeterBar(orient: Int = SwingConstants.VERTICAL)
       rmsPixPos    = math.min((rmsNorm * rLen1).toInt & ~1, peakPixPos - 4)
       recentLength = len
     }
-    if ((calcedLength != recentLength) || (calcedBreadth != recentBreadth)) {
-      recalcPaint()
+    if ((calculatedLength != recentLength) || (calculatedBreadth != recentBreadth)) {
+      recalculatePaint()
     }
 
     val g2 = g.asInstanceOf[Graphics2D]
@@ -789,7 +790,7 @@ class PeakMeterBar(orient: Int = SwingConstants.VERTICAL)
       imgBg = null
       pntBg = null
     }
-    calcedLength = -1
+    calculatedLength = -1
   }
 
   def dispose(): Unit = disposeImages()
