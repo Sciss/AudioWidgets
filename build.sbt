@@ -1,7 +1,8 @@
 lazy val baseName       = "AudioWidgets"
 lazy val baseNameL      = baseName.toLowerCase
 
-lazy val projectVersion = "1.10.0"
+lazy val projectVersion = "1.10.1"
+lazy val mimaVersion    = "1.10.0" // used for migration-manager
 
 lazy val commonSettings = Seq(
   version             := projectVersion,
@@ -43,6 +44,9 @@ lazy val root = Project(id = baseNameL, base = file("."))
 lazy val core = Project(id = s"$baseNameL-core", base = file("core"))
   .settings(commonSettings)
   .settings(testSettings)
+  .settings(
+    mimaPreviousArtifacts := Set("de.sciss" %% s"$baseNameL-core" % mimaVersion)
+  )
 
 lazy val swing = Project(id = s"$baseNameL-swing", base = file("swing"))
   .dependsOn(core)
@@ -55,7 +59,8 @@ lazy val swing = Project(id = s"$baseNameL-swing", base = file("swing"))
       else
         "org.scala-lang" % "scala-swing" % sv
       swing
-    }
+    },
+    mimaPreviousArtifacts := Set("de.sciss" %% s"$baseNameL-swing" % mimaVersion)
   )
 
 lazy val app = Project(id = s"$baseNameL-app", base = file("app"))
@@ -67,7 +72,8 @@ lazy val app = Project(id = s"$baseNameL-app", base = file("app"))
       "de.sciss" %% "desktop"       % desktopVersion,
       "de.sciss" %% "raphael-icons" % raphaelVersion,
       "de.sciss" %% "span"          % spanVersion
-    )
+    ),
+    mimaPreviousArtifacts := Set("de.sciss" %% s"$baseNameL-app" % mimaVersion)
   )
 
 // ---- publishing ----
