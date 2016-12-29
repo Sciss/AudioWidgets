@@ -5,13 +5,13 @@
 
 ## statement
 
-AudioWidgets is a library providing specialized widgets for audio applications. It is Swing based and written in the Scala programming language. (C)opyright 2011&ndash;2016 by Hanns Holger Rutz. All rights reserved. It is released under the [GNU Lesser General Public License](http://github.com/Sciss/AudioWidgets/blob/master/licenses/AudioWidgets-License.txt) v2.1+ and comes with absolutely no warranties. To contact the author, send an email to `contact at sciss.de`.
+AudioWidgets is a library providing specialized widgets for audio applications. It is Swing based and written in the Scala programming language. (C)opyright 2011&ndash;2017 by Hanns Holger Rutz. All rights reserved. It is released under the [GNU Lesser General Public License](http://github.com/Sciss/AudioWidgets/blob/master/licenses/AudioWidgets-License.txt) v2.1+ and comes with absolutely no warranties. To contact the author, send an email to `contact at sciss.de`.
 
 The included font "Familida Mono" is based on a font by darunio123456789 and released under a [Creative Commons CC BY-SA 3.0 license](http://github.com/Sciss/AudioWidgets/blob/master/licenses/FamiliadaMono-License.txt).
 
 ## requirements / installation
 
-AudioWidgets currently compiles against Scala 2.11, 2.10 using sbt 0.13. There are three sub projects: `core`, `swing` and `app`, where `swing` depends on `core` and `app` depends on `swing`.
+AudioWidgets currently compiles against Scala 2.12, 2.11, 2.10 using sbt 0.13. There are three sub projects: `core`, `swing` and `app`, where `swing` depends on `core` and `app` depends on `swing`.
 
  - The `core` project provides widgets based on plain Java Swing
  - `swing` wraps them for usage within Scala-Swing. Therefore, `swing` adds a further dependency on `scala-swing`.
@@ -23,7 +23,7 @@ To use the library in your project:
     "de.sciss" %% "audiowidgets-swing" % v
     "de.sciss" %% "audiowidgets-app"   % v
 
-The current version `v` is `"1.10.1"`.
+The current version `v` is `"1.10.2"`.
 
 To view a demo of the widgets from the sbt console:
 

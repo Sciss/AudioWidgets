@@ -1,7 +1,7 @@
 lazy val baseName       = "AudioWidgets"
 lazy val baseNameL      = baseName.toLowerCase
 
-lazy val projectVersion = "1.10.1"
+lazy val projectVersion = "1.10.2"
 lazy val mimaVersion    = "1.10.0" // used for migration-manager
 
 lazy val commonSettings = Seq(
@@ -11,7 +11,7 @@ lazy val commonSettings = Seq(
   homepage            := Some(url(s"https://github.com/Sciss/$baseName")),
   licenses            := Seq("LGPL v2.1+" -> url("http://www.gnu.org/licenses/lgpl-2.1.txt")),
   scalaVersion        := "2.11.8",
-  crossScalaVersions  := Seq("2.11.8", "2.10.6"),
+  crossScalaVersions  := Seq("2.12.1", "2.11.8", "2.10.6"),
   scalacOptions      ++= Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture"),
   initialCommands in console := """
     |import de.sciss.audiowidgets._""".stripMargin
@@ -19,10 +19,10 @@ lazy val commonSettings = Seq(
 
 // ---- dependencies ----
 
-lazy val desktopVersion     = "0.7.2"
-lazy val spanVersion        = "1.3.1"
-lazy val raphaelVersion     = "1.0.3"
-lazy val scalaSwingVersion  = "1.0.2"
+lazy val desktopVersion     = "0.7.3"
+lazy val spanVersion        = "1.3.2"
+lazy val raphaelVersion     = "1.0.4"
+lazy val swingPlusVersion   = "0.2.2"
 
 // ---- test dependencies ----
 
@@ -53,13 +53,9 @@ lazy val swing = Project(id = s"$baseNameL-swing", base = file("swing"))
   .settings(commonSettings)
   .settings(testSettings)
   .settings(
-    libraryDependencies += { val sv = scalaVersion.value
-      val swing = if (sv startsWith "2.11")
-        "org.scala-lang.modules" %% "scala-swing" % scalaSwingVersion
-      else
-        "org.scala-lang" % "scala-swing" % sv
-      swing
-    },
+    libraryDependencies ++= Seq(
+      "de.sciss" %% "swingplus" % swingPlusVersion
+    ),
     mimaPreviousArtifacts := Set("de.sciss" %% s"$baseNameL-swing" % mimaVersion)
   )
 
