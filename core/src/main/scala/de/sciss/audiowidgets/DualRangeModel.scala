@@ -14,7 +14,8 @@
 package de.sciss.audiowidgets
 
 import javax.swing.event.{ChangeEvent, ChangeListener}
-import collection.immutable.{IndexedSeq => Vec}
+
+import scala.collection.immutable.{IndexedSeq => Vec}
 
 object DualRangeModel {
   def apply(minimum: Int = 0, maximum: Int = 100): DualRangeModel = new Impl(minimum, maximum)

@@ -13,10 +13,11 @@
 
 package de.sciss.audiowidgets.j.ui
 
+import java.awt.MultipleGradientPaint.CycleMethod
 import java.awt.geom.Ellipse2D
-import java.awt.{Graphics2D, LinearGradientPaint, MultipleGradientPaint, Paint, Color}
-import NimbusHelper.adjustColor
-import MultipleGradientPaint.CycleMethod
+import java.awt.{Color, Graphics2D, LinearGradientPaint, Paint}
+
+import de.sciss.audiowidgets.j.ui.NimbusHelper.adjustColor
 
 /** A painter which is imitating the nimbus appearance of radio button knobs.
   * The colors have been slightly tuned so they look good with colored knobs.

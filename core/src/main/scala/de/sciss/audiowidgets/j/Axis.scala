@@ -14,8 +14,8 @@
 package de.sciss.audiowidgets
 package j
 
-import java.awt.{Paint, Rectangle, Graphics2D, Graphics, FontMetrics, RenderingHints, Font, LinearGradientPaint, Dimension, Color}
 import java.awt.geom.{AffineTransform, GeneralPath}
+import java.awt.{Color, Dimension, Font, FontMetrics, Graphics, Graphics2D, LinearGradientPaint, Paint, Rectangle, RenderingHints}
 import java.util.Locale
 import javax.swing.{JComponent, SwingConstants, UIManager}
 

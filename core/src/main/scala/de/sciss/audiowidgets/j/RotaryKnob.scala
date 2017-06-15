@@ -14,9 +14,10 @@
 package de.sciss.audiowidgets
 package j
 
-import javax.swing.{DefaultBoundedRangeModel, BoundedRangeModel, JSlider}
 import java.awt.Color
-import ui.RotaryKnobUI
+import javax.swing.{BoundedRangeModel, DefaultBoundedRangeModel, JSlider}
+
+import de.sciss.audiowidgets.j.ui.RotaryKnobUI
 
 class RotaryKnob(m: BoundedRangeModel) extends JSlider(m) with RotaryKnobLike {
   private var colrKnob        : Color   = _

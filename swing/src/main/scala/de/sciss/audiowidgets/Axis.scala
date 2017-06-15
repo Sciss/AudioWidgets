@@ -13,8 +13,9 @@
 
 package de.sciss.audiowidgets
 
-import j.{Axis => JAxis}
-import scala.swing.{Font, Orientation, Component}
+import de.sciss.audiowidgets.j.{Axis => JAxis}
+
+import scala.swing.{Component, Font, Orientation}
 
 object Axis {
   def DefaultFont: Font = JAxis.DefaultFont

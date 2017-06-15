@@ -14,11 +14,11 @@
 package de.sciss.audiowidgets
 package j
 
-import java.awt.{Toolkit, Font, GridBagLayout, GridBagConstraints}
-import java.awt.event.{KeyEvent, ActionEvent, ActionListener}
+import java.awt.event.{ActionEvent, ActionListener, KeyEvent}
+import java.awt.{Font, GridBagConstraints, GridBagLayout, Toolkit}
 import java.beans.{PropertyChangeEvent, PropertyChangeListener}
 import javax.swing.JFormattedTextField.{AbstractFormatter, AbstractFormatterFactory}
-import javax.swing.{AbstractAction, KeyStroke, SwingConstants, BorderFactory, JFormattedTextField, JPanel}
+import javax.swing.{AbstractAction, BorderFactory, JFormattedTextField, JPanel, KeyStroke, SwingConstants}
 
 import scala.collection.immutable.{Seq => ISeq}
 

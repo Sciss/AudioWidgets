@@ -13,10 +13,11 @@
 
 package de.sciss.audiowidgets.j
 
-import java.awt.{Point, Dimension, Toolkit, Stroke, BasicStroke, Paint, Color, Graphics2D}
-import collection.immutable.{IndexedSeq => Vec}
-import javax.swing.{JComponent, AbstractAction, KeyStroke, Action}
-import java.awt.event.{MouseWheelEvent, MouseWheelListener, ActionEvent, InputEvent, KeyEvent}
+import java.awt.event.{ActionEvent, InputEvent, KeyEvent, MouseWheelEvent, MouseWheelListener}
+import java.awt.{BasicStroke, Color, Dimension, Graphics2D, Paint, Point, Stroke, Toolkit}
+import javax.swing.{AbstractAction, Action, JComponent, KeyStroke}
+
+import scala.collection.immutable.{IndexedSeq => Vec}
 
 object WavePainter {
   def sampleAndHold: OneLayer  = new SHImpl

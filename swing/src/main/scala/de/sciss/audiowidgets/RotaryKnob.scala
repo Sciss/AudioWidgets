@@ -13,9 +13,10 @@
 
 package de.sciss.audiowidgets
 
-import scala.swing.Slider
-import javax.swing.{DefaultBoundedRangeModel, BoundedRangeModel, JSlider}
 import java.awt.Color
+import javax.swing.{BoundedRangeModel, DefaultBoundedRangeModel}
+
+import scala.swing.Slider
 
 class RotaryKnob(model0: BoundedRangeModel) extends Slider with RotaryKnobLike {
   def this() {

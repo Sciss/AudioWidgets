@@ -59,5 +59,5 @@ class PeakMeter extends Component with PeakMeterLike {
 
   def channel(ch: Int): PeakMeterChannel = peer.channel(ch)
 
-  def update(peakRMSPairs: Vec[Float], offset: Int, time: Long) = peer.update(peakRMSPairs, offset, time)
+  def update(peakRMSPairs: Vec[Float], offset: Int, time: Long): Boolean = peer.update(peakRMSPairs, offset, time)
 }

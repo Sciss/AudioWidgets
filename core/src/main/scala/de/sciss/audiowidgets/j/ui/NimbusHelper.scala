@@ -13,9 +13,8 @@
 
 package de.sciss.audiowidgets.j.ui
 
-import javax.swing.UIDefaults
-import javax.swing.UIManager
 import java.awt.Color
+import javax.swing.{UIDefaults, UIManager}
 
 import de.sciss.audiowidgets.Util
 

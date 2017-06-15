@@ -14,10 +14,10 @@
 package de.sciss.audiowidgets
 package j
 
-import java.beans.{PropertyChangeEvent, PropertyChangeListener}
-import javax.swing.{BorderFactory, JComponent, SwingConstants}
 import java.awt.image.BufferedImage
 import java.awt.{Color, Container, Dimension, Graphics, Graphics2D, Insets, Paint, Rectangle, TexturePaint}
+import java.beans.{PropertyChangeEvent, PropertyChangeListener}
+import javax.swing.{BorderFactory, JComponent, SwingConstants}
 
 /** A level (volume) meter GUI component. The component
   * is a vertical bar displaying a green-to-reddish bar
@@ -219,8 +219,9 @@ object PeakMeterBar {
 class PeakMeterBar(orient: Int = SwingConstants.VERTICAL)
   extends JComponent with PeakMeterChannel {
 
-  import PeakMeterBar._
   import SwingConstants._
+
+  import PeakMeterBar._
 
   private[this] final var holdDurationVar	       = PeakMeter.DefaultHoldDuration   // milliseconds peak hold
 

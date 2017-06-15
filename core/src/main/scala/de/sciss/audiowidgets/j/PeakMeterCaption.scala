@@ -14,12 +14,13 @@
 package de.sciss.audiowidgets
 package j
 
-import java.awt.font.{GlyphVector, FontRenderContext}
+import java.awt.font.{FontRenderContext, GlyphVector}
 import java.awt.geom.{AffineTransform, GeneralPath, Rectangle2D}
-import annotation.switch
-import java.awt.{BasicStroke, RenderingHints, Graphics2D, Graphics, GraphicsEnvironment, Font, Color, Dimension, Shape}
-import javax.swing.{SwingConstants, JComponent, SwingUtilities}
-import java.beans.{PropertyChangeListener, PropertyChangeEvent}
+import java.awt.{BasicStroke, Color, Dimension, Font, Graphics, Graphics2D, GraphicsEnvironment, RenderingHints, Shape}
+import java.beans.{PropertyChangeEvent, PropertyChangeListener}
+import javax.swing.{JComponent, SwingConstants, SwingUtilities}
+
+import scala.annotation.switch
 
 object PeakMeterCaption {
   private val MAJOR_TICKS       = Array(0.0f, 0.05f, 0.15f, 0.225f, 0.3f, 0.4f, 0.5f, 0.625f, 0.75f, 0.875f, 1f)
@@ -32,8 +33,9 @@ object PeakMeterCaption {
 
 class PeakMeterCaption(orient: Int = SwingConstants.VERTICAL) extends JComponent {
 
-  import PeakMeterCaption._
   import SwingConstants._
+
+  import PeakMeterCaption._
 
   private var hAlign          = RIGHT
   private var paintLabelsVar  = true

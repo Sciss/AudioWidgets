@@ -14,10 +14,12 @@
 package de.sciss.audiowidgets
 package j
 
-import javax.swing.{SwingConstants, JComponent}
 import javax.swing.event.{ChangeEvent, ChangeListener}
-import scala.collection.immutable.{IndexedSeq => Vec}
+import javax.swing.{JComponent, SwingConstants}
+
 import de.sciss.audiowidgets.j.ui.DualRangeSliderUI
+
+import scala.collection.immutable.{IndexedSeq => Vec}
 
 /** A slider similar to the one found in QuickTime Player 7. It combines a linear positioning slider
   * with a range (region) slider.

@@ -13,8 +13,9 @@
 
 package de.sciss.audiowidgets
 
-import j.{LCDPanel => JLCDPanel}
-import swing.FlowPanel
+import de.sciss.audiowidgets.j.{LCDPanel => JLCDPanel}
+
+import scala.swing.FlowPanel
 
 class LCDPanel extends FlowPanel {
   override lazy val peer: JLCDPanel = new JLCDPanel with SuperMixin

@@ -13,7 +13,7 @@
 
 package de.sciss.audiowidgets
 
-import collection.immutable.{IndexedSeq => Vec}
+import scala.collection.immutable.{IndexedSeq => Vec}
 
 trait PeakMeterLike {
   def clearHold (): Unit

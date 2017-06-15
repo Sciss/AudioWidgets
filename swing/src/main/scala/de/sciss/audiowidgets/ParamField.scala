@@ -16,7 +16,7 @@ package de.sciss.audiowidgets
 import javax.swing.JFormattedTextField
 
 import scala.collection.immutable.{Seq => ISeq}
-import scala.swing.{FormattedTextField, Component}
+import scala.swing.{Component, FormattedTextField}
 
 class ParamField[A](value0: A, formats0: ISeq[ParamFormat[A]]) extends Component with ParamFieldLike[A] { me =>
   override lazy val peer: j.ParamField[A] = new j.ParamField[A](value0, formats0) with SuperMixin

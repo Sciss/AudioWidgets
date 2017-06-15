@@ -13,7 +13,7 @@
 
 package de.sciss.audiowidgets.j
 
-import javax.swing.{JComponent, Action}
+import javax.swing.{Action, JComponent}
 
 trait InstallableAction extends Action {
   def install(component: JComponent, condition: Int = JComponent.WHEN_IN_FOCUSED_WINDOW): Unit

@@ -14,13 +14,13 @@
 package de.sciss.audiowidgets
 package j
 
-import java.awt.{AWTEventMulticaster, Color, Component, Dimension, FontMetrics, Graphics, Graphics2D, RenderingHints}
 import java.awt.event.{ActionEvent, ActionListener, MouseAdapter, MouseEvent}
+import java.awt.{AWTEventMulticaster, Color, Component, Dimension, FontMetrics, Graphics, Graphics2D, RenderingHints}
 import java.beans.{PropertyChangeEvent, PropertyChangeListener}
-import javax.swing.{SwingConstants, AbstractAction, Action, ButtonGroup, Icon, JCheckBoxMenuItem, JLabel, JPopupMenu, MenuElement}
+import javax.swing.{AbstractAction, Action, ButtonGroup, Icon, JCheckBoxMenuItem, JLabel, JPopupMenu, MenuElement, SwingConstants}
 
 import scala.collection.immutable.{Seq => ISeq}
-import scala.math.{max, Pi}
+import scala.math.{Pi, max}
 
 /** This class extends <code>JLabel</code> by adding support
   * for a list of labels which can be easily switched programmatically

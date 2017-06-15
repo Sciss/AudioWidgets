@@ -13,8 +13,9 @@
 
 package de.sciss.audiowidgets
 
-import scala.swing.Component
 import javax.swing.event.{ChangeEvent, ChangeListener}
+
+import scala.swing.Component
 import scala.swing.event.ValueChanged
 
 class DualRangeSlider(model0: DualRangeModel) extends Component with DualRangeSliderLike {

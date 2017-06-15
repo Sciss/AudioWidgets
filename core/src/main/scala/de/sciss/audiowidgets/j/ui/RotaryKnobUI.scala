@@ -14,26 +14,11 @@
 package de.sciss.audiowidgets.j
 package ui
 
-import javax.swing.JComponent
-import javax.swing.JSlider
-import javax.swing.SwingUtilities
-import javax.swing.UIManager
-import java.awt.BasicStroke
-import java.awt.Color
-import java.awt.Dimension
-import java.awt.Graphics
-import java.awt.Graphics2D
-import java.awt.Insets
-import java.awt.RenderingHints
-import java.awt.Shape
-import java.awt.Stroke
+import java.awt.{BasicStroke, Color, Dimension, Graphics, Graphics2D, Insets, RenderingHints, Shape, Stroke}
 import java.awt.event.MouseEvent
-import java.awt.geom.AffineTransform
-import java.awt.geom.Arc2D
-import java.awt.geom.Area
-import java.awt.geom.GeneralPath
-import java.beans.PropertyChangeEvent
-import java.beans.PropertyChangeListener
+import java.awt.geom.{AffineTransform, Arc2D, Area, GeneralPath}
+import java.beans.{PropertyChangeEvent, PropertyChangeListener}
+import javax.swing.{JComponent, JSlider, SwingUtilities, UIManager}
 import javax.swing.plaf.basic.BasicSliderUI
 
 object RotaryKnobUI {
