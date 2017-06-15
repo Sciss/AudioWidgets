@@ -25,9 +25,9 @@ import de.sciss.desktop.impl.DynamicComponentImpl
 import Swing._
 
 object TimelineCanvasImpl {
-  private sealed trait AxisMouseAction
-  private case object AxisPosition extends AxisMouseAction
-  private final case class AxisSelection(fix: Long) extends AxisMouseAction
+  private sealed trait      AxisMouseAction
+  private case object       AxisPosition              extends AxisMouseAction
+  private final case class  AxisSelection(fix: Long)  extends AxisMouseAction
 
   private final val colrPositionXor   = Color.black // new Color(0x00, 0x00, 0xFF, 0x7F)
   private final val colrPosition      = Color.white // new Color(0x00, 0x00, 0xFF, 0x7F)
@@ -223,9 +223,9 @@ trait TimelineCanvasImpl extends TimelineCanvas {
 
   private[this] object pane extends BorderPanel with DynamicComponentImpl {
 
-    def component = this
+//    def component = this
 
-    def isListeningP = isListening
+    def isListeningP: Boolean = isListening
 
     add(timePane,         BorderPanel.Position.North )
     add(canvasComponent,  BorderPanel.Position.Center)
@@ -239,7 +239,7 @@ trait TimelineCanvasImpl extends TimelineCanvas {
   final def component: Component = pane
 
   private val timelineListener: TimelineModel.Listener = {
-    case TimelineModel.Visible(_, span) =>
+    case TimelineModel.Visible(_, _ /* span */) =>
       updateAxis()
       updateScroll()
       repaint()  // XXX TODO: optimize dirty region / copy double buffer
@@ -260,7 +260,7 @@ trait TimelineCanvasImpl extends TimelineCanvas {
         canvasComponent.repaint(r)
       }
 
-    case TimelineModel.Selection(_, span) =>
+    case TimelineModel.Selection(_, _ /* span */) =>
       // XXX TODO: optimize dirty region
       timeAxis.repaint()
       repaint()

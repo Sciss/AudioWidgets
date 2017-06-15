@@ -58,7 +58,7 @@ class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
     but
   }
 
-  private lazy val butPane: Panel = {
+  private[this] lazy val butPane: Panel = {
     import KeyStrokes.menu1
     // meta-left and meta-right would have been better, but
     // somehow the text-field blocks these inputs
@@ -71,9 +71,9 @@ class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
     res
   }
 
-  private lazy val ggTime: ParamField[Long] = {
+  private[this] lazy val ggTime: ParamField[Long] = {
     val fmtTime = new ParamFormat[Long] {
-      private val axis = AxisFormat.Time(hours = true, millis = true)
+      private[this] val axis = AxisFormat.Time(hours = true, millis = true)
 
       val unit = UnitView("HH:MM:SS.mmm", raphael.Icon(20, raphael.DimPaint)(raphael.Shapes.WallClock))
 
@@ -214,7 +214,7 @@ class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
 
   private def ggFocus: Component = ggTime.textField
 
-  private lazy val pane = new BoxPanel(Orientation.Vertical) {
+  private[this] lazy val pane = new BoxPanel(Orientation.Vertical) {
     contents += butPane
     contents += Swing.VStrut(8)
     contents += ggTime
