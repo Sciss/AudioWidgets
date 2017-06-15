@@ -68,8 +68,8 @@ trait TransportCompanion {
     private val inShape: Shape = element.shape(scale)
     private val outShape: Shape = calcOutShape(inShape)
 
-    def getIconWidth  = math.ceil(24 * scale).toInt
-    def getIconHeight = math.ceil(22 * scale).toInt
+    def getIconWidth : Int = math.ceil(24 * scale).toInt
+    def getIconHeight: Int = math.ceil(22 * scale).toInt
 
     def paintIcon(c: Component, g: Graphics, x: Int, y: Int): Unit = {
       val g2 = g.asInstanceOf[Graphics2D]

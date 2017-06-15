@@ -42,7 +42,7 @@ object DualRangeModel {
       }
     }
 
-    def value = _value
+    def value: Int = _value
 
     def value_=(value: Int): Unit = if (setValue(value)) fire()
 
@@ -56,7 +56,7 @@ object DualRangeModel {
       } else false
     }
 
-    def range = _range
+    def range: (Int, Int) = _range
 
     def range_=(value: (Int, Int)): Unit = if (setRange(value)) fire()
 
@@ -73,7 +73,7 @@ object DualRangeModel {
       } else false
     }
 
-    def minimum = _minimum
+    def minimum: Int = _minimum
 
     def minimum_=(value: Int): Unit = if (setMinimum(value)) fire()
 
@@ -87,7 +87,7 @@ object DualRangeModel {
         true
       } else false
 
-    def maximum = _maximum
+    def maximum: Int = _maximum
 
     def maximum_=(value: Int): Unit = if (setMaximum(value)) fire()
 
@@ -102,7 +102,7 @@ object DualRangeModel {
         true
       } else false
 
-    def adjusting = _adjusting
+    def adjusting: Boolean = _adjusting
     def adjusting_=(value: Boolean): Unit = if (setAdjusting(value)) fire()
 
     private def setAdjusting(value: Boolean): Boolean =

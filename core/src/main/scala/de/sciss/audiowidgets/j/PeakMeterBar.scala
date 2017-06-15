@@ -248,10 +248,10 @@ class PeakMeterBar(orient: Int = SwingConstants.VERTICAL)
   private[this] final var holdPaintedVar		     = true
   private[this] final var rmsPaintedVar		       = true
 
-  private[this] final var pntBg: Paint			     = null
-  private[this] final var imgBg  : BufferedImage = null
-  private[this] final var imgRMS : BufferedImage = null
-  private[this] final var imgPeak: BufferedImage = null
+  private[this] final var pntBg: Paint			     = _
+  private[this] final var imgBg  : BufferedImage = _
+  private[this] final var imgRMS : BufferedImage = _
+  private[this] final var imgPeak: BufferedImage = _
 
   private[this] final val ins                    = new Insets(0, 0, 0, 0)
 

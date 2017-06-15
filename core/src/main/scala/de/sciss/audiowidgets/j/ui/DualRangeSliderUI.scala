@@ -128,13 +128,13 @@ object DualRangeSliderUI {
     def valueOption(m: DualRangeModel) = Some(value(m))
   }
   private case object ValueHandle extends Handle {
-    def value(m: DualRangeModel) = m.value
+    def value(m: DualRangeModel): Int = m.value
   }
   private case object LowHandle extends Handle {
-    def value(m: DualRangeModel) = m.range._1
+    def value(m: DualRangeModel): Int = m.range._1
   }
   private case object HighHandle extends Handle {
-    def value(m: DualRangeModel) = m.range._2
+    def value(m: DualRangeModel): Int = m.range._2
   }
 
   private final val ValueHandleRadius = 5
@@ -143,10 +143,10 @@ object DualRangeSliderUI {
 class DualRangeSliderUI(slider: DualRangeSlider) extends ComponentUI {
   import DualRangeSliderUI._
 
-  private var focusHandle: MaybeHandle = NoHandle
-  private var _insets: Insets = null
+  private[this] var focusHandle: MaybeHandle = NoHandle
+  private[this] var _insets: Insets = _
 
-  private var dragHandle: MaybeHandle = NoHandle
+  private[this] var dragHandle: MaybeHandle = NoHandle
   
   private[this] var colrFillTrack     : Color = _
   private[this] var colrDrawTrack     : Color = _
@@ -304,10 +304,10 @@ class DualRangeSliderUI(slider: DualRangeSlider) extends ComponentUI {
       }
     }
 
-    def mouseMoved   (e: MouseEvent) = ()
-    def mouseClicked (e: MouseEvent) = ()
-    def mouseEntered (e: MouseEvent) = ()
-    def mouseExited  (e: MouseEvent) = ()
+    def mouseMoved   (e: MouseEvent): Unit = ()
+    def mouseClicked (e: MouseEvent): Unit = ()
+    def mouseEntered (e: MouseEvent): Unit = ()
+    def mouseExited  (e: MouseEvent): Unit = ()
 
     def focusGained(e: FocusEvent): Unit = slider.repaint()
     def focusLost  (e: FocusEvent): Unit = slider.repaint()
@@ -374,8 +374,8 @@ class DualRangeSliderUI(slider: DualRangeSlider) extends ComponentUI {
         case _ => // println(s"keyPressed. ${e.getKeyCode}")
       }
 
-    def keyReleased(e: KeyEvent) = ()
-    def keyTyped   (e: KeyEvent) = ()
+    def keyReleased(e: KeyEvent): Unit = ()
+    def keyTyped   (e: KeyEvent): Unit = ()
   }
 
   private def installListeners(): Unit = {

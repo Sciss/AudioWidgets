@@ -48,7 +48,7 @@ object WavePainter {
   }
 
   private final class SHImpl extends OneLayerImpl {
-    override def toString = "WavePainter.sampleAndHold@" + hashCode().toHexString
+    override def toString = s"WavePainter.sampleAndHold@${hashCode().toHexString}"
 
     def paint(g: Graphics2D, data: Array[Float], dataOffset: Int, dataLength: Int): Unit = {
       val polySize  = dataLength << 1
@@ -79,7 +79,7 @@ object WavePainter {
   }
 
   private final class LinearImpl extends OneLayerImpl {
-    override def toString = "WavePainter.linear@" + hashCode().toHexString
+    override def toString = s"WavePainter.linear@${hashCode().toHexString}"
 
     def paint(g: Graphics2D, data: Array[Float], dataOffset: Int, dataLength: Int): Unit = {
       val polyX = new Array[Int](dataLength)
@@ -204,7 +204,7 @@ object WavePainter {
   }
 
   private final class ScalingImpl extends ScalingImplLike {
-    protected def didRecalc() = ()
+    protected def didRecalc(): Unit = ()
   }
 
   private final case class PeakRMSDecimator(factor: Int) 
@@ -313,8 +313,8 @@ object WavePainter {
   }
 
   object Decimator {
-    def pcmToPeakRMS(factor: Int): Decimator = new PCMToPeakRMSDecimator(factor)
-    def peakRMS     (factor: Int): Decimator = new PeakRMSDecimator     (factor)
+    def pcmToPeakRMS(factor: Int): Decimator = PCMToPeakRMSDecimator(factor)
+    def peakRMS     (factor: Int): Decimator = PeakRMSDecimator     (factor)
 
     def dummy: Decimator = Dummy
 
@@ -333,7 +333,7 @@ object WavePainter {
       val tupleInSize   = 1
       val tupleOutSize  = 1
 
-      def decimate(in: Array[Float], inOffset: Int, out: Array[Float], outOffset: Int, outLength: Int) = ()
+      def decimate(in: Array[Float], inOffset: Int, out: Array[Float], outOffset: Int, outLength: Int): Unit = ()
     }
   }
 
@@ -408,9 +408,9 @@ object WavePainter {
       private final class ArrayReader(data: Array[Array[Float]], val decimationFactor: Int)
         extends Reader {
 
-        val tupleSize = if (decimationFactor == 1) 1 else 3
+        val tupleSize: Int = if (decimationFactor == 1) 1 else 3
 
-        def available(srcOff: Long, len: Int): Vec[Int] = Vec(0, len)
+        def available(srcOff: Long, len: Int): Vec[Int] = Vector(0, len)
 
         def read(buf: Array[Array[Float]], bufOff: Int, srcOff: Long, len: Int): Boolean = {
           val bufOffT = bufOff * tupleSize

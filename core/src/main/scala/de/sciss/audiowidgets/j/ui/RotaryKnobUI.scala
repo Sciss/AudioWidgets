@@ -49,25 +49,26 @@ object RotaryKnobUI {
 class RotaryKnobUI(knob: RotaryKnob) extends BasicSliderUI(knob) {
   import RotaryKnobUI._
 
-  private final val dashTrackHigh   = Array[Float](2f, 1f)
-  private var mOver                 = false
-  private var mPressed              = false
-  private final val pathHand        = new GeneralPath
-  private var shpHand: Shape        = null
-  private final val atHand          = new AffineTransform
-  private var shpHandOut: Area      = null
-  private var shpTrack  : Area      = null
-  private final val trackBufIn      = new Insets(0, 0, 0, 0)
-  private var strkTrackHigh: Stroke = null
-  private final val arcTrackHigh: Arc2D = new Arc2D.Float(0, 0, 10, 10, arcStartDeg, 0, Arc2D.OPEN)
-  private final val trackCentered: PropertyChangeListener = new PropertyChangeListener {
+  private[this] final val dashTrackHigh   = Array[Float](2f, 1f)
+  private[this] var mOver                 = false
+  private[this] var mPressed              = false
+  private[this] final val pathHand        = new GeneralPath
+  private[this] var shpHand: Shape        = _
+  private[this] final val atHand          = new AffineTransform
+  private[this] var shpHandOut: Area      = _
+  private[this] var shpTrack  : Area      = _
+  private[this] final val trackBufIn      = new Insets(0, 0, 0, 0)
+  private[this] var strkTrackHigh: Stroke = _
+  private[this] final val arcTrackHigh: Arc2D = new Arc2D.Float(0, 0, 10, 10, arcStartDeg, 0, Arc2D.OPEN)
+
+  private[this] final val trackCentered: PropertyChangeListener = new PropertyChangeListener {
     def propertyChange(e: PropertyChangeEvent): Unit = {
       calculateThumbLocation()
       knob.repaint()
     }
   }
 
-  private final val hoverHighlight = NimbusHelper.isNimbus
+  private[this] final val hoverHighlight = NimbusHelper.isNimbus
 
   private def handColor: Color = {
     val c = NimbusHelper.mixColorWithAlpha(NimbusHelper.textColor, knob.handColor)

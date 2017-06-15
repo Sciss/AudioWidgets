@@ -55,9 +55,9 @@ object UnitLabel {
 class UnitLabel extends JLabel with Icon { label =>
   import UnitLabel._
 
-  private final val pop       = new JPopupMenu
-  private final val bg        = new ButtonGroup
-  private final var units     = Vector.empty[UnitAction]
+  private[this] final val pop       = new JPopupMenu
+  private[this] final val bg        = new ButtonGroup
+  private[this] final var units     = Vector.empty[UnitAction]
 
   private[this] def setAlpha(in: Color, alpha: Int) = new Color(in.getRGB & 0x00FFFFFF | (alpha << 24), true)
 
@@ -65,10 +65,10 @@ class UnitLabel extends JLabel with Icon { label =>
   private[this] val colrTriD  = setAlpha(getForeground, 0x40)
   private[this] val colrLabD  = setAlpha(getForeground, 0x60)
 
-  private var al: ActionListener = null
+  private[this] var al: ActionListener = _
 
-  private var _selectedIdx  = -1
-  private var _cycle        = false
+  private[this] var _selectedIdx  = -1
+  private[this] var _cycle        = false
 
   /* Forwards <code>Font</code> property
    * changes to the child gadgets

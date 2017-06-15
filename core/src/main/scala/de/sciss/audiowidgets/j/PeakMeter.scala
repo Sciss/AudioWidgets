@@ -14,11 +14,12 @@
 package de.sciss.audiowidgets
 package j
 
-import annotation.switch
-import javax.swing.{JPanel, BoxLayout, SwingConstants, BorderFactory}
+import java.awt.{Color, Font, Graphics, Insets}
 import java.beans.{PropertyChangeEvent, PropertyChangeListener}
-import java.awt.{Insets, Font, Color, Graphics}
-import collection.immutable.{IndexedSeq => Vec}
+import javax.swing.{BorderFactory, BoxLayout, JPanel, SwingConstants}
+
+import scala.annotation.switch
+import scala.collection.immutable.{IndexedSeq => Vec}
 
 object PeakMeter {
   final val DefaultHoldDuration = 2500
@@ -27,27 +28,29 @@ object PeakMeter {
 class PeakMeter(orient: Int = SwingConstants.VERTICAL) 
   extends JPanel with PeakMeterLike {
 
-  import PeakMeter._
   import SwingConstants._
 
-  private final var holdDurationVar	        = DefaultHoldDuration   // milliseconds peak hold
-	protected var meters                      = new Array[PeakMeterBar](0)
-	protected var captionComp: PeakMeterCaption = null
-	private final var captionPositionVar	    = LEFT
-	private final var captionAlign	          = RIGHT
-	private final var captionVisibleVar	      = true
-	private final var captionLabelsVar	      = true
-	private final var numChannelsVar		      = 0
-	private final var borderVisibleVar			  = false
+  import PeakMeter._
 
-	private final var rmsPaintedVar		        = true
-	private final var holdPaintedVar		      = true
+  protected var meters                      = new Array[PeakMeterBar](0)
+  protected var captionComp: PeakMeterCaption = _
 
-	private final var orientVar			          = VERTICAL
-	private final var vertical		            = true
+  private[this] final var holdDurationVar	        = DefaultHoldDuration   // milliseconds peak hold
+	private[this] final var captionPositionVar	    = LEFT
+	private[this] final var captionAlign	          = RIGHT
+	private[this] final var captionVisibleVar	      = true
+	private[this] final var captionLabelsVar	      = true
+	private[this] final var numChannelsVar		      = 0
+	private[this] final var borderVisibleVar			  = false
 
-  private final val ins                     = new Insets(0, 0, 0, 0)
-  private final var ticksVar		            = 101
+	private[this] final var rmsPaintedVar		        = true
+	private[this] final var holdPaintedVar		      = true
+
+	private[this] final var orientVar			          = VERTICAL
+	private[this] final var vertical		            = true
+
+  private[this] final val ins                     = new Insets(0, 0, 0, 0)
+  private[this] final var ticksVar		            = 101
 
   setLayout(new BoxLayout(this, BoxLayout.X_AXIS))
 

@@ -41,9 +41,9 @@ class PeakMeterCaption(orient: Int = SwingConstants.VERTICAL) extends JComponent
   private var recentWidth     = -1
   private var recentHeight    = -1
 
-  private var shpMajorTicks: Shape = null
-  private var shpMinorTicks: Shape = null
-  private var shpLabels    : Shape = null
+  private var shpMajorTicks: Shape = _
+  private var shpMinorTicks: Shape = _
+  private var shpLabels    : Shape = _
 
   private var ascentVar   = 0
   private var descentVar  = 0

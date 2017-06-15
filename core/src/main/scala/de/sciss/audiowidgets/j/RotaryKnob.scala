@@ -19,10 +19,10 @@ import java.awt.Color
 import ui.RotaryKnobUI
 
 class RotaryKnob(m: BoundedRangeModel) extends JSlider(m) with RotaryKnobLike {
-  private var colrKnob        : Color   = null
-  private var colrHand        : Color   = null
-  private var colrRange       : Color   = null
-  private var colrTrack       : Color   = null
+  private var colrKnob        : Color   = _
+  private var colrHand        : Color   = _
+  private var colrRange       : Color   = _
+  private var colrTrack       : Color   = _
   private var _centered       : Boolean = false
 
   def this(min: Int, max: Int, value: Int) {

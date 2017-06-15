@@ -63,36 +63,33 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
 
   import Axis._
 
-  private var _orient = orient
+  private[this] var _orient = orient
 
-  private var recentWidth   = 0
-  private var recentHeight  = 0
-  private var doRecalc      = true
+  private[this] var recentWidth   = 0
+  private[this] var recentHeight  = 0
+  private[this] var doRecalc      = true
 
-  private val kPeriod   = 1000.0
-  private var labels    = new Array[Label](0)
-  private val shpTicks  = new GeneralPath()
+  private[this] val kPeriod   = 1000.0
+  private[this] var labels    = new Array[Label](0)
+  private[this] val shpTicks  = new GeneralPath()
 
-  private val trnsVertical = new AffineTransform()
+  private[this] val trnsVertical = new AffineTransform()
 
-  private var labelRaster: Array[Long] = null
-  private var labelMinRaster = 0L
+  private[this] var labelRaster: Array[Long] = _
+  private[this] var labelMinRaster = 0L
 
-  private var spcMin = 0.0
-  private var spcMax = 0.0 // 1.0
+  private[this] var spcMin = 0.0
+  private[this] var spcMax = 0.0 // 1.0
 
-  private var formatVar: AxisFormat = AxisFormat.Decimal
-  private var flMirror      = false
-  private var flTimeFormat  = false
-  private var flTimeHours   = false
-  private var flTimeMillis  = false
-  private var flIntegers    = false
-  private var flFixedBounds = false
+  private[this] var formatVar: AxisFormat = AxisFormat.Decimal
+  private[this] var flMirror      = false
+  private[this] var flTimeFormat  = false
+  private[this] var flTimeHours   = false
+  private[this] var flTimeMillis  = false
+  private[this] var flIntegers    = false
+  private[this] var flFixedBounds = false
 
-//  private var imgWidth  = 0
-//  private var imgHeight = 0
-//  private var img: BufferedImage = null
-  private var pntBackground: Paint = null
+  private[this] var pntBackground: Paint = _
 
   private[this] final val scheme    = if (Util.isDarkSkin) darkScheme else lightScheme
   private[this] final val colrTicks = if (Util.isDarkSkin) Color.gray else Color.lightGray
@@ -266,7 +263,7 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
     trnsVertical.setToRotation(-math.Pi / 2, recentHeight.toDouble / 2, recentHeight.toDouble / 2)
 
   private def calcStringWidth(decimals: Int, fntMetr: FontMetrics, value: Double): Int = {
-    val s = format.format(value, decimals = decimals, pad = 0)
+    val s = format.format(value, decimals = decimals)
     fntMetr.stringWidth(s)
   }
 
@@ -447,7 +444,7 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
 
     var i = 0
     while (i < numLabels) {
-      labels(i) = new Label(format.format(valueOff / kPeriod, decimals = decimals, pad = 0), (pixelOff + 2).toInt)
+      labels(i) = new Label(format.format(valueOff / kPeriod, decimals = decimals), (pixelOff + 2).toInt)
       valueOff += valueStep
       shpTicks.moveTo(pixelOff.toFloat, 1)
       shpTicks.lineTo(pixelOff.toFloat, height - 2)

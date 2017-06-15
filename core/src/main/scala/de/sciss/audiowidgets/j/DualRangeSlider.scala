@@ -31,14 +31,14 @@ class DualRangeSlider(model0: DualRangeModel) extends JComponent with DualRangeS
   var rangeEditable = true
   var extentFixed   = false
 
-  def valueVisible  = _valueVisible
+  def valueVisible: Boolean = _valueVisible
   def valueVisible_=(value: Boolean): Unit =
     if (_valueVisible != value) {
       _valueVisible = value
       repaint()
     }
 
-  def rangeVisible  = _rangeVisible
+  def rangeVisible: Boolean = _rangeVisible
   def rangeVisible_=(value: Boolean): Unit =
     if (_rangeVisible != value) {
       _rangeVisible = value
@@ -54,7 +54,7 @@ class DualRangeSlider(model0: DualRangeModel) extends JComponent with DualRangeS
     def stateChanged(e: ChangeEvent): Unit = listeners.foreach(_.stateChanged(e)) // forward
   }
 
-  def model = _model
+  def model: DualRangeModel = _model
   def model_=(value: DualRangeModel): Unit = {
     _model.removeChangeListener(listener)
     _model = value

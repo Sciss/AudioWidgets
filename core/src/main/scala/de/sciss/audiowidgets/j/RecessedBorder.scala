@@ -28,7 +28,7 @@ class RecessedBorder(c: Color = Color.black)
   import RecessedBorder._
 
   private final var colorVar = c
-  private final var shpBg     : Shape = null
+  private final var shpBg     : Shape = _
 
   private final var recentWidth  = -1
   private final var recentHeight = -1

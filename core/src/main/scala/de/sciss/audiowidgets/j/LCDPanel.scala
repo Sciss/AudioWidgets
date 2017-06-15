@@ -14,40 +14,41 @@
 package de.sciss.audiowidgets
 package j
 
-import javax.swing.{UIManager, JPanel}
+import java.awt.{Color, Dimension, Graphics, Graphics2D, Insets, LinearGradientPaint, Rectangle, RenderingHints}
 import java.beans.{PropertyChangeEvent, PropertyChangeListener}
-import java.awt.{Rectangle, RenderingHints, Graphics2D, LinearGradientPaint, Insets, Color, Graphics}
+import javax.swing.JPanel
 
 /**
  * Unfinished!
  */
 class LCDPanel extends JPanel {
-  private final val gradInnerColr     = new Array[Color](5)
-  private final val gradInnerFrac     = Array(0f, -1f, 0.5f, -1f, 1f)
-  private final val gradOuterLColr    = new Array[Color](3)
-  private final val gradOuterLFrac    = Array(0f, -1f, 1f)
-  private final val gradOuterRColr    = new Array[Color](3)
-  private final val gradOuterRFrac    = Array(0f, -1f, 1f)
-  private final val gradInnerLColr    = new Array[Color](2)
-  private final val gradInnerLFrac    = Array(0f, 1f)
-  private final val gradInnerRColr    = new Array[Color](2)
-  private final val gradInnerRFrac    = Array(0f, 0.5f)
-  private final var colrTop: Color    = null
-  private final var colrTopSh: Color  = null
-  private final val colrBot           =
+  private[this] final val gradInnerColr     = new Array[Color](5)
+  private[this] final val gradInnerFrac     = Array(0f, -1f, 0.5f, -1f, 1f)
+  private[this] final val gradOuterLColr    = new Array[Color](3)
+  private[this] final val gradOuterLFrac    = Array(0f, -1f, 1f)
+  private[this] final val gradOuterRColr    = new Array[Color](3)
+  private[this] final val gradOuterRFrac    = Array(0f, -1f, 1f)
+  private[this] final val gradInnerLColr    = new Array[Color](2)
+  private[this] final val gradInnerLFrac    = Array(0f, 1f)
+  private[this] final val gradInnerRColr    = new Array[Color](2)
+  private[this] final val gradInnerRFrac    = Array(0f, 0.5f)
+  private[this] final var colrTop: Color    = _
+  private[this] final var colrTopSh: Color  = _
+
+  private[this] final val colrBot           =
     if (Util.isDarkSkin) new Color(0x3F, 0x3F, 0x3F, 0x7F) else new Color(0xFF, 0xFF, 0xFF, 0x7F)
-  private final var colrBotSh: Color  = null
-  private final var recentHeight      = -1
-  private final val in                = new Insets(0, 0, 0, 0)
-  private final val rClip             = new Rectangle()
-  private final var gradInner : LinearGradientPaint = null
-  private final var gradOuterL: LinearGradientPaint = null
-  private final var gradOuterR: LinearGradientPaint = null
-  private final var gradInnerL: LinearGradientPaint = null
-  private final var gradInnerR: LinearGradientPaint = null
-  private final val inH = 2
-  private final val inV = 0 // 1
-  //   private val strkSh = new BasicStroke( 2f )
+
+  private[this] final var colrBotSh: Color  = _
+  private[this] final var recentHeight      = -1
+  private[this] final val in                = new Insets(0, 0, 0, 0)
+  private[this] final val rClip             = new Rectangle()
+  private[this] final var gradInner : LinearGradientPaint = _
+  private[this] final var gradOuterL: LinearGradientPaint = _
+  private[this] final var gradOuterR: LinearGradientPaint = _
+  private[this] final var gradInnerL: LinearGradientPaint = _
+  private[this] final var gradInnerR: LinearGradientPaint = _
+  private[this] final val inH = 2
+  private[this] final val inV = 0 // 1
 
   setBackground(LCDColors.background)
   recalculateColors()
@@ -59,8 +60,8 @@ class LCDPanel extends JPanel {
     }
   })
 
-  override def getMaximumSize = getPreferredSize
-  override def getMinimumSize = getPreferredSize
+  override def getMaximumSize: Dimension = getPreferredSize
+  override def getMinimumSize: Dimension = getPreferredSize
 
   override def getInsets: Insets = getInsets(new Insets(0, 0, 0, 0))
   override def getInsets(insets: Insets): Insets = {

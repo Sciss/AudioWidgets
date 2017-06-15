@@ -15,9 +15,6 @@ package de.sciss.audiowidgets
 
 import javax.swing.JFormattedTextField
 
-//object ParamFormat {
-//
-//}
 trait ParamFormat[A] {
   def unit: UnitView
 

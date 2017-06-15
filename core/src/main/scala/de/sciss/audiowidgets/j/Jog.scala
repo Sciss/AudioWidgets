@@ -16,13 +16,13 @@ package j
 
 import java.awt.event.MouseEvent
 import java.awt.geom.{Ellipse2D, Point2D}
-import java.awt.{RenderingHints, Graphics2D, Graphics, Dimension, BasicStroke, Color, Cursor, GradientPaint, Insets, Paint, Shape, Stroke, Window}
+import java.awt.{BasicStroke, Color, Cursor, Dimension, GradientPaint, Graphics, Graphics2D, Insets, Paint, RenderingHints, Shape, Stroke, Window}
 import java.beans.{PropertyChangeEvent, PropertyChangeListener}
-import java.util.{EventObject, EventListener}
+import java.util.{EventListener, EventObject}
 import javax.swing.event.MouseInputAdapter
-import javax.swing.{UIManager, JComponent, SwingUtilities}
+import javax.swing.{JComponent, SwingUtilities}
 
-import scala.math.{Pi, sin, cos, min, max, atan2, sqrt}
+import scala.math.{Pi, atan2, cos, max, min, sin, sqrt}
 
 object Jog {
 
@@ -71,16 +71,16 @@ object Jog {
 class Jog extends JComponent { me =>
   import Jog._
   
-  private final val bellyPos  = new Point2D.Double(-0.7071064, -0.7071064)
+  private[this] final val bellyPos  = new Point2D.Double(-0.7071064, -0.7071064)
 
-  private var savedCursor : Cursor = null
-  private var in          : Insets = null
+  private[this] var savedCursor : Cursor = _
+  private[this] var in          : Insets = _
 
-  private var dragX         = 0
-  private var dragY         = 0
-  private var dragArc       = 0.0
-  private var displayArc    = -2.356194
-  private var propagateFire = false
+  private[this] var dragX         = 0
+  private[this] var dragY         = 0
+  private[this] var dragArc       = 0.0
+  private[this] var displayArc    = -2.356194
+  private[this] var propagateFire = false
 
   private[this] final val scheme  = if (Util.isDarkSkin) Jog.darkScheme  else Jog.lightScheme
   private[this] final val schemeD = if (Util.isDarkSkin) Jog.darkSchemeD else Jog.lightSchemeD
@@ -194,7 +194,6 @@ class Jog extends JComponent { me =>
     g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE )
     g2.translate(0.5f + in.left, 0.5f + in.top)
 
-    val en = isEnabled
     val colors = if (isEnabled) scheme else schemeD
     import colors._
     g2.setPaint(pntBack)
