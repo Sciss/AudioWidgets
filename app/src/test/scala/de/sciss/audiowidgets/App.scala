@@ -4,7 +4,7 @@ import java.awt.Graphics2D
 
 import de.sciss.audiowidgets.impl.TimelineCanvasImpl
 import de.sciss.desktop.impl.{SwingApplicationImpl, WindowImpl}
-import de.sciss.desktop.{Menu, Window}
+import de.sciss.desktop.{Menu, Window, WindowHandler}
 import de.sciss.span.Span
 import de.sciss.submin.Submin
 import de.sciss.swingplus.Implicits._
@@ -23,7 +23,7 @@ object App extends SwingApplicationImpl("AudioWidgets") {
     Submin.install(isDark)
 
     new WindowImpl {
-      def handler = App.windowHandler
+      def handler: WindowHandler = App.windowHandler
 
       title = "Application Demo"
 

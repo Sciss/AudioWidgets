@@ -136,10 +136,10 @@ object WaveTests extends App with Runnable {
     multi.stopFrame = multiSize
 
     final implicit class RichDouble(val x: Double) /* extends AnyVal */ {
-      def linlin(srcLo: Double, srcHi: Double, dstLo: Double, dstHi: Double) =
+      def linlin(srcLo: Double, srcHi: Double, dstLo: Double, dstHi: Double): Double =
         (x - srcLo) / (srcHi - srcLo) * (dstHi - dstLo) + dstLo
 
-      def linexp(srcLo: Double, srcHi: Double, dstLo: Double, dstHi: Double) =
+      def linexp(srcLo: Double, srcHi: Double, dstLo: Double, dstHi: Double): Double =
         math.pow(dstHi / dstLo, (x - srcLo) / (srcHi - srcLo)) * dstLo
     }
 
@@ -149,7 +149,7 @@ object WaveTests extends App with Runnable {
     lazy val display: WavePainter.Display = new WavePainter.Display {
       def numChannels = 1
 
-      def numFrames = multiSize
+      def numFrames: Long = multiSize
 
       def refreshAllChannels(): Unit = view2.repaint()
 
