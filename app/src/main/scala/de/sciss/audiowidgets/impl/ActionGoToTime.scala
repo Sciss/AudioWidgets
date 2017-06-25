@@ -15,19 +15,16 @@ package de.sciss.audiowidgets
 package impl
 
 import java.awt.geom.Path2D
-import java.text.{NumberFormat, ParseException}
-import java.util.Locale
 import javax.swing.KeyStroke
-import javax.swing.text.{MaskFormatter, NumberFormatter}
 
 import de.sciss.desktop
 import de.sciss.desktop.{FocusType, KeyStrokes, OptionPane}
 import de.sciss.icons.raphael
+import de.sciss.span.Span
 import de.sciss.swingplus.DoClickAction
 
 import scala.swing.event.Key
 import scala.swing.{Action, BoxPanel, Button, Component, FlowPanel, Orientation, Panel, Swing}
-import scala.util.Try
 
 class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
   extends Action("Set Cursor Position") {
@@ -35,11 +32,6 @@ class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
   accelerator = Option(stroke)
 
   import model.bounds
-
-  private def framesToMillis (n: Long): Double =  n / model.sampleRate * 1000
-  private def millisToFrames (m: Double): Long = (m * model.sampleRate / 1000 + 0.5).toLong
-  private def framesToPercent(n: Long): Double = (n - bounds.start).toDouble / bounds.length
-  private def percentToFrames(p: Double): Long = (p * bounds.length + bounds.start + 0.5).toLong
 
   private def mkBut(shape: Path2D => Unit, key: KeyStroke, fun: => Long): Button = {
     val action = new Action(null) {
@@ -71,146 +63,9 @@ class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
     res
   }
 
-  private[this] lazy val ggTime: ParamField[Long] = {
-    val fmtTime = new ParamFormat[Long] {
-      private[this] val axis = AxisFormat.Time(hours = true, millis = true)
-
-      val unit = UnitView("HH:MM:SS.mmm", raphael.Icon(20, raphael.DimPaint)(raphael.Shapes.WallClock))
-
-      val formatter = new MaskFormatter("*#:##:##.###") {
-        // setAllowsInvalid(true)
-        setPlaceholderCharacter('_')
-        // the next line is crucial because retarded MaskFormatter calls into super.stringToValue
-        // from other methods, and DefaultFormatter finds a Long with a static constructor method
-        // that takes a String, and blindly tries to feed that crap into it. Setting an explicit
-        // value-class that does _not_ have a string constructor will bypass that bull crap.
-        setValueClass(classOf[AnyRef])
-
-        override def stringToValue(value: String): AnyRef = {
-          val v0 = super.stringToValue(value)
-          val s0 = v0.toString
-          val res = tryParse(s0)
-          // println(s"res = $res")
-          res.asInstanceOf[AnyRef]
-        }
-
-        override def valueToString(value: Any): String = {
-          val s0 = format(value.asInstanceOf[Long])
-          super.valueToString(s0)
-        }
-      }
-
-      def adjust(in: Long, inc: Int): Long = {
-        val incM = millisToFrames(inc)
-        bounds.clip(in + incM)
-      }
-
-      private def tryParse(s: String): Long = {
-        // HH:MM:SS.mmm
-        val arr = s.replace(' ', '0').split(':')
-        if (arr.length != 3) throw new ParseException(s, 0)
-        try {
-          val hours   = arr(0).toLong
-          val minutes = arr(1).toLong
-          val secs    = arr(2).toDouble
-          val millis  = (secs * 1000).toLong
-          val allMS   = (hours * 60 + minutes) * 60000 + millis
-          bounds.clip(millisToFrames(allMS))
-        } catch {
-          case _: NumberFormatException => throw new ParseException(s, 0)
-        }
-      }
-
-      def parse(s: String): Option[Long] = Try(tryParse(s)).toOption
-
-      def format(value: Long): String = axis.format(value / model.sampleRate, pad = 12)
-    }
-
-    val fmtFrames = new ParamFormat[Long] {
-      val unit = UnitView("sample frames", raphael.Icon(20, raphael.DimPaint)(Shapes.SampleFrames))
-
-      private val numFmt = NumberFormat.getIntegerInstance(Locale.US)
-      numFmt.setGroupingUsed(false)
-      val formatter = new NumberFormatter(numFmt)
-      formatter.setMinimum(bounds.start)
-      formatter.setMaximum(bounds.stop )
-
-      def adjust(in: Long, inc: Int): Long =
-        model.bounds.clip(in + inc)
-
-      def parse(s: String): Option[Long] = Try(s.toLong).toOption
-
-      def format(value: Long): String = value.toString
-    }
-
-    val fmtMilli = new ParamFormat[Long] {
-      val unit = UnitView("milliseconds", "ms")
-
-      private val numFmt = NumberFormat.getIntegerInstance(Locale.US)
-      numFmt.setGroupingUsed(false)
-      val formatter = new NumberFormatter(numFmt) {
-        override def valueToString(value: Any): String = format(value.asInstanceOf[Long])
-
-        override def stringToValue(text: String): AnyRef = tryParse(text).asInstanceOf[AnyRef]
-      }
-      formatter.setMinimum(framesToMillis(bounds.start))
-      formatter.setMaximum(framesToMillis(bounds.stop ))
-
-      def adjust(in: Long, inc: Int): Long = {
-        val incM = millisToFrames(inc)
-        model.bounds.clip(in + incM)
-      }
-
-      private def tryParse(s: String): Long =
-      try {
-        bounds.clip(millisToFrames(s.toLong))
-      } catch {
-        case _: NumberFormatException => throw new ParseException(s, 0)
-      }
-
-      def parse(s: String): Option[Long] = Try(tryParse(s)).toOption
-
-      def format(value: Long): String = (framesToMillis(value) + 0.5).toLong.toString
-    }
-
-    val fmtPercent = new ParamFormat[Long] {
-      val unit = UnitView("percent", "%")
-
-      private val numFmt = NumberFormat.getIntegerInstance(Locale.US)
-      numFmt.setGroupingUsed(false)
-      val formatter = new NumberFormatter(numFmt) {
-        override def valueToString(value: Any   ): String = format(value.asInstanceOf[Long])
-        override def stringToValue(text : String): AnyRef = tryParse(text).asInstanceOf[AnyRef]
-      }
-      formatter.setMinimum(  0.0)
-      formatter.setMaximum(100.0)
-
-      private def tryParse(s: String): Long =
-        try {
-          bounds.clip(percentToFrames(s.toDouble * 0.01))
-        } catch {
-          case _: NumberFormatException => throw new ParseException(s, 0)
-        }
-
-      def adjust(in: Long, inc: Int): Long = {
-        val n = percentToFrames(framesToPercent(in) + inc * 0.0001)
-        model.bounds.clip(n)
-      }
-
-      def parse(s: String): Option[Long] = Try(tryParse(s)).toOption
-
-      def format(value: Long): String = f"${framesToPercent(value) * 100}%1.3f"
-    }
-
-    val fmt = List(fmtTime, fmtFrames, fmtMilli, fmtPercent)
-    val res = new ParamField(bounds.start /* model.position */, fmt)
-    //    val iMap = res.getInputMap
-    //    iMap.remove(KeyStrokes.menu1 + Key.Left )
-    //    iMap.remove(KeyStrokes.menu1 + Key.Right)
-
-    res.prototypeDisplayValues = bounds.start :: bounds.stop :: Nil
-    res
-  }
+  private[this] lazy val ggTime: ParamField[Long] =
+    new TimeField(value0 = model.bounds match { case hs: Span.HasStart => hs.start; case _ => 0L },
+      span0 = model.bounds, sampleRate = model.sampleRate)
 
   private def ggFocus: Component = ggTime.textField
 

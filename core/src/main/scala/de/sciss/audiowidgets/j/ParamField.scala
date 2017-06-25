@@ -25,13 +25,15 @@ import scala.collection.immutable.{Seq => ISeq}
 class ParamField[A](value0: A, formats0: ISeq[ParamFormat[A]])
   extends JPanel with ParamFieldLike[A] { field =>
 
-  private var _value        = value0
-  private var _formats      = formats0
-  private var _protoVals: ISeq[A] = value0:: Nil
+  private[this] var _value        = value0
+  private[this] var _formats      = formats0
+  private[this] var _protoVals: ISeq[A] = value0:: Nil
 
-  private val lbUnit		    = new UnitLabel(formats0.map(_.unit))
+  private[this] val lbUnit		    = new UnitLabel(formats0.map(_.unit))
 
-  private val ggNumber	    = new JFormattedTextField(new AbstractFormatterFactory {
+  private[this] val ggNumber	    = new JFormattedTextField(new AbstractFormatterFactory {
+    override def toString = s"ParamField(${_value})@${field.hashCode.toHexString}.FormatterFactory"
+
     def getFormatter(tf: JFormattedTextField): AbstractFormatter = {
       selectedFormat.map(_.formatter).orNull
       // formatter.setOverwriteMode(selectedFormat.exists(_.useOverwriteMode))
@@ -71,12 +73,7 @@ class ParamField[A](value0: A, formats0: ISeq[ParamFormat[A]])
     })
 
     lbUnit.addActionListener(new ActionListener {
-      def actionPerformed(e: ActionEvent): Unit = {
-        unitUpdated()
-        // XXX TODO:
-        //        fireSpaceChanged
-        //        fireValueChanged(false)
-      }
+      def actionPerformed(e: ActionEvent): Unit = unitUpdated()
     })
 
     con.gridwidth   = 1
@@ -198,13 +195,21 @@ class ParamField[A](value0: A, formats0: ISeq[ParamFormat[A]])
       if (res < 0) throw new IllegalArgumentException(s"Format $pf is not among current formats")
       res
     }
-    lbUnit.selectedIndex = idx
+    val oldIdx = lbUnit.selectedIndex
+    if (idx != oldIdx) {
+//      val oldValue = if (oldIdx < 0 || oldIdx >= _formats.size) None else Some(_formats(oldIdx))
+      lbUnit.selectedIndex = idx
+      unitUpdated()
+    }
   }
 
   def editable: Boolean = ggNumber.isEditable
   def editable_=(value: Boolean): Unit = ggNumber.setEditable(value)
 
-  private def unitUpdated(): Unit = ggNumber.setValue(ggNumber.getValue)
+  private def unitUpdated(): Unit = {
+    ggNumber.setValue(ggNumber.getValue)
+    firePropertyChange("selectedFormat", null, selectedFormat)
+  }
 
   override def getBaseline(width: Int, height: Int): Int =
     ggNumber.getBaseline(width, height) + ggNumber.getY

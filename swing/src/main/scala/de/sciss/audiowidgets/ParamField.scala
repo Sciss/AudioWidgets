@@ -13,13 +13,44 @@
 
 package de.sciss.audiowidgets
 
+import java.beans.{PropertyChangeEvent, PropertyChangeListener}
 import javax.swing.JFormattedTextField
 
 import scala.collection.immutable.{Seq => ISeq}
+import scala.swing.event.{SelectionChanged, ValueChanged}
 import scala.swing.{Component, FormattedTextField}
 
+/** A parameter field that combines a formatted text field and a combo-box for units.
+  *
+  * This widget fires `ValueChanged` for parameter value changed, and `SelectionChanged`
+  * for selected format (unit) changes
+  */
 class ParamField[A](value0: A, formats0: ISeq[ParamFormat[A]]) extends Component with ParamFieldLike[A] { me =>
-  override lazy val peer: j.ParamField[A] = new j.ParamField[A](value0, formats0) with SuperMixin
+  override lazy val peer: j.ParamField[A] = new j.ParamField[A](value0, formats0) with SuperMixin { jp =>
+    val pl = new PropertyChangeListener {
+      private[this] var seenValue : A                       = jp.value
+      private[this] var seenFormat: Option[ParamFormat[A]]  = jp.selectedFormat
+
+      def propertyChange(evt: PropertyChangeEvent): Unit = {
+        val pn = evt.getPropertyName
+        if (pn == "value") {
+          val newValue = jp.value
+          if (seenValue != newValue) {
+            seenValue = newValue
+            publish(new ValueChanged(me))
+          }
+        } else if (pn == "selectedFormat") {
+          val newFormat = jp.selectedFormat
+          if (seenFormat != newFormat) {
+            seenFormat = newFormat
+            publish(SelectionChanged(me))
+          }
+        }
+      }
+    }
+    jp.textField.addPropertyChangeListener("value", pl)
+    jp.addPropertyChangeListener ("selectedFormat", pl)
+  }
 
   lazy val textField: FormattedTextField = new FormattedTextField(null) {
     override lazy val peer: JFormattedTextField = me.peer.textField
