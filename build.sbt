@@ -1,7 +1,7 @@
 lazy val baseName       = "AudioWidgets"
 lazy val baseNameL      = baseName.toLowerCase
 
-lazy val projectVersion = "1.11.1-SNAPSHOT"
+lazy val projectVersion = "1.11.1"
 lazy val mimaVersion    = "1.11.0" // used for migration-manager
 
 lazy val commonSettings = Seq(
