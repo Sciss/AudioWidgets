@@ -12,6 +12,7 @@ The included font "Familida Mono" is based on a font by darunio123456789 and rel
 ## requirements / installation
 
 AudioWidgets currently compiles against Scala 2.12, 2.11, 2.10 using sbt 0.13. There are three sub projects: `core`, `swing` and `app`, where `swing` depends on `core` and `app` depends on `swing`.
+For convenience, the [sbt script by Paul Phillips](https://github.com/paulp/sbt-extras) has been included, which is covered by a BSD-3-clause license. Therefore, on Linux and Mac you can just use `./sbt test:run` to get going without having to separately install sbt.
 
  - The `core` project provides widgets based on plain Java Swing
  - `swing` wraps them for usage within Scala-Swing. Therefore, `swing` adds a further dependency on `scala-swing`.

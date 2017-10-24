@@ -247,7 +247,7 @@ trait TimelineCanvasImpl extends TimelineCanvas {
     case TimelineModel.Position(_, Change(before, now)) =>
       val mn = math.min(before, now)
       val mx = math.max(before, now)
-      val x0 = math.max(0                            , frameToScreen(mn).toInt)
+      val x0 = math.max(0                            , frameToScreen(mn).toInt - 1) // the `-1` is needed for shitty macOS retina display
       val x1 = math.min(canvasComponent.peer.getWidth, frameToScreen(mx).toInt + 1)
       if (x0 < x1) {
         r.x      = x0

@@ -140,7 +140,7 @@ trait DualRangeModel {
     math.min(r1, r2)
   }
 
-  /** Logical range higher value, which is `min(range._1, range._2)`. */
+  /** Logical range higher value, which is `max(range._1, range._2)`. */
   def rangeHi: Int = {
     val (r1, r2) = range
     math.max(r1, r2)
