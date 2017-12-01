@@ -2,7 +2,7 @@
  *  TimelineNavigation.scala
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2016 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2017 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is published under the GNU Lesser General Public License v2.1+
  *
@@ -207,8 +207,8 @@ object TimelineNavigation {
    def apply(): Unit = {
      val pos      = model.position
      val selSpan  = model.selection match {
-       case sp @ Span(_, _) => sp
-       case _               => Span(pos, pos)
+       case sp: Span => sp
+       case _        => Span(pos, pos)
      }
 
      val wholeSpan  = model.bounds

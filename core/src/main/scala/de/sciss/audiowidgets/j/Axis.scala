@@ -2,7 +2,7 @@
  *  Axis.scala
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2016 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2017 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is published under the GNU Lesser General Public License v2.1+
  *
@@ -38,13 +38,12 @@ object Axis {
   private final val TIME_RASTER     = Array( 60000000L,  6000000L,  600000L,  60000L, 10000L, 1000L, 100L, 10L, 1L)
   private final val MinLabelSpace   = 16
 
-//  private final class ColorScheme(val top: Color, val mid: Color, val bot: Color)
   private type ColorScheme = Array[Color]
 
   private final val lightScheme: ColorScheme = Array(new Color(0xB8B8B8), new Color(0xFCFCFC), new Color(0xEFEFEF))
   private final val darkScheme : ColorScheme = Array(new Color(0x080808), new Color(0x2E2E2E), new Color(0x272727))
 
-  private final val gradFrac    = Array[Float](0.0f, 0.75f, 0.9375f)
+  private final val gradFractions = Array[Float](0.0f, 0.75f, 0.9375f)
 
   private final val barExtent = 15
 
@@ -116,7 +115,7 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
 //    img.setRGB(0, 0, imgWidth, imgHeight, pntBarGradientPixels, 0, imgWidth)
 //    pntBackground = new TexturePaint(img, new Rectangle(0, 0, imgWidth, imgHeight))
     pntBackground = new LinearGradientPaint(0f, 0f, if (isHoriz) 0f else barExtent, if (isHoriz) barExtent else 0,
-      gradFrac, scheme)
+      gradFractions, scheme)
     triggerRedisplay()
   }
 
@@ -223,8 +222,8 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
     if (doRecalc || (r.width != recentWidth) || (r.height != recentHeight)) {
       recentWidth   = r.width
       recentHeight  = r.height
-      recalcLabels(g)
-      if (_orient == VERTICAL) recalcTransforms()
+      recalculateLabels(g)
+      if (_orient == VERTICAL) recalculateTransforms()
       doRecalc = false
     }
 
@@ -255,190 +254,204 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
     }
 
     g2.setTransform(trnsOrig)
-    //      paintOnTop( g2 )
     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, aaOrig)
   }
 
-  private def recalcTransforms(): Unit =
+  private def recalculateTransforms(): Unit =
     trnsVertical.setToRotation(-math.Pi / 2, recentHeight.toDouble / 2, recentHeight.toDouble / 2)
 
-  private def calcStringWidth(decimals: Int, fntMetr: FontMetrics, value: Double): Int = {
+  private def calcStringWidth(decimals: Int, fntMetrics: FontMetrics, value: Double): Int = {
     val s = format.format(value, decimals = decimals)
-    fntMetr.stringWidth(s)
+    fntMetrics.stringWidth(s)
   }
 
-  private def calcMinLabSpc(decimals: Int, fntMetr: FontMetrics, mini: Double, maxi: Double): Int = {
-    math.max(calcStringWidth(decimals, fntMetr, mini), calcStringWidth(decimals, fntMetr, maxi)) + MinLabelSpace
-  }
+  private def calcMinLabSpc(decimals: Int, fntMetrics: FontMetrics, mini: Double, maxi: Double): Int =
+    math.max(calcStringWidth(decimals, fntMetrics, mini), calcStringWidth(decimals, fntMetrics, maxi)) + MinLabelSpace
 
-  private def recalcLabels(g: Graphics): Unit = {
-    import math._
-
-    val fntMetr = g.getFontMetrics
+  private def recalculateLabels(g: Graphics): Unit = {
 
     shpTicks.reset()
     if (spcMin == spcMax) {
       labels = new Array[Label](0)
-      return
-    }
-
-    val (width, height) = if (_orient == HORIZONTAL) {
-      //			if( spaceVar.hlog ) {
-      //				recalcLogLabels
-      //				return
-      //			}
-      (recentWidth, recentHeight) // , spaceVar.hmin, spaceVar.hmax
     } else {
-      //			if( spaceVar.vlog ) {
-      //				recalcLogLabels
-      //				return
-      //			}
-      (recentHeight, recentWidth) // , spaceVar.vmin, spaceVar.vmax
-    }
-    val scale = width / (spcMax - spcMin)
-    val minK  = kPeriod * spcMin
-    val maxK  = kPeriod * spcMax
+      val isHoriz   = _orient == HORIZONTAL
+      val length    = if (isHoriz) recentWidth  else recentHeight
+      val thickness = if (isHoriz) recentHeight else recentWidth
+      val scale     = length / (spcMax - spcMin)
+      val minK      = kPeriod * spcMin
+      val maxK      = kPeriod * spcMax
+      val isInteger = flIntegers || (flTimeFormat && !flTimeMillis)
 
-    val isInteger = flIntegers || (flTimeFormat && !flTimeMillis)
-    var (decimals: Int, numTicks: Int, valueOff: Double, pixelOff: Double, valueStep: Double) =
       if (flFixedBounds) {
-        val decimals1 = if (isInteger) 0
-        else {
-          val decTmp = {
-            val n = abs(minK).toLong
-            if ((n % 1000) == 0) {
-              0
-            } else if ((n % 100) == 0) {
-              1
-            } else if ((n % 10) == 0) {
-              2
-            } else {
-              3
-            }
-          }
-
-          val n = abs(maxK).toLong
-          if ((n % 1000) == 0) {
-            decTmp
-          } else if ((n % 100) == 0) {
-            max(decTmp, 1)
-          } else if ((n % 10) == 0) {
-            max(decTmp, 2)
-          } else {
-            3
-          }
-        }
-
-        // make a first label width calculation with coarsest display
-        val minLbDist = calcMinLabSpc(decimals1, fntMetr, spcMin, spcMax)
-        var numLabels = max(1, width / minLbDist)
-
-        // ok, easy way : only divisions by powers of two
-        var shift = 0
-        while (numLabels > 2) {
-          shift      += 1
-          numLabels >>= 1
-        }
-        numLabels   <<= shift
-        val valueStep = (maxK - minK) / numLabels
-
-        val decimals2 = if (isInteger) 0
-        else {
-          val n = valueStep.toLong
-          if ((n % 1000) == 0) {
-            decimals1
-          } else if ((n % 100) == 0) {
-            max(decimals1, 1)
-          } else if ((n % 10) == 0) {
-            max(decimals1, 2)
-          } else {
-            3
-          }
-        }
-
-        val decimals3 = if (decimals2 == decimals1) decimals2 else {
-          // ok, labels get bigger, recalc numLabels ...
-          val minLbDist = calcMinLabSpc(decimals2, fntMetr, spcMin, spcMax)
-          numLabels = max(1, width / minLbDist)
-          shift = 0
-          while (numLabels > 2) {
-            shift += 1
-            numLabels >>= 1
-          }
-          numLabels <<= shift
-          val valueStep = (maxK - minK) / numLabels
-
-          // nochmal ptrnIdx berechnen, evtl. reduziert sich die aufloesung wieder...
-          val n = valueStep.toLong
-          if ((n % 1000) == 0) {
-            decimals1
-          } else if ((n % 100) == 0) {
-            max(decimals1, 1)
-          } else if ((n % 10) == 0) {
-            max(decimals1, 2)
-          } else {
-            3
-          }
-        }
-
-        (decimals3, 4, minK, 0, valueStep)
-
+        recalculateLabelsFixed  (g, minK = minK, maxK = maxK, isInteger = isInteger,
+          length = length, thickness = thickness, scale = scale)
       } else {
-        // ---- no fixed bounds ----
+        recalculateLabelsElastic(g, minK = minK, maxK = maxK, isInteger = isInteger,
+          length = length, thickness = thickness, scale = scale)
+      }
+    }
+  }
 
-        // make a first label width calculation with coarsest display
-        var minLbDist = calcMinLabSpc(0, fntMetr, spcMin, spcMax)
-        var numLabels = max(1, width / minLbDist)
+  private def recalculateLabelsFixed(g: Graphics, minK: Double, maxK: Double, isInteger: Boolean,
+                                     length: Int, thickness: Int, scale: Double): Unit = {
+    import math._
 
-        // now valueStep =^= 1000 * minStep
-        var valueStep = ceil((maxK - minK) / numLabels)
-        // die Grossenordnung von valueStep ist Indikator fuer Message Pattern
-        var decimals1 = if (isInteger) 0 else 3
-        var raster = labelMinRaster
-        var i = 0
-        var break = false
-        while ((i < labelRaster.length) && !break) {
-          if (valueStep >= labelRaster(i)) {
-            decimals1  = max(0, i - 5)
-            raster    = labelRaster(i)
-            break     = true
-          } else {
-            i += 1
-          }
+    val fntMetrics = g.getFontMetrics
+
+    val decimals1 = if (isInteger) 0
+    else {
+      val decTmp = {
+        val n = abs(minK).toLong
+        if ((n % 1000) == 0) {
+          0
+        } else if ((n % 100) == 0) {
+          1
+        } else if ((n % 10) == 0) {
+          2
+        } else {
+          3
         }
-        if (decimals1 > 0) {
-          // have to recheck label width!
-          minLbDist = max(calcStringWidth(decimals1, fntMetr, spcMin),
-                          calcStringWidth(decimals1, fntMetr, spcMax)) + MinLabelSpace
-          numLabels = max(1, width / minLbDist)
-          valueStep = ceil((maxK - minK) / numLabels)
-        }
-        valueStep = max(1, floor((valueStep + raster - 1) / raster))
-        if (valueStep == 7 || valueStep == 9) valueStep = 10
-
-        val numTicks = (valueStep.toInt: @switch) match {
-          case 2 => 4
-          case 4 => 4
-          case 8 => 4
-          case 3 => 6
-          case 6 => 6
-          case _ => 5
-        }
-        valueStep *= raster
-        val valueOff = floor(abs(minK) / valueStep) * (if (minK >= 0) valueStep else -valueStep)
-        val pixelOff = (valueOff - minK) / kPeriod * scale // + 0.5 (was a left over from quartz rendering)
-
-        (decimals1, numTicks, valueOff, pixelOff, valueStep)
       }
 
+      val n = abs(maxK).toLong
+      if ((n % 1000) == 0) {
+        decTmp
+      } else if ((n % 100) == 0) {
+        max(decTmp, 1)
+      } else if ((n % 10) == 0) {
+        max(decTmp, 2)
+      } else {
+        3
+      }
+    }
+
+    // make a first label width calculation with coarsest display
+    val minLbDist = calcMinLabSpc(decimals1, fntMetrics, spcMin, spcMax)
+    var numLabels = max(1, length / minLbDist)
+
+    // ok, easy way : only divisions by powers of two
+    var shift = 0
+    while (numLabels > 2) {
+      shift      += 1
+      numLabels >>= 1
+    }
+    numLabels   <<= shift
+    var valueStep = (maxK - minK) / numLabels
+
+    val decimals2 = if (isInteger) 0
+    else {
+      val n = valueStep.toLong
+      if ((n % 1000) == 0) {
+        decimals1
+      } else if ((n % 100) == 0) {
+        max(decimals1, 1)
+      } else if ((n % 10) == 0) {
+        max(decimals1, 2)
+      } else {
+        3
+      }
+    }
+//    println(f"[2] minLbDist $minLbDist, numLabels = $numLabels, decimals $decimals2")
+
+    val decimals3 = if (decimals2 == decimals1) decimals2 else {
+      // ok, labels get bigger, recalculate numLabels ...
+      val minLbDist = calcMinLabSpc(decimals2, fntMetrics, spcMin, spcMax)
+      numLabels = max(1, length / minLbDist)
+      shift = 0
+      while (numLabels > 2) {
+        shift += 1
+        numLabels >>= 1
+      }
+      numLabels <<= shift
+      valueStep = (maxK - minK) / numLabels
+
+      // calculate ptrnIdx again, possibly reducing the resolution again...
+      val n = valueStep.toLong
+      val res = if ((n % 1000) == 0) {
+        decimals1
+      } else if ((n % 100) == 0) {
+        max(decimals1, 1)
+      } else if ((n % 10) == 0) {
+        max(decimals1, 2)
+      } else {
+        3
+      }
+
+//      println(f"[3] minLbDist $minLbDist, numLabels = $numLabels, decimals $res")
+      res
+    }
+
+    labelsFinish(g = g, length = length, thickness = thickness, scale = scale, decimals = decimals3, numTicks = 4,
+      valueOff0 = minK, pixelOff0 = 0, valueStep = valueStep)
+  }
+
+  private def recalculateLabelsElastic(g: Graphics, minK: Double, maxK: Double, isInteger: Boolean,
+                                       length: Int, thickness: Int, scale: Double): Unit = {
+    import math._
+
+    // make a first label width calculation with coarsest display
+    val fntMetrics  = g.getFontMetrics
+    var minLbDist   = calcMinLabSpc(0, fntMetrics, spcMin, spcMax)
+    var numLabels   = max(1, length / minLbDist)
+
+    // now valueStep =^= 1000 * minStep
+    var valueStep = ceil((maxK - minK) / numLabels)
+    // the magnitude of valueStep is an indicator for message pattern
+    var decimals1 = if (isInteger) 0 else 3
+    var raster = labelMinRaster
+    var i = 0
+    var break = false
+    while ((i < labelRaster.length) && !break) {
+      if (valueStep >= labelRaster(i)) {
+        decimals1  = max(0, i - 5)
+        raster    = labelRaster(i)
+        break     = true
+      } else {
+        i += 1
+      }
+    }
+    if (decimals1 > 0) {
+      // have to recheck label width!
+      val w1 = calcStringWidth(decimals1, fntMetrics, spcMin)
+      val w2 = calcStringWidth(decimals1, fntMetrics, spcMax)
+      minLbDist = max(w1, w2) + MinLabelSpace
+      numLabels = max(1, length / minLbDist)
+      valueStep = ceil((maxK - minK) / numLabels)
+    }
+    valueStep = max(1, floor((valueStep + raster - 1) / raster))
+    if (valueStep == 7 || valueStep == 9) valueStep = 10
+
+    val numTicks = (valueStep.toInt: @switch) match {
+      case 2 => 4
+      case 4 => 4
+      case 8 => 4
+      case 3 => 6
+      case 6 => 6
+      case _ => 5
+    }
+    valueStep *= raster
+    val valueOff = floor(abs(minK) / valueStep) * (if (minK >= 0) valueStep else -valueStep)
+    val pixelOff = (valueOff - minK) / kPeriod * scale
+
+    labelsFinish(g = g, length = length, thickness = thickness, scale = scale,
+      decimals = decimals1, numTicks = numTicks, valueOff0 = valueOff, pixelOff0 = pixelOff, valueStep = valueStep)
+  }
+
+  private def labelsFinish(g: Graphics, length: Int, thickness: Int, scale: Double, decimals: Int, numTicks: Int,
+                           valueOff0: Double, pixelOff0: Double, valueStep: Double): Unit = {
+    import math._
+    var valueOff  = valueOff0
+    var pixelOff  = pixelOff0
     val pixelStep = valueStep / kPeriod * scale
-    var tickStep = pixelStep / numTicks
-    val numLabels = max(0, ((width - pixelOff + pixelStep - 1.0) / pixelStep).toInt)
+    var tickStep  = pixelStep / numTicks
+    val numLabels = max(0, ((length - pixelOff + pixelStep - 1.0) / pixelStep).toInt)
+//    val numLabels = max(0, ((length - pixelOff) / pixelStep).toInt)
+//    println(f"scale $scale%g, decimals $decimals, numTicks $numTicks, pixelStep $pixelStep%g, tickStep $tickStep%g, numLabels $numLabels")
 
     if (labels.length != numLabels) labels = new Array[Label](numLabels)
 
     if (flMirror) {
-      pixelOff = width - pixelOff
+      pixelOff = length - pixelOff
       tickStep = -tickStep
     }
 
@@ -447,12 +460,12 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
       labels(i) = new Label(format.format(valueOff / kPeriod, decimals = decimals), (pixelOff + 2).toInt)
       valueOff += valueStep
       shpTicks.moveTo(pixelOff.toFloat, 1)
-      shpTicks.lineTo(pixelOff.toFloat, height - 2)
+      shpTicks.lineTo(pixelOff.toFloat, thickness - 2)
       pixelOff += tickStep
       var k = 1
       while (k < numTicks) {
-        shpTicks.moveTo(pixelOff.toFloat, height - 4)
-        shpTicks.lineTo(pixelOff.toFloat, height - 2)
+        shpTicks.moveTo(pixelOff.toFloat, thickness - 4)
+        shpTicks.lineTo(pixelOff.toFloat, thickness - 2)
         pixelOff += tickStep
         k += 1
       }
@@ -462,9 +475,6 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
 
   private def triggerRedisplay(): Unit = {
     doRecalc = true
-    //		if( host.isDefined ) {
-    //			host.get.update( this )
-    //		} else
     if (isVisible) {
       repaint()
     }
@@ -475,6 +485,5 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
   def dispose(): Unit = {
     labels = null
     shpTicks.reset()
-//    img.flush()
   }
 }

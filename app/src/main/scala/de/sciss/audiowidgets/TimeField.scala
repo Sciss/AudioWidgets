@@ -2,7 +2,7 @@
  *  TimeField.scala
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2016 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2017 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is published under the GNU Lesser General Public License v2.1+
  *
@@ -189,7 +189,7 @@ object TimeField {
 
     private[this] val numFmt = NumberFormat.getIntegerInstance(Locale.US)
     numFmt.setGroupingUsed(false)
-    val formatter = new NumberFormatter(numFmt) {
+    val formatter: NumberFormatter = new NumberFormatter(numFmt) {
       override def valueToString(value: Any   ): String = format  (value.asInstanceOf[Long])
       override def stringToValue(text : String): AnyRef = tryParse(text).asInstanceOf[AnyRef]
     }

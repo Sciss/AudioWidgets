@@ -2,7 +2,7 @@
  *  ParamField.scala
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2016 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2017 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is published under the GNU Lesser General Public License v2.1+
  *
@@ -27,7 +27,7 @@ import scala.swing.{Component, FormattedTextField}
   */
 class ParamField[A](value0: A, formats0: ISeq[ParamFormat[A]]) extends Component with ParamFieldLike[A] { me =>
   override lazy val peer: j.ParamField[A] = new j.ParamField[A](value0, formats0) with SuperMixin { jp =>
-    val pl = new PropertyChangeListener {
+    private[this] val pl = new PropertyChangeListener {
       private[this] var seenValue : A                       = jp.value
       private[this] var seenFormat: Option[ParamFormat[A]]  = jp.selectedFormat
 

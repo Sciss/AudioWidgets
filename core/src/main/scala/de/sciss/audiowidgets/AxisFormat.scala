@@ -2,7 +2,7 @@
  *  AxisFormat.scala
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2016 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2017 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is published under the GNU Lesser General Public License v2.1+
  *
@@ -13,52 +13,47 @@
 
 package de.sciss.audiowidgets
 
+import java.text.NumberFormat
+import java.util.Locale
+
 object AxisFormat {
-  private final val decimMult = Array(1, 10, 100, 1000)
+  private final val decimMult = {
+    val res = new Array[NumberFormat](4)
+    var i = 0
+    while (i < 4) {
+      val nf = NumberFormat.getInstance(Locale.US)
+      nf.setMinimumFractionDigits(i)
+      nf.setMaximumFractionDigits(i)
+      nf.setGroupingUsed(false)
+      nf.setRoundingMode(java.math.RoundingMode.DOWN)
+      res(i) = nf
+      i += 1
+    }
+    res
+  }
 
   private def formatNumber(value: Double, decimals: Int, pad: Int): String = {
-    val m = (value * decimMult(decimals)).toLong
-    if (decimals == 0 && pad == 0) return m.toString
-
-    val neg   = m < 0
-    val dec   = decimals > 0
-    val s     = (if (neg) -m else m).toString
-    val sl    = s.length
-    val sl1   = if (dec) sl + 1 else sl
-    val sz    = if (neg) sl1 + 1 else sl1
-    val sz2   = if (pad > sz) pad else sz
-    val sb    = new java.lang.StringBuilder(sz2)
-    if (neg) sb.append('-')
+    val s   = decimMult(decimals).format(value)
+    val sz  = s.length
     if (pad > sz) {
+      val sb = new java.lang.StringBuilder(pad)
       var i = pad - sz
       while (i > 0) {
         sb.append(' ')
         i -= 1
       }
-    }
-    if (pad == 0 || pad >= sz) {
-      if (dec) {
-        val j = sl - decimals
-        sb.append(s, 0, j)
-        sb.append('.')
-        sb.append(s, j, sl)
-      } else {
-        sb.append(s)
-      }
-    } else {
+      sb.append(s)
+      sb.toString
+
+    } else if (pad > 0 && pad < sz) {
+      val sb = new java.lang.StringBuilder(pad)
       sb.append('*')
-      val i = sl - (pad - sb.length())
-      val j = sl - decimals
-      // println(s"i = $i, j = $j, sl = $sl, sb = ${sb.length()}")
-      if (dec && j >= i) {
-        sb.append(s, i, j)
-        sb.append('.')
-        sb.append(s, j, sl)
-      } else {
-        sb.append(s, i, sl)
-      }
+      sb.append(s, 1, sz)
+      sb.toString
+
+    } else {
+      s
     }
-    sb.toString
   }
 
   case object Decimal extends AxisFormat {

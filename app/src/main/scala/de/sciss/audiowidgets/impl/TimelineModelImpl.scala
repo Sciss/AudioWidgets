@@ -2,7 +2,7 @@
  *  TimelineModelImpl.scala
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2016 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2017 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is published under the GNU Lesser General Public License v2.1+
  *
@@ -29,7 +29,7 @@ final class TimelineModelImpl(bounds0: Span, val sampleRate: Double)
   private var _pos    = bounds0.start
   private var _sel    = Span.Void: SpanOrVoid
 
-  def visible = _visi
+  def visible: Span = _visi
   def visible_=(value: Span): Unit = {
     val oldSpan = _visi
     if (oldSpan != value) {
@@ -43,7 +43,7 @@ final class TimelineModelImpl(bounds0: Span, val sampleRate: Double)
     }
   }
 
-  def position = _pos
+  def position: Long = _pos
   def position_=(value: Long): Unit = {
     val oldPos = _pos
     if (oldPos != value) {
@@ -53,7 +53,7 @@ final class TimelineModelImpl(bounds0: Span, val sampleRate: Double)
     }
   }
 
-  def selection = _sel
+  def selection: SpanOrVoid = _sel
   def selection_=(value: SpanOrVoid): Unit = {
     val oldSel = _sel
     if (oldSel != value) {
@@ -63,7 +63,7 @@ final class TimelineModelImpl(bounds0: Span, val sampleRate: Double)
     }
   }
 
-  def bounds = _total
+  def bounds: Span = _total
   def bounds_=(value: Span): Unit = {
     val oldTot = _total
     if (oldTot != value) {

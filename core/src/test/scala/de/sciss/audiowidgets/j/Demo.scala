@@ -2,7 +2,7 @@ package de.sciss.audiowidgets
 package j
 
 import java.awt.event.{ActionEvent, ActionListener, WindowAdapter, WindowEvent}
-import java.awt.{BorderLayout, Color, EventQueue, GridLayout}
+import java.awt.{BorderLayout, EventQueue, GridLayout}
 import java.text.NumberFormat
 import java.util.Locale
 import javax.swing._

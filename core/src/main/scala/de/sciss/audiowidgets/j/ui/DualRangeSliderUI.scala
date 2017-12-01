@@ -2,7 +2,7 @@
  *  DualRangeSliderUI.java
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2016 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2017 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is published under the GNU Lesser General Public License v2.1+
  *
@@ -121,11 +121,11 @@ object DualRangeSliderUI {
     def valueOption(m: DualRangeModel): Option[Int]
   }
   private case object NoHandle extends MaybeHandle {
-    def valueOption(m: DualRangeModel) = None
+    def valueOption(m: DualRangeModel): Option[Int] = None
   }
   private sealed trait Handle extends MaybeHandle {
     def value(m: DualRangeModel): Int
-    def valueOption(m: DualRangeModel) = Some(value(m))
+    def valueOption(m: DualRangeModel): Option[Int] = Some(value(m))
   }
   private case object ValueHandle extends Handle {
     def value(m: DualRangeModel): Int = m.value

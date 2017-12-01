@@ -22,7 +22,7 @@ import de.sciss.submin.Submin
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.swing.Swing._
 import scala.swing.event.{ValueChanged, WindowClosing, WindowOpened}
-import scala.swing.{BorderPanel, BoxPanel, Component, GridPanel, Label, MainFrame, Orientation, SimpleSwingApplication, Swing}
+import scala.swing.{BorderPanel, BoxPanel, Component, Frame, GridPanel, Label, MainFrame, Orientation, SimpleSwingApplication}
 
 object Demo extends SimpleSwingApplication {
 
@@ -31,17 +31,17 @@ object Demo extends SimpleSwingApplication {
     super.startup(args)
   }
 
-  lazy val top = new MainFrame {
+  lazy val top: Frame = new MainFrame {
     title = "ScalaAudioWidgets"
 
-    val m = new PeakMeter {
+    val m: PeakMeter = new PeakMeter {
       numChannels   = 2
       ticks         = 101 // 50
       caption    = true
       borderVisible = true
     }
 
-    val lcdColors   = Vec(
+    val lcdColors = Vec(
       (Some(Color.darkGray)             , None),
       (Some(new Color(205, 232, 254))   , Some(new Color(15, 42, 64))),
       (Some(Color.darkGray)             , Some(Color.lightGray)),
@@ -49,10 +49,10 @@ object Demo extends SimpleSwingApplication {
       (Some(new Color(0xE0, 0xE0, 0xE0)), Some(new Color(0x20, 0x20, 0x20)))
     )
 
-    val lcdLbs = lcdColors.zipWithIndex.map {
+    val lcdLbs: Seq[Label] = lcdColors.zipWithIndex.map {
       case ((fg, _), idx) =>
         new Label {
-          text = "00:00:0" + idx
+          text = s"00:00:0$idx"
           if (idx != 1 && idx != 4) peer.putClientProperty("styleId", "noshade")
           peer.putClientProperty("JComponent.sizeVariant", "small")
           font = LCDFont()
@@ -70,25 +70,25 @@ object Demo extends SimpleSwingApplication {
         }
     }
 
-    val lcds = lcdColors.zip(lcdLbs).zipWithIndex.map {
-      case (((fg, bg), lb), idx) =>
+    val lcds: Seq[LCDPanel] = lcdColors.zip(lcdLbs).map {
+      case ((_, bg), lb) =>
         new LCDPanel {
           bg.foreach(background = _)
           contents += lb
         }
     }
-    val lcdGrid = new GridPanel(lcdColors.size, 1) {
+    val lcdGrid: GridPanel = new GridPanel(lcdColors.size, 1) {
       vGap = 6
       contents ++= lcds
     }
 
-    val axis = new Axis {
+    val axis: Axis = new Axis {
       format  = AxisFormat.Time()
       minimum = 0.0
       maximum = 34.56
     }
 
-    lazy val trnspActions = Seq(
+    lazy val trnspActions: Seq[Transport.ActionElement] = Seq(
       Transport.GoToBegin, Transport.Rewind     , Transport.Stop   , Transport.Pause, Transport.Play,
       Transport.Record   , Transport.FastForward, Transport.GoToEnd, Transport.Loop).map {
 
@@ -104,7 +104,7 @@ object Demo extends SimpleSwingApplication {
       res
     }
 
-    lazy val timeSlid = {
+    lazy val timeSlid: LCDPanel = {
       val fmt = AxisFormat.Time(hours = true, millis = false)
       val lb = new Label {
         text        = fmt.format(value = 0.0, decimals = 0)
@@ -125,7 +125,7 @@ object Demo extends SimpleSwingApplication {
       }
     }
 
-    lazy val southPane = new BoxPanel(Orientation.Vertical) {
+    lazy val southPane: BoxPanel = new BoxPanel(Orientation.Vertical) {
       contents += trnsp
       contents += VStrut(6)
       contents += timeSlid
@@ -164,7 +164,7 @@ object Demo extends SimpleSwingApplication {
     })
 
     val t2 = new Timer(1000, new ActionListener {
-      val lb1 = lcdLbs.head
+      val lb1: Label = lcdLbs.head
       var cnt = 0
 
       def actionPerformed(e: ActionEvent): Unit = {

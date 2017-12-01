@@ -28,13 +28,13 @@ object App extends SwingApplicationImpl("AudioWidgets") {
       title = "Application Demo"
 
       // println("CREATE WIN")
-      val canvas = new TimelineCanvasImpl {
+      val canvas: TimelineCanvas = new TimelineCanvasImpl {
         // println("INIT SUB")
         /** The underlying model */
         val timelineModel = TimelineModel(Span(0, (sampleRate * 60).toLong), sampleRate)
 
         /** The corresponding Swing component */
-        lazy val canvasComponent = new Component {
+        lazy val canvasComponent: Component = new Component {
           preferredSize = (800, 400)
 
           override protected def paintComponent(g: Graphics2D): Unit = {
