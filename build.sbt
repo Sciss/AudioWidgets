@@ -1,7 +1,7 @@
 lazy val baseName       = "AudioWidgets"
 lazy val baseNameL      = baseName.toLowerCase
 
-lazy val projectVersion = "1.12.0-SNAPSHOT"
+lazy val projectVersion = "1.12.0"
 lazy val mimaVersion    = "1.12.0" // used for migration-manager
 
 lazy val commonSettings = Seq(
@@ -19,10 +19,10 @@ lazy val commonSettings = Seq(
 
 // ---- dependencies ----
 
-lazy val desktopVersion     = "0.9.0-SNAPSHOT"
-lazy val spanVersion        = "1.4.0-SNAPSHOT"
+lazy val desktopVersion     = "0.9.0"
+lazy val spanVersion        = "1.4.0"
 lazy val raphaelVersion     = "1.0.4"
-lazy val swingPlusVersion   = "0.3.0-SNAPSHOT"
+lazy val swingPlusVersion   = "0.3.0"
 
 // ---- test dependencies ----
 
@@ -34,21 +34,21 @@ lazy val testSettings = Seq(
 
 // ----
 
-lazy val root = Project(id = baseNameL, base = file("."))
+lazy val root = project.withId(baseNameL).in(file("."))
   .aggregate(core, swing, app)
   .settings(commonSettings)
   .settings(
     packagedArtifacts := Map.empty           // prevent publishing anything!
   )
 
-lazy val core = Project(id = s"$baseNameL-core", base = file("core"))
+lazy val core = project.withId(s"$baseNameL-core").in(file("core"))
   .settings(commonSettings)
   .settings(testSettings)
   .settings(
     mimaPreviousArtifacts := Set("de.sciss" %% s"$baseNameL-core" % mimaVersion)
   )
 
-lazy val swing = Project(id = s"$baseNameL-swing", base = file("swing"))
+lazy val swing = project.withId(s"$baseNameL-swing").in(file("swing"))
   .dependsOn(core)
   .settings(commonSettings)
   .settings(testSettings)
@@ -59,7 +59,7 @@ lazy val swing = Project(id = s"$baseNameL-swing", base = file("swing"))
     mimaPreviousArtifacts := Set("de.sciss" %% s"$baseNameL-swing" % mimaVersion)
   )
 
-lazy val app = Project(id = s"$baseNameL-app", base = file("app"))
+lazy val app = project.withId(s"$baseNameL-app").in(file("app"))
   .dependsOn(swing)
   .settings(commonSettings)
   .settings(testSettings)
