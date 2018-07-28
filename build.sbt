@@ -1,7 +1,7 @@
 lazy val baseName       = "AudioWidgets"
 lazy val baseNameL      = baseName.toLowerCase
 
-lazy val projectVersion = "1.12.1-SNAPSHOT"
+lazy val projectVersion = "1.12.1"
 lazy val mimaVersion    = "1.12.0" // used for migration-manager
 
 lazy val commonSettings = Seq(
@@ -10,8 +10,8 @@ lazy val commonSettings = Seq(
   description         := "Specialized Swing widgets for audio applications in Scala",
   homepage            := Some(url(s"https://github.com/Sciss/$baseName")),
   licenses            := Seq("LGPL v2.1+" -> url("http://www.gnu.org/licenses/lgpl-2.1.txt")),
-  scalaVersion        := "2.12.5",
-  crossScalaVersions  := Seq("2.12.5", "2.11.12"),
+  scalaVersion        := "2.12.6",
+  crossScalaVersions  := Seq("2.12.6", "2.11.12"),
   scalacOptions      ++= Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture"),
   initialCommands in console := """
     |import de.sciss.audiowidgets._""".stripMargin
@@ -19,8 +19,8 @@ lazy val commonSettings = Seq(
 
 // ---- dependencies ----
 
-lazy val desktopVersion     = "0.9.0"
-lazy val spanVersion        = "1.4.0"
+lazy val desktopVersion     = "0.9.2"
+lazy val spanVersion        = "1.4.1"
 lazy val raphaelVersion     = "1.0.4"
 lazy val swingPlusVersion   = "0.3.0"
 

@@ -6,7 +6,7 @@
 ## statement
 
 AudioWidgets is a library providing specialized widgets for audio applications. It is Swing based and written in the 
-Scala programming language. (C)opyright 2011&ndash;2017 by Hanns Holger Rutz. All rights reserved. It is released 
+Scala programming language. (C)opyright 2011&ndash;2018 by Hanns Holger Rutz. All rights reserved. It is released 
 under the [GNU Lesser General Public License](http://github.com/Sciss/AudioWidgets/blob/master/licenses/AudioWidgets-License.txt) v2.1+
 and comes with absolutely no warranties. To contact the author, send an email to `contact at sciss.de`.
 
@@ -28,7 +28,7 @@ To use the library in your project:
     "de.sciss" %% "audiowidgets-swing" % v
     "de.sciss" %% "audiowidgets-app"   % v
 
-The current version `v` is `"1.12.0"`.
+The current version `v` is `"1.12.1"`.
 
 To view a demo of the widgets from the sbt console:
 
