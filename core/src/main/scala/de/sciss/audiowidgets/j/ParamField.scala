@@ -31,7 +31,7 @@ class ParamField[A](value0: A, formats0: ISeq[ParamFormat[A]])
 
   private[this] val lbUnit		    = new UnitLabel(formats0.map(_.unit))
 
-  private[this] val ggNumber	    = new JFormattedTextField(new AbstractFormatterFactory {
+  private[this] val ggNumber: JFormattedTextField = new JFormattedTextField(new AbstractFormatterFactory {
     override def toString = s"ParamField(${_value})@${field.hashCode.toHexString}.FormatterFactory"
 
     def getFormatter(tf: JFormattedTextField): AbstractFormatter = {
@@ -61,6 +61,8 @@ class ParamField[A](value0: A, formats0: ISeq[ParamFormat[A]])
   private def init(): Unit = {
     val lay       = new GridBagLayout
     val con       = new GridBagConstraints
+
+    unitVisibility()
 
     setLayout(lay)
     con.anchor    = GridBagConstraints.WEST
@@ -164,8 +166,18 @@ class ParamField[A](value0: A, formats0: ISeq[ParamFormat[A]])
   def formats_=(xs: ISeq[ParamFormat[A]]): Unit = if (_formats != xs) {
     _formats = xs
     lbUnit.entries = xs.map(_.unit)
+    unitVisibility()
     unitUpdated()
     updatePreferredSize()
+  }
+
+  private def unitVisibility(): Unit = {
+    val xs      = _formats
+    val hidden  = xs.isEmpty || (xs.size == 1 && {
+      val u = xs.head.unit
+      u.label.isEmpty && u.icon.isEmpty
+    })
+    lbUnit.setVisible(!hidden)
   }
 
   def prototypeDisplayValues: ISeq[A] = _protoVals
