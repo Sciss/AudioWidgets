@@ -225,7 +225,7 @@ class PeakMeterBar(orient: Int = SwingConstants.VERTICAL)
 
   private[this] final var holdDurationVar	       = PeakMeter.DefaultHoldDuration   // milliseconds peak hold
 
-  private[this] final val nInf                   = Float.NegativeInfinity
+  private[this] final val nInf                   = java.lang.Float.NEGATIVE_INFINITY
   private[this] final var	peakDB                 = nInf
   private[this] final var rmsDB                  = nInf
   private[this] final var	peakLin                = 0f

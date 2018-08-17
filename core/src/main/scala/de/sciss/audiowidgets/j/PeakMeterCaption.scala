@@ -23,12 +23,13 @@ import javax.swing.{JComponent, SwingConstants, SwingUtilities}
 import scala.annotation.switch
 
 object PeakMeterCaption {
-  private val MAJOR_TICKS       = Array(0.0f, 0.05f, 0.15f, 0.225f, 0.3f, 0.4f, 0.5f, 0.625f, 0.75f, 0.875f, 1f)
-  private val LABELS            = Array("60", "50", "40", "35", "30", "25", "20", "15", "10", "5", "0")
-  private val strokeMajorTicks  = new BasicStroke(1f)
-  private val strokeMinorTicks  = new BasicStroke(0.5f)
-  private val MAJOR_W           = 5.25f
-  private val MINOR_W           = 3.5f
+  private final val MAJOR_TICKS       = Array(0.0f, 0.05f, 0.15f, 0.225f, 0.3f, 0.4f, 0.5f, 0.625f, 0.75f, 0.875f, 1f)
+  private final val LABELS            = Array("60", "50", "40", "35", "30", "25", "20", "15", "10", "5", "0")
+  private final val strokeMajorTicks  = new BasicStroke(1f)
+  private final val strokeMinorTicks  = new BasicStroke(0.5f)
+  private final val MAJOR_EXT         = 5.25f
+  private final val MINOR_EXT         = 3.5f
+  private final val PIH               = Math.PI/2
 }
 
 class PeakMeterCaption(orient: Int = SwingConstants.VERTICAL) extends JComponent {
@@ -37,42 +38,46 @@ class PeakMeterCaption(orient: Int = SwingConstants.VERTICAL) extends JComponent
 
   import PeakMeterCaption._
 
-  private var hAlign          = RIGHT
-  private var paintLabelsVar  = true
+  private[this] var hAlign          = RIGHT
+  private[this] var paintLabelsVar  = true
 
-  private var recentWidth     = -1
-  private var recentHeight    = -1
+  private[this] var recentWidth     = -1
+  private[this] var recentHeight    = -1
 
-  private var shpMajorTicks: Shape = _
-  private var shpMinorTicks: Shape = _
-  private var shpLabels    : Shape = _
+  private[this] var shpMajorTicks: Shape = _
+  private[this] var shpMinorTicks: Shape = _
+  private[this] var shpLabels    : Shape = _
 
-  private var ascentVar   = 0
-  private var descentVar  = 0
+  private[this] var ascentVar   = 0
+  private[this] var descentVar  = 0
 
-  private var ticksVar    = 0
+  private[this] var ticksVar    = 0
 
-  private var vertical = orient == VERTICAL
+  private[this] var vertical = orient == VERTICAL
 
   if (!vertical && orient != HORIZONTAL) throw new IllegalArgumentException(orient.toString)
 
   setPreferredSize(new Dimension(20, 20))
   setOpaque(true)
-  setFont(new Font("SansSerif", Font.PLAIN, 12))
+//  setFont(new Font("SansSerif", Font.PLAIN, 12))
+  setFont({
+    val f0 = new Font("SansSerif", Font.PLAIN, 1)
+    f0.deriveFont(9.6f)
+  })
   setForeground(Color.white)
   setBackground(Color.black)
-  recalcPrefSize()
+  recalculatePreferredSize()
 
-  private val recalcListener = new PropertyChangeListener {
+  private[this] val recalculationListener = new PropertyChangeListener {
     def propertyChange(e: PropertyChangeEvent): Unit = {
-      recentHeight = -1
-      recalcPrefSize()
+      recentHeight = -1  // triggers update in `paintComponent`
+      recalculatePreferredSize()
       repaint()
     }
   }
 
-  addPropertyChangeListener("border", recalcListener)
-  addPropertyChangeListener("font"  , recalcListener)
+  addPropertyChangeListener("border", recalculationListener)
+  addPropertyChangeListener("font"  , recalculationListener)
 
   def orientation_=(orient: Int): Unit = {
     val newVertical = orient == VERTICAL
@@ -89,7 +94,7 @@ class PeakMeterCaption(orient: Int = SwingConstants.VERTICAL) extends JComponent
 
   def ticks_=(num: Int): Unit = if (ticksVar != num) {
     ticksVar = num
-    recalcPrefSize()
+    recalculatePreferredSize()
   }
 
   def ticks: Int = ticksVar
@@ -97,7 +102,7 @@ class PeakMeterCaption(orient: Int = SwingConstants.VERTICAL) extends JComponent
   def ascent : Int = ascentVar
   def descent: Int = descentVar
 
-  private def recalcPrefSize(): Unit = {
+  private def recalculatePreferredSize(): Unit = {
     val insets = getInsets()
     var labW = 0
 
@@ -115,35 +120,52 @@ class PeakMeterCaption(orient: Int = SwingConstants.VERTICAL) extends JComponent
       var labH = 0f
       var i    = 0
       while (i < LABELS.length) {
-        val b = fnt.createGlyphVector(frc, LABELS(i)).getLogicalBounds
+        val b = fnt.createGlyphVector(frc, LABELS(i)).getLogicalBounds // getVisualBounds // getLogicalBounds
         labW  = math.max(labW, (b.getWidth + 0.5).toInt)
         labH  = math.max(labH, b.getHeight.toFloat)
         i    += 1
       }
-      labW      += 2
-      ascentVar  = (labH / 2).toInt
-      descentVar = ascentVar
+      labW      += 5
+//      println(s"labW $labW")
+      val labHi  = (labH + 0.5f).toInt
+      ascentVar  = labHi / 2 // + 2 // (labH / 2).toInt
+      descentVar = labHi - ascentVar // ascentVar
+//      ascentVar  = (labH / 2).toInt
+//      descentVar = ascentVar
     } else {
       labW       = 0
       ascentVar  = 0
       descentVar = 0
     }
 
-    val d = new Dimension(labW + (if (hAlign == CENTER) 12 else 5) + insets.left + insets.right,
-      if (ticksVar <= 0) getPreferredSize.height else ticksVar * 2 - 1 + insets.top + insets.bottom)
+    val iw = if (vertical) insets.left + insets.right else insets.top + insets.bottom
+    val ih = if (vertical) insets.top + insets.bottom else insets.left + insets.right
+    val pw = labW + (if (hAlign == CENTER) 12 else 5) + iw
+    val ph = if (ticksVar <= 0) {
+      val pref = getPreferredSize
+      if (vertical) pref.height else pref.width
+    } else ticksVar * 2 - 1 + ih
 
-    setPreferredSize(d)
-    setMinimumSize(new Dimension(d.width, 2 + insets.top + insets.bottom))
-    setMaximumSize(new Dimension(d.width, getMaximumSize.height))
+    val max = getMaximumSize
+
+    if (vertical) {
+      setPreferredSize(new Dimension(pw, ph))
+      setMinimumSize  (new Dimension(pw, 2 + ih))
+      setMaximumSize  (new Dimension(pw, max.height))
+    } else {
+      setPreferredSize(new Dimension(ph, pw))
+      setMinimumSize  (new Dimension(2 + ih, pw))
+      setMaximumSize  (new Dimension(max.width, pw))
+    }
   }
 
-  def horizontalAlignment_=( value: Int ): Unit = if( hAlign != value ) {
+  def horizontalAlignment_=(value: Int): Unit = if (hAlign != value) {
     if (value != LEFT && value != RIGHT && value != CENTER)
       throw new IllegalArgumentException(value.toString)
 
     hAlign        = value
-    recentHeight  = -1
-    recalcPrefSize()
+    recentHeight  = -1  // triggers update in `paintComponent`
+    recalculatePreferredSize()
     repaint()
   }
 
@@ -151,7 +173,7 @@ class PeakMeterCaption(orient: Int = SwingConstants.VERTICAL) extends JComponent
 
   def labelsVisible_=(b: Boolean): Unit = if (paintLabelsVar != b) {
     paintLabelsVar = b
-    recentHeight   = -1
+    recentHeight   = -1  // triggers update in `paintComponent`
     repaint()
   }
 
@@ -161,6 +183,7 @@ class PeakMeterCaption(orient: Int = SwingConstants.VERTICAL) extends JComponent
     val w = getWidth
     val h = getHeight
     g.setColor(getBackground)
+//    g.setColor(Color.red)
     g.fillRect(0, 0, w, h)
     g.setColor(Color.white)
 
@@ -171,15 +194,15 @@ class PeakMeterCaption(orient: Int = SwingConstants.VERTICAL) extends JComponent
       recentWidth  = w
       recentHeight = h
 
-      var xw   = 0f
-      var labX = 0
+      var xw      = 0f
+      var labOff  = 0
 
       (hAlign: @switch) match {
         case LEFT =>
-          labX = (MAJOR_W + 3).toInt
+          labOff = (MAJOR_EXT + 3).toInt
         case CENTER =>
-          xw   = 0.5f
-          labX = (MAJOR_W + 3).toInt
+          xw = 0.5f
+          labOff = (MAJOR_EXT + 3).toInt
         case RIGHT =>
           xw = 1f
       }
@@ -188,12 +211,21 @@ class PeakMeterCaption(orient: Int = SwingConstants.VERTICAL) extends JComponent
 
       val at		  = new AffineTransform()
 			val insets	= getInsets()
-			val wi		  = w - (insets.left + insets.right)
-			val hi		  = h - (insets.top + insets.bottom + ascentVar + descentVar)
+			val wi		  = if (vertical) w - (insets.left + insets.right)
+                    else          h - (insets.top + insets.bottom)
+			val hi		  = if (vertical) h - (insets.top + insets.bottom + ascentVar + descentVar)
+                    else          w - (insets.left + insets.right + ascentVar + descentVar)
 			val him		  = hi - 1
 			val gpMajT	= new GeneralPath()
 			val gpMinT	= new GeneralPath()
-      at.translate(insets.left, insets.top + ascentVar)
+
+      if (vertical) {
+        at.translate(insets.left, insets.top + ascentVar)
+      } else {
+//        println(s"insets = T ${insets.top} L ${insets.left} B ${insets.bottom} R ${insets.right}, ascent $ascentVar, descent $descentVar, labOff $labOff")
+        at.translate(insets.left + w - (ascentVar + 1), insets.top)
+        at.rotate(PIH)
+      }
 
       var j  = 0
       val jm = if (hAlign == CENTER) 2 else 1
@@ -201,20 +233,20 @@ class PeakMeterCaption(orient: Int = SwingConstants.VERTICAL) extends JComponent
         val xwEff = if (hAlign == CENTER) {
           if (j == 0) 0f else 1f
         } else xw
-        val offX1 = (wi - MAJOR_W) * xwEff
-        val offX2 = (wi - MINOR_W) * xwEff
+        val offX1 = (wi - MAJOR_EXT) * xwEff
+        val offX2 = (wi - MINOR_EXT) * xwEff
         var i = 0
         while (i < MAJOR_TICKS.length) {
           val tck = MAJOR_TICKS(i)
           gpMajT.moveTo(offX1, (1f - tck) * him)
-          gpMajT.lineTo(offX1 + MAJOR_W, (1f - tck) * him)
+          gpMajT.lineTo(offX1 + MAJOR_EXT, (1f - tck) * him)
           i += 1
         }
         i = 0
         while (i < 20) {
           if ((i % 5) != 0) {
             gpMinT.moveTo(offX2, i * 0.025f * him)
-            gpMinT.lineTo(offX2 + MINOR_W, i * 0.025f * him)
+            gpMinT.lineTo(offX2 + MINOR_EXT, i * 0.025f * him)
           }
           i += 1
         }
@@ -222,12 +254,15 @@ class PeakMeterCaption(orient: Int = SwingConstants.VERTICAL) extends JComponent
       }
       shpMajorTicks = at.createTransformedShape(gpMajT)
       shpMinorTicks = at.createTransformedShape(gpMinT)
-			
+
 			// ------------ recalculate labels ------------
       if (paintLabelsVar) {
         val frc       = g2.getFontRenderContext
         val gp        = new GeneralPath()
-        val lbScale   = (hi - 1) * 0.004
+//        println(s"vertical $vertical, hi $hi")
+//        val lbScale   = (hi - 1) * 0.004
+        val lbScale = hi - 1
+//        println(s"vertical $vertical, lbScale $lbScale")
         val numLabels = LABELS.length
         val gv        = new Array[GlyphVector](numLabels)
         val gvb       = new Array[Rectangle2D](numLabels)
@@ -245,11 +280,17 @@ class PeakMeterCaption(orient: Int = SwingConstants.VERTICAL) extends JComponent
         while (i < gv.length) {
           gp.append(gv(i).getOutline(
             (maxWidth - gvb(i).getWidth.toFloat) * xw + 1.5f,
-            (1f - MAJOR_TICKS(i)) * 250 - gvb(i).getCenterY.toFloat), false)
+            (1f - MAJOR_TICKS(i)) * lbScale /* 250 */ - gvb(i).getCenterY.toFloat), false)
           i += 1
         }
-        at.setToTranslation(insets.left + labX, insets.top + ascentVar)
-        at.scale(lbScale, lbScale)
+
+        at.setToIdentity()
+        if (vertical) {
+          at.translate(insets.left + labOff, insets.top + ascentVar)
+        } else {
+          at.translate(insets.left + w - ascentVar, insets.top + labOff)
+          at.rotate(PIH)
+        }
         shpLabels = at.createTransformedShape(gp)
       }
     }

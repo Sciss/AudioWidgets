@@ -16,6 +16,8 @@ package j
 
 import java.awt.{Color, Font, Graphics, Insets}
 import java.beans.{PropertyChangeEvent, PropertyChangeListener}
+
+import javax.swing.border.Border
 import javax.swing.{BorderFactory, BoxLayout, JPanel, SwingConstants}
 
 import scala.annotation.switch
@@ -54,16 +56,20 @@ class PeakMeter(orient: Int = SwingConstants.VERTICAL)
 
   setLayout(new BoxLayout(this, BoxLayout.X_AXIS))
 
-  setFont(new Font("SansSerif", Font.PLAIN, 12))
+  setFont({
+    val f0 = new Font("SansSerif", Font.PLAIN, 1)
+    f0.deriveFont(9.6f)
+  })
   addPropertyChangeListener("font", new PropertyChangeListener {
     def propertyChange(e: PropertyChangeEvent): Unit = if (captionComp != null) {
       captionComp.setFont(getFont)
-      val b = BorderFactory.createEmptyBorder(captionComp.ascent, 1, captionComp.descent, 1)
-      var ch = 0
-      while (ch < meters.length) {
-        meters(ch).setBorder(b)
-        ch += 1
-      }
+      updateBorders()
+//      val b = BorderFactory.createEmptyBorder(captionComp.ascent, 1, captionComp.descent, 1)
+//      var ch = 0
+//      while (ch < meters.length) {
+//        meters(ch).setBorder(b)
+//        ch += 1
+//      }
     }
   })
   updateBorders()
@@ -257,36 +263,37 @@ class PeakMeter(orient: Int = SwingConstants.VERTICAL)
 
   // -------------- private methods --------------
 
+  private def mkMeterBorder(): Border =
+    if (caption) {
+      val asc = captionComp.ascent
+      val des = captionComp.descent
+      if (vertical) {
+        BorderFactory.createEmptyBorder(asc, 1, des, 0)
+      } else {
+        BorderFactory.createEmptyBorder(1, des, 0, asc)
+      }
+    } else {
+      if (vertical) {
+        BorderFactory.createEmptyBorder(1, 1, 1, 0)
+      } else {
+        BorderFactory.createEmptyBorder(1, 1, 0, 1)
+      }
+    }
+
   private def rebuildMeters(): Unit = {
     removeAll()
 
-    //    val b1 = if (caption)
-    //      BorderFactory.createEmptyBorder(captionComp.ascent, 1, captionComp.descent, 1)
-    //    else
-    //      null
-
-    val b2 = if (caption)
-      BorderFactory.createEmptyBorder(captionComp.ascent, 1, captionComp.descent, 0)
-    else
-      BorderFactory.createEmptyBorder(1, 1, if (vertical) 1 else 0, if (vertical) 0 else 1)
-
-//		val s1 = if (!borderVisibleVar || (captionVisibleVar && captionPositionVar == RIGHT)) numChannelsVar - 1 else -1
-//		val s2 = if (captionVisibleVar && captionPositionVar == CENTER) numChannelsVar >> 1 else -1
-
-    val newMeters = new Array[PeakMeterBar](numChannels)
-    val numChans  = numChannelsVar
+    val b2        = mkMeterBorder()
+    val numCh     = numChannelsVar
+    val newMeters = new Array[PeakMeterBar](numCh)
     var ch = 0
-    while (ch < numChans) {
+    while (ch < numCh) {
       val m           = new PeakMeterBar(orientVar)
       m.refreshParent = true
       m.rmsPainted    = rmsPaintedVar
       m.holdPainted   = holdPaintedVar
-//      if ((ch == s1) || (ch == s2)) {
-//        if (b1 != null) m.setBorder(b1)
-//      } else {
-        m.setBorder(b2)
-//      }
-      m.ticks = ticksVar // if( caption != null ) ticksVar else 0
+      m.setBorder(b2)
+      m.ticks         = ticksVar
       add(m)
       newMeters(ch) = m
       ch += 1
@@ -305,26 +312,18 @@ class PeakMeter(orient: Int = SwingConstants.VERTICAL)
 
 	private def updateBorders(): Unit = {
     // top left bottom right
-    val b0 = if (borderVisibleVar)
+    val b0 = if (borderVisibleVar) {
       new RecessedBorder()
-    else
-      BorderFactory.createMatteBorder(0, 0, if (vertical) 0 else 1, if (vertical) 1 else 0, Color.black)
+    } else {
+      if (vertical) {
+        BorderFactory.createMatteBorder(0, 0, 0, 1, Color.black)
+      } else {
+        BorderFactory.createMatteBorder(0, 0, 1, 0, Color.black)
+      }
+    }
     setBorder(b0)
 
-    //
-    //		val b1		= if(caption)
-    //      BorderFactory.createEmptyBorder(captionComp.ascent, 1, captionComp.descent, 1)
-    //    else
-    //      BorderFactory.createEmptyBorder(1, 1, 1, 1)
-
-    val b2 = if (caption)
-      BorderFactory.createEmptyBorder(captionComp.ascent, 1, captionComp.descent, 0)
-    else
-      BorderFactory.createEmptyBorder(1, 1, if (vertical) 1 else 0, if (vertical) 0 else 1)
-
-    //    val s1 = if (!borderVisibleVar || (captionVisibleVar && captionPositionVar == RIGHT)) numChannelsVar - 1 else -1
-    //		val s2 = if (captionVisibleVar && captionPositionVar == CENTER) numChannelsVar >> 1 else -1
-
+    val b2 = mkMeterBorder()
     var ch = 0
     while (ch < numChannelsVar) {
       // val b = if ((ch == s1) || (ch == s2)) b1 else b2

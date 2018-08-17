@@ -1,7 +1,7 @@
 lazy val baseName       = "AudioWidgets"
 lazy val baseNameL      = baseName.toLowerCase
 
-lazy val projectVersion = "1.12.1"
+lazy val projectVersion = "1.12.2"
 lazy val mimaVersion    = "1.12.0" // used for migration-manager
 
 lazy val commonSettings = Seq(
@@ -36,6 +36,7 @@ lazy val testSettings = Seq(
 
 lazy val root = project.withId(baseNameL).in(file("."))
   .aggregate(core, swing, app)
+  .dependsOn(core, swing, app)
   .settings(commonSettings)
   .settings(
     packagedArtifacts := Map.empty           // prevent publishing anything!
