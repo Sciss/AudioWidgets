@@ -14,7 +14,7 @@
 package de.sciss.audiowidgets
 
 import de.sciss.model.{Change, Model}
-import de.sciss.span.Span
+import de.sciss.span.{Span, SpanLike}
 import de.sciss.span.Span.SpanOrVoid
 import impl.{TimelineModelImpl => Impl}
 
@@ -23,20 +23,22 @@ object TimelineModel {
   final case class Visible  (model: TimelineModel, span:   Change[Span])       extends Update
   final case class Position (model: TimelineModel, frame:  Change[Long])       extends Update
   final case class Selection(model: TimelineModel, span:   Change[SpanOrVoid]) extends Update
-  final case class Bounds   (model: TimelineModel, span:   Change[Span])       extends Update
+  final case class Bounds   (model: TimelineModel, span:   Change[SpanLike])   extends Update
 
   type Listener = Model.Listener[Update]
 
   trait Modifiable extends TimelineModel {
-    var visible: Span
-    var position: Long
-    var selection: SpanOrVoid
-    var bounds: Span
+    var visible   : Span
+    var position  : Long
+    var selection : SpanOrVoid
+    var bounds    : SpanLike
 
     def modifiableOption: Option[TimelineModel.Modifiable] = Some(this)
   }
 
-  def apply(bounds: Span, sampleRate: Double): Modifiable = new Impl(bounds, sampleRate)
+  def apply(bounds: SpanLike, visible: Span, sampleRate: Double,
+            clipStart: Boolean = true, clipStop: Boolean = true): Modifiable =
+    new Impl(bounds0 = bounds, visible0 = visible, sampleRate = sampleRate, clipStart = clipStart, clipStop = clipStop)
 }
 
 /** A `TimelineModel` encompasses the idea of a timeline based user interface.
@@ -57,7 +59,10 @@ trait TimelineModel extends Model[TimelineModel.Update] {
   /** The current selection in the user interface */
   def selection: SpanOrVoid
   /** The timeline's total time span */
-  def bounds: Span
+  def bounds: SpanLike
+
+  def clipStart: Boolean
+  def clipStop : Boolean
 
   def modifiableOption: Option[TimelineModel.Modifiable]
 }

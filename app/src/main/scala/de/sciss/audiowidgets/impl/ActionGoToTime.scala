@@ -15,13 +15,12 @@ package de.sciss.audiowidgets
 package impl
 
 import java.awt.geom.Path2D
-import javax.swing.KeyStroke
 
 import de.sciss.desktop
 import de.sciss.desktop.{FocusType, KeyStrokes, OptionPane}
 import de.sciss.icons.raphael
-import de.sciss.span.Span
 import de.sciss.swingplus.DoClickAction
+import javax.swing.KeyStroke
 
 import scala.swing.event.Key
 import scala.swing.{Action, BoxPanel, Button, Component, FlowPanel, Orientation, Panel, Swing}
@@ -33,15 +32,16 @@ class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
 
   import model.bounds
 
-  private def mkBut(shape: Path2D => Unit, key: KeyStroke, fun: => Long): Button = {
+  private def mkBut(shape: Path2D => Unit, key: KeyStroke, fun: => Option[Long]): Button = {
     val action = new Action(null) {
       icon = raphael.TexturedIcon(20)(shape)
 
-      def apply(): Unit = {
-        ggTime.value = fun
+      def apply(): Unit = fun.foreach { value =>
+        ggTime.value = value
         ggFocus.requestFocus()
       }
     }
+    action.enabled = fun.isDefined
     val but = new Button(action)
     import desktop.Implicits._
     val clickCurr = DoClickAction(but)
@@ -54,9 +54,9 @@ class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
     import KeyStrokes.menu1
     // meta-left and meta-right would have been better, but
     // somehow the text-field blocks these inputs
-    val ggStart   = mkBut(raphael.Shapes.TransportBegin, menu1 + Key.Comma , bounds.start  )
-    val ggCurrent = mkBut(raphael.Shapes.Location      , menu1 + Key.Period, model.position)
-    val ggEnd     = mkBut(raphael.Shapes.TransportEnd  , menu1 + Key.Slash , bounds.stop   )
+    val ggStart   = mkBut(raphael.Shapes.TransportBegin, menu1 + Key.Comma , bounds.startOption)
+    val ggCurrent = mkBut(raphael.Shapes.Location      , menu1 + Key.Period, Some(model.position))
+    val ggEnd     = mkBut(raphael.Shapes.TransportEnd  , menu1 + Key.Slash , bounds.stopOption)
     val res       = new FlowPanel(ggStart, ggCurrent, ggEnd)
     res.hGap = 0
     res.vGap = 0
@@ -64,8 +64,9 @@ class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
   }
 
   private[this] lazy val ggTime: ParamField[Long] =
-    new TimeField(value0 = model.bounds match { case hs: Span.HasStart => hs.start; case _ => 0L },
-      span0 = model.bounds, sampleRate = model.sampleRate)
+    new TimeField(value0 = model.bounds.startOrElse(model.bounds.clip(0L)), span0 = model.bounds,
+      sampleRate = model.sampleRate, viewSampleRate0 = 0.0,
+      clipStart = model.clipStart, clipStop = model.clipStop)
 
   private def ggFocus: Component = ggTime.textField
 

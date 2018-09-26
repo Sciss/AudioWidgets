@@ -14,21 +14,23 @@
 package de.sciss.audiowidgets
 package impl
 
-import scala.swing.{Action, Component}
-import de.sciss.desktop.{FocusType, KeyStrokes}
 import de.sciss.desktop
-import javax.swing.KeyStroke
+import de.sciss.desktop.{FocusType, KeyStrokes}
 import de.sciss.span.Span
+import javax.swing.KeyStroke
+
+import scala.math.{max, min}
 import scala.swing.event.Key
+import scala.swing.{Action, Component}
 
 object TimelineNavigation {
   /** Installs standard keyboard commands for navigating a timeline model.
     * These commands are enabled when the `component` is inside the focused window.
     */
   def install(model: TimelineModel.Modifiable, component: Component): Unit = {
+    import FocusType.{Window => Focus}
     import KeyStrokes._
     import desktop.Implicits._
-    import FocusType.{Window => Focus}
 
     // ---- zoom ----
     component.addAction("timeline-inc-h1"  , new ActionSpanWidth(model, 2.0, ctrl  + Key.Left        ), Focus)
@@ -54,55 +56,63 @@ object TimelineNavigation {
     component.addAction("timeline-sel-to-end", new ActionSelect(model, ExtendToBoundsStop , shift + alt + Key.Enter), Focus)
     component.addAction("timeline-sel-all"   , new ActionSelect(model, All, menu1 + Key.A), FocusType.Default)
 
-    component.addAction("timeline-go-to-time", new ActionGoToTime(model, plain + Key.G), Focus)
+    component.addAction("timeline-go-to-time", new ActionGoToTime(model, stroke = plain + Key.G), Focus)
   }
 
-  private class ActionSpanWidth(model: TimelineModel.Modifiable, factor: Double, stroke: KeyStroke)
+  private def minStart(model: TimelineModel): Long = 
+    if (model.clipStart) model.bounds.startOrElse (-0x2000000000000000L) else -0x2000000000000000L
+  
+  private def maxStop (model: TimelineModel): Long = 
+    if (model.clipStop ) model.bounds.stopOrElse  (+0x2000000000000000L) else +0x2000000000000000L
+
+  final protected class ActionSpanWidth(model: TimelineModel.Modifiable, factor: Double, stroke: KeyStroke)
     extends Action(s"Span Width $factor") {
 
     accelerator = Some(stroke)
 
     def apply(): Unit = {
-      val visiSpan    = model.visible
-      val visiLen     = visiSpan.length
+      val visSpan     = model.visible
+      val visLen      = visSpan.length
       val pos         = model.position
 
-      val newVisiSpan = if (factor < 1.0) {
+      val newVisSpan = if (factor < 1.0) {
         // zoom in
-        if (visiLen < 4) Span.Void
+        if (visLen < 4) Span.Void
         else {
           // if timeline pos visible -> try to keep it's relative position constant
-          if (visiSpan.contains(pos)) {
-            val start = pos - ((pos - visiSpan.start) * factor + 0.5).toLong
-            val stop = start + (visiLen * factor + 0.5).toLong
+          if (visSpan.contains(pos)) {
+            val start = pos - ((pos - visSpan.start) * factor + 0.5).toLong
+            val stop = start + (visLen * factor + 0.5).toLong
             Span(start, stop)
             // if timeline pos before visible span, zoom left hand
-          } else if (visiSpan.start > pos) {
-            val start = visiSpan.start
-            val stop = start + (visiLen * factor + 0.5).toLong
+          } else if (visSpan.start > pos) {
+            val start = visSpan.start
+            val stop = start + (visLen * factor + 0.5).toLong
             Span(start, stop)
             // if timeline pos after visible span, zoom right hand
           } else {
-            val stop = visiSpan.stop
-            val start = stop - (visiLen * factor + 0.5).toLong
+            val stop = visSpan.stop
+            val start = stop - (visLen * factor + 0.5).toLong
             Span(start, stop)
           }
         }
       } else {
         // zoom out
-        val total = model.bounds
-        val start = math.max(total.start, visiSpan.start - (visiLen * factor / 4 + 0.5).toLong)
-        val stop  = math.min(total.stop,  start + (visiLen * factor + 0.5).toLong)
+        val start0    = visSpan.start - (visLen * factor / 4 + 0.5).toLong
+        val start     = max(minStart(model), start0)
+        val stop0     = start + (visLen * factor + 0.5).toLong
+        val stop      = min(maxStop(model),  stop0)
         Span(start, stop)
       }
-      newVisiSpan match {
+      newVisSpan match {
         case sp @ Span(_, _) if sp.nonEmpty => model.visible = sp
         case _ =>
       }
     }
   }
 
-  private class ActionSelToPos(model: TimelineModel.Modifiable, weight: Double, deselect: Boolean, stroke: KeyStroke)
+  final protected class ActionSelToPos(model: TimelineModel.Modifiable, weight: Double, deselect: Boolean,
+                                       stroke: KeyStroke)
     extends Action("Extends Selection to Position") {
 
     accelerator = Some(stroke)
@@ -119,7 +129,7 @@ object TimelineNavigation {
     }
   }
 
-  private object ActionScroll {
+  protected object ActionScroll {
     sealed trait Mode
     case object BoundsStart     extends Mode
     sealed trait NotBoundsStart extends Mode
@@ -129,7 +139,7 @@ object TimelineNavigation {
     case object EntireBounds    extends NotBoundsStart
    }
 
-  private class ActionScroll(model: TimelineModel.Modifiable, mode: ActionScroll.Mode, stroke: KeyStroke)
+  final protected class ActionScroll(model: TimelineModel.Modifiable, mode: ActionScroll.Mode, stroke: KeyStroke)
     extends Action("Scroll") {
 
     accelerator = Some(stroke)
@@ -138,20 +148,21 @@ object TimelineNavigation {
 
     def apply(): Unit = {
       val pos       = model.position
-      val visiSpan  = model.visible
+      val visSpan   = model.visible
       val wholeSpan = model.bounds
 
       mode match {
         case BoundsStart =>
-        //             if( transport.isRunning ) transport.stop
-        val posNotZero = pos != wholeSpan.start
-        val zeroNotVisi = !visiSpan.contains(wholeSpan.start)
-        if (posNotZero || zeroNotVisi) {
-          if (posNotZero) model.position = wholeSpan.start
-          if (zeroNotVisi) {
-            model.visible = Span(wholeSpan.start, wholeSpan.start + visiSpan.length)
+          wholeSpan.startOption.foreach { start =>
+            val posNotZero = pos != start
+            val zeroNotVis = !visSpan.contains(start)
+            if (posNotZero || zeroNotVis) {
+              if (posNotZero) model.position = start
+              if (zeroNotVis) {
+                model.visible = Span(start, start + visSpan.length)
+              }
+            }
           }
-        }
 
         case mode2: NotBoundsStart =>
           val selSpan = model.selection
@@ -161,9 +172,9 @@ object TimelineNavigation {
                 case Span.HasStart(s) => s
                 case _                => pos
               }
-              val start = math.max(wholeSpan.start, selSpanStart - (visiSpan.length >>
-                (if (visiSpan.contains(selSpanStart)) 1 else 3)))
-              val stop = math.min(wholeSpan.stop, start + visiSpan.length)
+              val start0    = selSpanStart - (visSpan.length >> (if (visSpan.contains(selSpanStart)) 1 else 3))
+              val start     = max(minStart(model), start0)
+              val stop      = min(maxStop (model), start + visSpan.length)
               Span(start, stop)
 
             case SelectionStop =>
@@ -171,16 +182,16 @@ object TimelineNavigation {
                 case Span.HasStop(s)  => s
                 case _                => pos
               }
-              val stop = math.min(wholeSpan.stop, selSpanStop + (visiSpan.length >>
-                (if (visiSpan.contains(selSpanStop)) 1 else 3)))
-              val start = math.max(wholeSpan.start, stop - visiSpan.length)
+              val stop0 = selSpanStop + (visSpan.length >> (if (visSpan.contains(selSpanStop)) 1 else 3))
+              val stop  = min(maxStop(model), stop0)
+              val start = max(minStart(model), stop - visSpan.length)
               Span(start, stop)
 
             case FitToSelection => selSpan
             case EntireBounds   => wholeSpan
           }
           newSpan match {
-            case sp @ Span(_, _) if sp.nonEmpty && sp != visiSpan =>
+            case sp: Span if sp.nonEmpty && sp != visSpan =>
               model.visible = sp
             case _ =>
           }
@@ -188,7 +199,7 @@ object TimelineNavigation {
     }
   }
 
-  private object ActionSelect {
+  protected object ActionSelect {
     sealed trait Mode
     case object ExtendToBoundsStart extends Mode
     case object ExtendToBoundsStop  extends Mode
@@ -197,7 +208,7 @@ object TimelineNavigation {
     case object FlipForward         extends Mode
    }
 
- private class ActionSelect(model: TimelineModel.Modifiable, mode: ActionSelect.Mode, stroke: KeyStroke = null)
+ final protected class ActionSelect(model: TimelineModel.Modifiable, mode: ActionSelect.Mode, stroke: KeyStroke = null)
    extends Action("Select") {
 
    accelerator = Option(stroke)
@@ -213,14 +224,27 @@ object TimelineNavigation {
 
      val wholeSpan  = model.bounds
      val newSpan    = mode match {
-       case ExtendToBoundsStart => Span(wholeSpan.start, selSpan.stop)
-       case ExtendToBoundsStop  => Span(selSpan.start, wholeSpan.stop)
-       case All                 => wholeSpan
+       case ExtendToBoundsStart =>
+         wholeSpan.startOption.fold(selSpan)(start => Span(start, selSpan.stop))
+       
+       case ExtendToBoundsStop => 
+         wholeSpan.stopOption.fold(selSpan)(stop => Span(selSpan.start, stop))
+       
+       case All => wholeSpan match {
+         case sp: Span  => sp
+         case _         => selSpan
+       }
+         
        case FlipBackward =>
-         val delta = -math.min(selSpan.start - wholeSpan.start, selSpan.length)
+         val delta0 = -selSpan.length
+         val delta  = if (!model.clipStart) delta0 else 
+           wholeSpan.startOption.fold(delta0)(start => max(start - selSpan.start, delta0))
          selSpan.shift(delta)
+       
        case FlipForward =>
-         val delta = math.min(wholeSpan.stop - selSpan.stop, selSpan.length)
+         val delta0 = selSpan.length
+         val delta  = if (!model.clipStop) delta0 else
+           wholeSpan.stopOption.fold(delta0)(stop => min(stop - selSpan.stop, delta0))
          selSpan.shift(delta)
      }
      if (newSpan != selSpan) model.selection = newSpan

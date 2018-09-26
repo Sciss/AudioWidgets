@@ -27,11 +27,12 @@ object App extends SwingApplicationImpl("AudioWidgets") {
 
       title = "Application Demo"
 
-      // println("CREATE WIN")
       val canvas: TimelineCanvas = new TimelineCanvasImpl {
-        // println("INIT SUB")
         /** The underlying model */
-        val timelineModel = TimelineModel(Span(0, (sampleRate * 60).toLong), sampleRate)
+        val timelineModel: TimelineModel = {
+          val span0 = Span(0, (sampleRate * 60).toLong)
+          TimelineModel(bounds = span0, visible = span0, sampleRate = sampleRate, clipStop = false)
+        }
 
         /** The corresponding Swing component */
         lazy val canvasComponent: Component = new Component {

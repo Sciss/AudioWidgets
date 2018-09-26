@@ -15,25 +15,26 @@ package de.sciss.audiowidgets
 package impl
 
 import de.sciss.model.impl.ModelImpl
-import de.sciss.span.Span
+import de.sciss.span.{Span, SpanLike}
 import de.sciss.span.Span.SpanOrVoid
 import de.sciss.model.Change
 
-final class TimelineModelImpl(bounds0: Span, val sampleRate: Double)
+final class TimelineModelImpl(bounds0: SpanLike, visible0: Span,
+                              val sampleRate: Double, val clipStart: Boolean, val clipStop: Boolean)
   extends TimelineModel.Modifiable with ModelImpl[TimelineModel.Update] {
 
   import TimelineModel._
 
-  private var _total  = bounds0
-  private var _visi   = bounds0
-  private var _pos    = bounds0.start
-  private var _sel    = Span.Void: SpanOrVoid
+  private[this] var _total  = bounds0
+  private[this] var _vis    = visible0
+  private[this] var _pos    = bounds0.startOrElse(bounds0.clip(0L))
+  private[this] var _sel    = Span.Void: SpanOrVoid
 
-  def visible: Span = _visi
+  def visible: Span = _vis
   def visible_=(value: Span): Unit = {
-    val oldSpan = _visi
+    val oldSpan = _vis
     if (oldSpan != value) {
-      _visi = value
+      _vis = value
       val visiCh  = Change(oldSpan, value)
       //      val oldPos  = _pos
       //      if (oldPos < value.start || oldPos > value.stop) {
@@ -63,8 +64,8 @@ final class TimelineModelImpl(bounds0: Span, val sampleRate: Double)
     }
   }
 
-  def bounds: Span = _total
-  def bounds_=(value: Span): Unit = {
+  def bounds: SpanLike = _total
+  def bounds_=(value: SpanLike): Unit = {
     val oldTot = _total
     if (oldTot != value) {
       _total = value

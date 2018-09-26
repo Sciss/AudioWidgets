@@ -87,13 +87,15 @@ trait TimelineCanvasImpl extends TimelineCanvas {
   }
 
   // lazy because of `timelineModel`
-  private[this] final lazy val timeAxis = new Axis {
+  private[this] final lazy val timeAxis: Axis = new Axis {
     override protected def paintComponent(g: Graphics2D): Unit = {
       super.paintComponent(g)
       paintPosAndSelection(g, peer.getHeight)
     }
-    private val maxSecs = timelineModel.bounds.stop  / timelineModel.sampleRate
-    format              = AxisFormat.Time(hours = maxSecs >= 3600.0, millis = true)
+    format = {
+      val hours = timelineModel.bounds.stopOption.forall(stop => (stop / timelineModel.sampleRate) >= 3600.0)
+      AxisFormat.Time(hours = hours, millis = true)
+    }
 
     listenTo(mouse.clicks)
     listenTo(mouse.moves)
@@ -168,38 +170,52 @@ trait TimelineCanvasImpl extends TimelineCanvas {
   private def updateScroll(): Unit = {
     val trackWidth      = math.max(1, scroll.peer.getWidth - 32)  // TODO XXX stupid hard coded value. but how to read it?
     val vis             = timelineModel.visible
-    val total           = timelineModel.bounds
-    val framesPerPixel  = math.max(1, ((total.length + (trackWidth >> 1)) / trackWidth).toInt)
-    val max             = math.min(0x3FFFFFFFL, total.length / framesPerPixel).toInt
-    val pos             = math.min(max - 1, (vis.start - total.start) / framesPerPixel).toInt
-    val visAmt          = math.min(max - pos, vis.length / framesPerPixel).toInt
-    val blockInc        = math.max(1, visAmt * 4 / 5)
 
     // __DO NOT USE deafTo and listenTo__ there must be a bug in scala-swing,
     // because that quickly overloads the AWT event multi-caster with stack overflows.
     //    deafTo(scroll)
     val l = pane.isListeningP
     if (l) scroll.reactions -= scrollListener
-    scroll.maximum        = max
-    scroll.visibleAmount  = visAmt
-    scroll.value          = pos
-    scroll.blockIncrement = blockInc
-    //    listenTo(scroll)
+
+    timelineModel.bounds match {
+      case total: Span =>
+        val framesPerPixel  = math.max(1, ((total.length + (trackWidth >> 1)) / trackWidth).toInt)
+        val max             = math.min(0x3FFFFFFFL, total.length / framesPerPixel).toInt
+        val pos             = math.min(max - 1, (vis.start - total.start) / framesPerPixel).toInt
+        val visAmt          = math.min(max - pos, vis.length / framesPerPixel).toInt
+        val blockInc        = math.max(1, visAmt * 4 / 5)
+
+        scroll.maximum        = max
+        scroll.visibleAmount  = visAmt
+        scroll.value          = pos
+        scroll.blockIncrement = blockInc
+
+      case _ =>
+        scroll.maximum        = 0x3FFFFFFF
+        scroll.visibleAmount  = 0x3FFFFFFF
+        scroll.value          = 0
+        scroll.blockIncrement = 1
+    }
+
     if (l) scroll.reactions += scrollListener
   }
 
   private def updateFromScroll(model: TimelineModel.Modifiable): Unit = {
-    val vis     = model.visible
-    val total   = model.bounds
-    val pos     = math.min(total.stop - vis.length,
-      ((scroll.value.toDouble / scroll.maximum) * total.length + 0.5).toLong)
-    val l       = pane.isListeningP
-    if (l) model.removeListener(timelineListener)
-    val newVis  = Span(pos, pos + vis.length)
-    model.visible = newVis
-    updateAxis()
-    repaint()
-    if (l) model.addListener(timelineListener)
+    model.bounds match {
+      case total: Span =>
+        val vis = model.visible
+        val pos = math.min(total.stop - vis.length,
+          ((scroll.value.toDouble / scroll.maximum) * total.length + 0.5).toLong)
+        val l       = pane.isListeningP
+        if (l) model.removeListener(timelineListener)
+        val newVis  = Span(pos, pos + vis.length)
+        model.visible = newVis
+        updateAxis()
+        repaint()
+        if (l) model.addListener(timelineListener)
+
+      case _ =>
+    }
   }
 
   private[this] final lazy val timePane = new BoxPanel(Orientation.Horizontal) {
@@ -238,7 +254,7 @@ trait TimelineCanvasImpl extends TimelineCanvas {
 
   final def component: Component = pane
 
-  private val timelineListener: TimelineModel.Listener = {
+  private[this] val timelineListener: TimelineModel.Listener = {
     case TimelineModel.Visible(_, _ /* span */) =>
       updateAxis()
       updateScroll()
