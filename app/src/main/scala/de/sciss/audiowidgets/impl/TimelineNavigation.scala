@@ -59,10 +59,10 @@ object TimelineNavigation {
     component.addAction("timeline-go-to-time", new ActionGoToTime(model, stroke = plain + Key.G), Focus)
   }
 
-  private def minStart(model: TimelineModel): Long = 
+  def minStart(model: TimelineModel): Long =
     if (model.clipStart) model.bounds.startOrElse (-0x2000000000000000L) else -0x2000000000000000L
   
-  private def maxStop (model: TimelineModel): Long = 
+  def maxStop (model: TimelineModel): Long =
     if (model.clipStop ) model.bounds.stopOrElse  (+0x2000000000000000L) else +0x2000000000000000L
 
   final protected class ActionSpanWidth(model: TimelineModel.Modifiable, factor: Double, stroke: KeyStroke)
