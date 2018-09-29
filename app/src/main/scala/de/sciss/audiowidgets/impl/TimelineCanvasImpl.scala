@@ -14,15 +14,18 @@
 package de.sciss.audiowidgets
 package impl
 
-import java.awt.{Graphics2D, Rectangle, TexturePaint, Color}
 import java.awt.image.BufferedImage
-import de.sciss.span.Span
-import scala.swing.event.{UIElementResized, ValueChanged, MouseDragged, Key, MousePressed}
-import scala.swing.{Swing, BoxPanel, BorderPanel, Component, Reactions, Orientation}
-import de.sciss.swingplus.ScrollBar
-import de.sciss.model.Change
+import java.awt.{Color, Graphics2D, Rectangle, TexturePaint}
+
 import de.sciss.desktop.impl.DynamicComponentImpl
-import Swing._
+import de.sciss.model.Change
+import de.sciss.span.Span
+import de.sciss.swingplus.ScrollBar
+
+import scala.math.{max, min}
+import scala.swing.Swing._
+import scala.swing.event.{Key, MouseDragged, MousePressed, UIElementResized, ValueChanged}
+import scala.swing.{BorderPanel, BoxPanel, Component, Orientation, Reactions}
 
 object TimelineCanvasImpl {
   private sealed trait      AxisMouseAction
@@ -86,16 +89,16 @@ trait TimelineCanvasImpl extends TimelineCanvas {
     }
   }
 
+  protected def hours: Boolean = !timelineModel.clipStop ||
+    timelineModel.bounds.stopOption.forall(stop => (stop / timelineModel.sampleRate) >= 3600.0)
+
   // lazy because of `timelineModel`
   private[this] final lazy val timeAxis: Axis = new Axis {
     override protected def paintComponent(g: Graphics2D): Unit = {
       super.paintComponent(g)
       paintPosAndSelection(g, peer.getHeight)
     }
-    format = {
-      val hours = timelineModel.bounds.stopOption.forall(stop => (stop / timelineModel.sampleRate) >= 3600.0)
-      AxisFormat.Time(hours = hours, millis = true)
-    }
+    format = AxisFormat.Time(hours = hours, millis = true)
 
     listenTo(mouse.clicks)
     listenTo(mouse.moves)
@@ -167,8 +170,8 @@ trait TimelineCanvasImpl extends TimelineCanvas {
     vis.clip(frame.toLong)
   }
 
-  private def updateScroll(): Unit = {
-    val trackWidth      = math.max(1, scroll.peer.getWidth - 32)  // TODO XXX stupid hard coded value. but how to read it?
+  private def updateFromModel(): Unit = {
+    val trackWidth      = max(1, scroll.peer.getWidth - 32)  // TODO XXX stupid hard coded value. but how to read it?
     val vis             = timelineModel.visible
 
     // __DO NOT USE deafTo and listenTo__ there must be a bug in scala-swing,
@@ -177,45 +180,33 @@ trait TimelineCanvasImpl extends TimelineCanvas {
     val l = pane.isListeningP
     if (l) scroll.reactions -= scrollListener
 
-    timelineModel.bounds match {
-      case total: Span =>
-        val framesPerPixel  = math.max(1, ((total.length + (trackWidth >> 1)) / trackWidth).toInt)
-        val max             = math.min(0x3FFFFFFFL, total.length / framesPerPixel).toInt
-        val pos             = math.min(max - 1, (vis.start - total.start) / framesPerPixel).toInt
-        val visAmt          = math.min(max - pos, vis.length / framesPerPixel).toInt
-        val blockInc        = math.max(1, visAmt * 4 / 5)
+    val total           = timelineModel.virtual
+    val framesPerPixel  = max(1, ((total.length + (trackWidth >> 1)) / trackWidth).toInt)
+    val _max            = min(0x3FFFFFFFL, total.length / framesPerPixel).toInt
+    val pos             = min(_max - 1, (vis.start - total.start) / framesPerPixel).toInt
+    val visAmt          = min(_max - pos, vis.length / framesPerPixel).toInt
+    val blockInc        = max(1, visAmt * 4 / 5)
 
-        scroll.maximum        = max
-        scroll.visibleAmount  = visAmt
-        scroll.value          = pos
-        scroll.blockIncrement = blockInc
-
-      case _ =>
-        scroll.maximum        = 0x3FFFFFFF
-        scroll.visibleAmount  = 0x3FFFFFFF
-        scroll.value          = 0
-        scroll.blockIncrement = 1
-    }
+    scroll.maximum        = _max
+    scroll.visibleAmount  = visAmt
+    scroll.value          = pos
+    scroll.blockIncrement = blockInc
 
     if (l) scroll.reactions += scrollListener
   }
 
   private def updateFromScroll(model: TimelineModel.Modifiable): Unit = {
-    model.bounds match {
-      case total: Span =>
-        val vis = model.visible
-        val pos = math.min(total.stop - vis.length,
-          ((scroll.value.toDouble / scroll.maximum) * total.length + 0.5).toLong)
-        val l       = pane.isListeningP
-        if (l) model.removeListener(timelineListener)
-        val newVis  = Span(pos, pos + vis.length)
-        model.visible = newVis
-        updateAxis()
-        repaint()
-        if (l) model.addListener(timelineListener)
-
-      case _ =>
-    }
+    val total = model.virtual
+    val vis   = model.visible
+    val pos   = min(total.stop - vis.length,
+      ((scroll.value.toDouble / scroll.maximum) * total.length + 0.5).toLong)
+    val l       = pane.isListeningP
+    if (l) model.removeListener(timelineListener)
+    val newVis  = Span(pos, pos + vis.length)
+    model.visible = newVis
+    updateAxis()
+    repaint()
+    if (l) model.addListener(timelineListener)
   }
 
   private[this] final lazy val timePane = new BoxPanel(Orientation.Horizontal) {
@@ -230,7 +221,7 @@ trait TimelineCanvasImpl extends TimelineCanvas {
   protected def componentShown(): Unit = {
     timelineModel.addListener(timelineListener)
     updateAxis()
-    updateScroll()  // this adds scrollListener in the end
+    updateFromModel()  // this adds scrollListener in the end
   }
   protected def componentHidden(): Unit = {
     timelineModel.removeListener(timelineListener)
@@ -255,16 +246,16 @@ trait TimelineCanvasImpl extends TimelineCanvas {
   final def component: Component = pane
 
   private[this] val timelineListener: TimelineModel.Listener = {
-    case TimelineModel.Visible(_, _ /* span */) =>
+    case _: TimelineModel.Visible | _: TimelineModel.Virtual =>
       updateAxis()
-      updateScroll()
+      updateFromModel()
       repaint()  // XXX TODO: optimize dirty region / copy double buffer
 
     case TimelineModel.Position(_, Change(before, now)) =>
-      val mn = math.min(before, now)
-      val mx = math.max(before, now)
-      val x0 = math.max(0                            , frameToScreen(mn).toInt - 1) // the `-1` is needed for shitty macOS retina display
-      val x1 = math.min(canvasComponent.peer.getWidth, frameToScreen(mx).toInt + 1)
+      val mn = min(before, now)
+      val mx = max(before, now)
+      val x0 = max(0                            , frameToScreen(mn).toInt - 1) // the `-1` is needed for shitty macOS retina display
+      val x1 = min(canvasComponent.peer.getWidth, frameToScreen(mx).toInt + 1)
       if (x0 < x1) {
         r.x      = x0
         r.width  = x1 - x0
@@ -284,7 +275,7 @@ trait TimelineCanvasImpl extends TimelineCanvas {
 
   private[this] final val scrollListener: Reactions.Reaction = {
     case UIElementResized(_) =>
-      updateScroll()
+      updateFromModel()
 
     case ValueChanged(_) =>
       timelineModel.modifiableOption.foreach(updateFromScroll)
@@ -297,7 +288,7 @@ trait TimelineCanvasImpl extends TimelineCanvas {
       case AxisPosition =>
         model.position = frame
       case AxisSelection(fix) =>
-        val span = Span(math.min(frame, fix), math.max(frame, fix))
+        val span = Span(min(frame, fix), max(frame, fix))
         model.selection = if (span.isEmpty) Span.Void else span
     }
 }

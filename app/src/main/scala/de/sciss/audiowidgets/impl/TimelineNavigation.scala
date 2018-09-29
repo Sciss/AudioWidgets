@@ -16,7 +16,7 @@ package impl
 
 import de.sciss.desktop
 import de.sciss.desktop.{FocusType, KeyStrokes}
-import de.sciss.span.Span
+import de.sciss.span.{Span, SpanLike}
 import javax.swing.KeyStroke
 
 import scala.math.{max, min}
@@ -61,8 +61,8 @@ object TimelineNavigation {
 
   def minStart(model: TimelineModel): Long =
     if (model.clipStart) model.bounds.startOrElse (-0x2000000000000000L) else -0x2000000000000000L
-  
-  def maxStop (model: TimelineModel): Long =
+
+  def maxStop(model: TimelineModel): Long =
     if (model.clipStop ) model.bounds.stopOrElse  (+0x2000000000000000L) else +0x2000000000000000L
 
   final protected class ActionSpanWidth(model: TimelineModel.Modifiable, factor: Double, stroke: KeyStroke)
@@ -75,12 +75,11 @@ object TimelineNavigation {
       val visLen      = visSpan.length
       val pos         = model.position
 
-      val newVisSpan = if (factor < 1.0) {
+      if (factor < 1.0) {
         // zoom in
-        if (visLen < 4) Span.Void
-        else {
+        if (visLen >= 4) {
           // if timeline pos visible -> try to keep it's relative position constant
-          if (visSpan.contains(pos)) {
+          val newVisSpan = if (visSpan.contains(pos)) {
             val start = pos - ((pos - visSpan.start) * factor + 0.5).toLong
             val stop = start + (visLen * factor + 0.5).toLong
             Span(start, stop)
@@ -95,18 +94,16 @@ object TimelineNavigation {
             val start = stop - (visLen * factor + 0.5).toLong
             Span(start, stop)
           }
+          model.setVisibleReduceVirtual(newVisSpan)
         }
       } else {
         // zoom out
-        val start0    = visSpan.start - (visLen * factor / 4 + 0.5).toLong
-        val start     = max(minStart(model), start0)
-        val stop0     = start + (visLen * factor + 0.5).toLong
-        val stop      = min(maxStop(model),  stop0)
-        Span(start, stop)
-      }
-      newVisSpan match {
-        case sp @ Span(_, _) if sp.nonEmpty => model.visible = sp
-        case _ =>
+        val start0      = visSpan.start - (visLen * factor / 4 + 0.5).toLong
+        val start       = max(minStart(model), start0)
+        val stop0       = start + (visLen * factor + 0.5).toLong
+        val stop        = min(maxStop(model),  stop0)
+        val newVisSpan  = Span(start, stop)
+        model.setVisibleExtendVirtual(newVisSpan)
       }
     }
   }
@@ -146,55 +143,54 @@ object TimelineNavigation {
 
     import ActionScroll._
 
-    def apply(): Unit = {
-      val pos       = model.position
-      val visSpan   = model.visible
-      val wholeSpan = model.bounds
+    private def trySetSpan(spl: SpanLike): Unit = spl match {
+      case sp: Span if sp.nonEmpty =>
+        model.setVisibleReduceVirtual(sp)
+      case _ =>
+    }
 
+    def apply(): Unit = {
       mode match {
         case BoundsStart =>
-          wholeSpan.startOption.foreach { start =>
-            val posNotZero = pos != start
+          model.bounds.startOption.foreach { start =>
+            val visSpan     = model.visible
+            val posNotZero  = model.position != start
             val zeroNotVis = !visSpan.contains(start)
             if (posNotZero || zeroNotVis) {
               if (posNotZero) model.position = start
               if (zeroNotVis) {
-                model.visible = Span(start, start + visSpan.length)
+                val newSpan = Span(start, start + visSpan.length)
+                model.setVisibleExtendVirtual(newSpan)
               }
             }
           }
 
-        case mode2: NotBoundsStart =>
-          val selSpan = model.selection
-          val newSpan = mode2 match {
-            case SelectionStart =>
-              val selSpanStart = selSpan match {
-                case Span.HasStart(s) => s
-                case _                => pos
-              }
-              val start0    = selSpanStart - (visSpan.length >> (if (visSpan.contains(selSpanStart)) 1 else 3))
-              val start     = max(minStart(model), start0)
-              val stop      = min(maxStop (model), start + visSpan.length)
-              Span(start, stop)
+          case SelectionStart =>
+            val selSpanStart = model.selection match {
+              case Span.HasStart(s) => s
+              case _                => model.position
+            }
+            val visSpan     = model.visible
+            val start0      = selSpanStart - (visSpan.length >> (if (visSpan.contains(selSpanStart)) 1 else 3))
+            val start       = max(minStart(model), start0)
+            val stop        = min(maxStop (model), start + visSpan.length)
+            val newVisSpan  = Span(start, stop)
+            model.setVisibleExtendVirtual(newVisSpan)
 
-            case SelectionStop =>
-              val selSpanStop = selSpan match {
-                case Span.HasStop(s)  => s
-                case _                => pos
-              }
-              val stop0 = selSpanStop + (visSpan.length >> (if (visSpan.contains(selSpanStop)) 1 else 3))
-              val stop  = min(maxStop(model), stop0)
-              val start = max(minStart(model), stop - visSpan.length)
-              Span(start, stop)
+          case SelectionStop =>
+            val selSpanStop = model.selection match {
+              case Span.HasStop(s)  => s
+              case _                => model.position
+            }
+            val visSpan     = model.visible
+            val stop0       = selSpanStop + (visSpan.length >> (if (visSpan.contains(selSpanStop)) 1 else 3))
+            val stop        = min(maxStop(model), stop0)
+            val start       = max(minStart(model), stop - visSpan.length)
+            val newVisSpan  = Span(start, stop)
+            model.setVisibleExtendVirtual(newVisSpan)
 
-            case FitToSelection => selSpan
-            case EntireBounds   => wholeSpan
-          }
-          newSpan match {
-            case sp: Span if sp.nonEmpty && sp != visSpan =>
-              model.visible = sp
-            case _ =>
-          }
+          case FitToSelection => trySetSpan(model.selection)
+          case EntireBounds   => trySetSpan(model.bounds)
       }
     }
   }

@@ -1,6 +1,6 @@
 package de.sciss.audiowidgets
 
-import java.awt.Graphics2D
+import java.awt.{Color, Graphics2D}
 
 import de.sciss.audiowidgets.impl.TimelineCanvasImpl
 import de.sciss.desktop.impl.{SwingApplicationImpl, WindowImpl}
@@ -31,8 +31,18 @@ object App extends SwingApplicationImpl("AudioWidgets") {
         /** The underlying model */
         val timelineModel: TimelineModel = {
           val span0 = Span(0, (sampleRate * 60).toLong)
-          TimelineModel(bounds = span0, visible = span0, sampleRate = sampleRate, clipStop = false)
+          TimelineModel(bounds = span0, visible = span0, virtual = span0, sampleRate = sampleRate, clipStop = false)
         }
+
+        timelineModel.addListener {
+          case TimelineModel.Position (_, p)   => println(s"position  = $p")
+          case TimelineModel.Visible  (_, sp)  => println(s"visible   = $sp")
+          case TimelineModel.Selection(_, sp)  => println(s"selection = $sp")
+          case TimelineModel.Virtual  (_, sp)  => println(s"virtual   = $sp")
+          case TimelineModel.Bounds   (_, sp)  => println(s"bounds    = $sp")
+        }
+
+        val objSpan = Span((sampleRate * 4).toLong, (sampleRate * 30).toLong)
 
         /** The corresponding Swing component */
         lazy val canvasComponent: Component = new Component {
@@ -43,6 +53,10 @@ object App extends SwingApplicationImpl("AudioWidgets") {
             val w = this.width
             val h = this.height
             g.fillRect(0, 0, w, h)
+            val x1 = frameToScreen(objSpan.start).toInt
+            val x2 = frameToScreen(objSpan.stop ).toInt
+            g.setColor(if (objSpan.contains(timelineModel.position)) Color.red else Color.orange)
+            g.fillRect(x1, 10, x2 - x1, 100)
             paintPosAndSelection(g, h)
           }
         }

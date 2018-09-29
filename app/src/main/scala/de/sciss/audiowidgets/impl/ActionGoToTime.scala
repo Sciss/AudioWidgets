@@ -30,7 +30,7 @@ class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
 
   accelerator = Option(stroke)
 
-  import model.bounds
+  import model.{bounds => bounds}
 
   private def mkBut(shape: Path2D => Unit, key: KeyStroke, fun: => Option[Long]): Button = {
     val action = new Action(null) {
@@ -64,7 +64,7 @@ class ActionGoToTime(model: TimelineModel.Modifiable, stroke: KeyStroke)
   }
 
   private[this] lazy val ggTime: ParamField[Long] =
-    new TimeField(value0 = model.bounds.startOrElse(model.bounds.clip(0L)), span0 = model.bounds,
+    new TimeField(value0 = bounds.startOrElse(bounds.clip(0L)), span0 = bounds,
       sampleRate = model.sampleRate, viewSampleRate0 = 0.0,
       clipStart = model.clipStart, clipStop = model.clipStop)
 
