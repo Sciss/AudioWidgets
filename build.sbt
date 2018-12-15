@@ -1,17 +1,17 @@
 lazy val baseName       = "AudioWidgets"
 lazy val baseNameL      = baseName.toLowerCase
 
-lazy val projectVersion = "1.13.0"
-lazy val mimaVersion    = "1.13.0" // used for migration-manager
+lazy val projectVersion = "1.14.0-SNAPSHOT"
+lazy val mimaVersion    = "1.14.0" // used for migration-manager
 
 lazy val commonSettings = Seq(
   version             := projectVersion,
   organization        := "de.sciss",
   description         := "Specialized Swing widgets for audio applications in Scala",
-  homepage            := Some(url(s"https://github.com/Sciss/$baseName")),
+  homepage            := Some(url(s"https://git.iem.at/sciss/$baseName")),
   licenses            := Seq("LGPL v2.1+" -> url("http://www.gnu.org/licenses/lgpl-2.1.txt")),
-  scalaVersion        := "2.12.7",
-  crossScalaVersions  := Seq("2.12.7", "2.11.12"),
+  scalaVersion        := "2.13.0-M5",
+  crossScalaVersions  := Seq("2.12.8", "2.11.12", "2.13.0-M5"),
   scalacOptions      ++= Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture"),
   initialCommands in console := """
     |import de.sciss.audiowidgets._""".stripMargin
@@ -19,17 +19,20 @@ lazy val commonSettings = Seq(
 
 // ---- dependencies ----
 
-lazy val desktopVersion     = "0.9.2"
-lazy val spanVersion        = "1.4.2"
-lazy val raphaelVersion     = "1.0.4"
-lazy val swingPlusVersion   = "0.3.1"
-
-// ---- test dependencies ----
-
-lazy val subminVersion      = "0.2.2"
+lazy val deps = new {
+  val main = new {
+    val desktop     = "0.10.0-SNAPSHOT"
+    val span        = "1.4.2"
+    val raphael     = "1.0.5-SNAPSHOT"
+    val swingPlus   = "0.4.0-SNAPSHOT"
+  }
+  val test = new {
+    val submin      = "0.2.2"
+  }
+}
 
 lazy val testSettings = Seq(
-  libraryDependencies += "de.sciss" % "submin" % subminVersion % "test"
+  libraryDependencies += "de.sciss" % "submin" % deps.test.submin % Test
 )
 
 // ----
@@ -55,7 +58,7 @@ lazy val swing = project.withId(s"$baseNameL-swing").in(file("swing"))
   .settings(testSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "de.sciss" %% "swingplus" % swingPlusVersion
+      "de.sciss" %% "swingplus" % deps.main.swingPlus
     ),
     mimaPreviousArtifacts := Set("de.sciss" %% s"$baseNameL-swing" % mimaVersion)
   )
@@ -66,9 +69,9 @@ lazy val app = project.withId(s"$baseNameL-app").in(file("app"))
   .settings(testSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "de.sciss" %% "desktop"       % desktopVersion,
-      "de.sciss" %% "raphael-icons" % raphaelVersion,
-      "de.sciss" %% "span"          % spanVersion
+      "de.sciss" %% "desktop"       % deps.main.desktop,
+      "de.sciss" %% "raphael-icons" % deps.main.raphael,
+      "de.sciss" %% "span"          % deps.main.span
     ),
     mimaPreviousArtifacts := Set("de.sciss" %% s"$baseNameL-app" % mimaVersion)
   )
@@ -88,8 +91,8 @@ lazy val publishSettings = Seq(
   pomIncludeRepository := { _ => false },
   pomExtra := { val n = baseName
 <scm>
-  <url>git@github.com:Sciss/{n}.git</url>
-  <connection>scm:git:git@github.com:Sciss/{n}.git</connection>
+  <url>git@git.iem.at:sciss/{n}.git</url>
+  <connection>scm:git:git@git.iem.at:sciss/{n}.git</connection>
 </scm>
 <developers>
    <developer>
