@@ -1,7 +1,7 @@
 lazy val baseName       = "AudioWidgets"
 lazy val baseNameL      = baseName.toLowerCase
 
-lazy val projectVersion = "1.14.1"
+lazy val projectVersion = "1.14.2-SNAPSHOT"
 lazy val mimaVersion    = "1.14.0" // used for migration-manager
 
 lazy val commonSettings = Seq(
@@ -11,7 +11,7 @@ lazy val commonSettings = Seq(
   homepage            := Some(url(s"https://git.iem.at/sciss/$baseName")),
   licenses            := Seq("LGPL v2.1+" -> url("http://www.gnu.org/licenses/lgpl-2.1.txt")),
   scalaVersion        := "2.12.8",
-  crossScalaVersions  := Seq("2.12.8", "2.11.12", "2.13.0-RC1"),
+  crossScalaVersions  := Seq("2.12.8", "2.11.12", "2.13.0-RC2"),
   scalacOptions      ++= Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xlint", "-Xsource:2.13"),
   initialCommands in console := """
     |import de.sciss.audiowidgets._""".stripMargin

@@ -2,7 +2,7 @@
  *  TimelineCanvasImpl.scala
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2018 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2019 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is published under the GNU Lesser General Public License v2.1+
  *
@@ -76,14 +76,14 @@ trait TimelineCanvasImpl extends TimelineCanvas {
         if (selX1 < rr && selX2 > r.x) {
           g.setColor(colrSelection)
           g.fillRect(selX1, 0, selX2 - selX1, h)
-          if (r.x <= selX1) g.drawLine(selX1, 0, selX1, h)
+          if (r.x  <= selX1)                g.drawLine(selX1    , 0, selX1    , h)
           if (selX2 > selX1 && rr >= selX2) g.drawLine(selX2 - 1, 0, selX2 - 1, h)
         }
       case _ =>
     }
     if (r.x <= pos && rr > pos) {
-      g.setXORMode(colrPositionXor)
       g.setColor(colrPosition)
+      g.setXORMode(colrPositionXor)
       g.drawLine(pos, 0, pos, h)
       g.setPaintMode()
     }

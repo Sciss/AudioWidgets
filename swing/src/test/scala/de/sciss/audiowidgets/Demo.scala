@@ -1,8 +1,8 @@
 /*
- *  AudioWidgets.scala
+ *  Demo
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2014 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2019 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is published under the GNU Lesser General Public License v2.1+
  *
@@ -37,11 +37,11 @@ object Demo extends SimpleSwingApplication {
     val m: PeakMeter = new PeakMeter {
       numChannels   = 2
       ticks         = 101 // 50
-      caption    = true
+      caption       = true
       borderVisible = true
     }
 
-    val lcdColors = Vec(
+    val lcdColors: Vec[(Option[Color], Option[Color])] = Vec(
       (Some(Color.darkGray)             , None),
       (Some(new Color(205, 232, 254))   , Some(new Color(15, 42, 64))),
       (Some(Color.darkGray)             , Some(Color.lightGray)),
@@ -92,7 +92,7 @@ object Demo extends SimpleSwingApplication {
       Transport.GoToBegin, Transport.Rewind     , Transport.Stop   , Transport.Pause, Transport.Play,
       Transport.Record   , Transport.FastForward, Transport.GoToEnd, Transport.Loop).map {
 
-      case l @ Transport.Loop => l.apply {
+      case l: Transport.Loop.type => l.apply {
           trnsp.button(l).foreach(b => b.selected = !b.selected)
         }
 

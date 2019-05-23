@@ -19,10 +19,10 @@ object TransportTests extends App with Runnable {
         val g2 = g.asInstanceOf[Graphics2D]
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
-        def gaga(scheme: ColorScheme, yoff: Int): Unit =
+        def gaga(scheme: ColorScheme, yOff: Int): Unit =
           Seq(GoToBegin, Rewind, Stop, Pause, Play, FastForward, GoToEnd, Record, Loop).zipWithIndex.foreach {
             case (icn, idx) =>
-              pnt(g2, icn, 10 + icn.defaultXOffset + (idx * 30), yoff + icn.defaultYOffset, 1f, scheme)
+              pnt(g2, icn, 10 + icn.defaultXOffset + (idx * 30), yOff + icn.defaultYOffset, 1f, scheme)
           }
 
         gaga(DarkScheme, 10)

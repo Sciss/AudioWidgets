@@ -63,7 +63,7 @@ object Demo extends App with Runnable {
     val p2 = new JPanel(new BorderLayout())
     p2.add(lcdGrid, BorderLayout.NORTH)
 
-    val unitMs = new ParamFormat[Int] {
+    val unitMs: ParamFormat[Int] = new ParamFormat[Int] {
       val unit = UnitView("milliseconds", "ms")
 
       val formatter = new NumberFormatter(NumberFormat.getIntegerInstance(Locale.US))
@@ -89,7 +89,7 @@ object Demo extends App with Runnable {
 
     lazy val trnspActions = Seq(
       Transport.GoToBegin, Transport.Play, Transport.Stop, Transport.GoToEnd, Transport.Loop).map {
-      case l@Transport.Loop => l.apply {
+      case l: Transport.Loop.type => l.apply {
         trnsp.button(l).foreach(b => b.setSelected(!b.isSelected))
       }
       case e => e.apply {}
