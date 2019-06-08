@@ -15,7 +15,7 @@ a [Creative Commons CC BY-SA 3.0 license](https://git.iem.at/sciss/AudioWidgets/
 
 ## requirements / installation
 
-AudioWidgets currently compiles against Scala 2.12, 2.11 using sbt. There are three sub projects: `core`, `swing`
+AudioWidgets currently compiles against Scala 2.13, 2.12, 2.11 using sbt. There are three sub projects: `core`, `swing`
 and `app`, where `swing` depends on `core` and `app` depends on `swing`.
 
  - The `core` project provides widgets based on plain Java Swing
@@ -28,7 +28,7 @@ To use the library in your project:
     "de.sciss" %% "audiowidgets-swing" % v
     "de.sciss" %% "audiowidgets-app"   % v
 
-The current version `v` is `"1.14.2"`.
+The current version `v` is `"1.14.3"`.
 
 To view a demo of the widgets from the sbt console:
 
