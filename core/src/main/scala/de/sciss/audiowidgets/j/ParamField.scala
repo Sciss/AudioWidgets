@@ -15,8 +15,9 @@ package de.sciss.audiowidgets
 package j
 
 import java.awt.event.{ActionEvent, ActionListener, KeyEvent}
-import java.awt.{Font, GridBagConstraints, GridBagLayout, Toolkit}
+import java.awt.{Font, GridBagConstraints, GridBagLayout, Insets, Toolkit}
 import java.beans.{PropertyChangeEvent, PropertyChangeListener}
+
 import javax.swing.JFormattedTextField.{AbstractFormatter, AbstractFormatterFactory}
 import javax.swing.{AbstractAction, BorderFactory, JFormattedTextField, JPanel, KeyStroke, SwingConstants}
 
@@ -95,9 +96,10 @@ class ParamField[A](value0: A, formats0: ISeq[ParamFormat[A]])
 
     con.gridx      += 1
     con.weightx     = 0.0
-    con.gridwidth = GridBagConstraints.REMAINDER
+    con.insets      = new Insets(0, 2, 0, 0)
+    con.gridwidth   = GridBagConstraints.REMAINDER
     lay.setConstraints(lbUnit, con)
-    lbUnit.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 0))
+//    lbUnit.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 0))
     add(lbUnit)
 
     val prop = new PropertyChangeListener {

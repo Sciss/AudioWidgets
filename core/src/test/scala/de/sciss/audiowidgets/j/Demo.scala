@@ -80,7 +80,9 @@ object Demo extends App with Runnable {
       def format(value: Int): String = value.toString
     }
 
-    p2.add(new ParamField(0, unitMs :: Nil), BorderLayout.SOUTH)
+    val pf = new ParamField(0, unitMs :: Nil)
+    pf.prototypeDisplayValues = List(-9999, +9999)
+    p2.add(pf, BorderLayout.SOUTH)
 
     val axis = new Axis
     axis.format = AxisFormat.Time()
