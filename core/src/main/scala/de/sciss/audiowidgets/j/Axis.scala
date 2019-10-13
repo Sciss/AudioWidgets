@@ -90,8 +90,13 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
 
   private[this] var pntBackground: Paint = _
 
-  private[this] final val scheme    = if (Util.isDarkSkin) darkScheme else lightScheme
-  private[this] final val colrTicks = if (Util.isDarkSkin) Color.gray else Color.lightGray
+  private[this] final val isDark    = Util.isDarkSkin
+  private[this] final val scheme    = if (isDark) darkScheme else lightScheme
+  private[this] final val colrTicks = if (isDark) Color.gray else Color.lightGray
+  private[this] final val colrLabel = {
+    val res = UIManager.getColor("Label.foreground")
+    if (res == null) Color.black else res
+  }
 
   private def orientUpdated(): Unit = {
     val isHoriz = _orient match {
@@ -244,7 +249,7 @@ class Axis(orient: Int = SwingConstants.HORIZONTAL)
     g2.draw(shpTicks)
 
     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-    g2.setColor(getForeground)
+    g2.setColor(colrLabel) // getForeground
 
     var i = 0
     while (i < labels.length) {
