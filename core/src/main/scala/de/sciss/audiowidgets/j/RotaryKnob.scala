@@ -26,15 +26,15 @@ class RotaryKnob(m: BoundedRangeModel) extends JSlider(m) with RotaryKnobLike {
   private var colrTrack       : Color   = _
   private var _centered       : Boolean = false
 
-  def this(min: Int, max: Int, value: Int) {
+  def this(min: Int, max: Int, value: Int) = {
     this(new DefaultBoundedRangeModel(value, 0, min, max))
   }
 
-  def this(min: Int, max: Int) {
+  def this(min: Int, max: Int) = {
     this(min, max, (min + max) / 2)
   }
 
-  def this() {
+  def this() = {
     this(0, 100, 50)
   }
 

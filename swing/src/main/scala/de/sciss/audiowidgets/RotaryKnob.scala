@@ -19,7 +19,7 @@ import javax.swing.{BoundedRangeModel, DefaultBoundedRangeModel}
 import scala.swing.Slider
 
 class RotaryKnob(model0: BoundedRangeModel) extends Slider with RotaryKnobLike {
-  def this() {
+  def this() = {
     this(new DefaultBoundedRangeModel(50, 0, 0, 100))
   }
 

@@ -78,7 +78,7 @@ object TimeField {
         val secs    = arr(2).toDouble
         val millis  = (secs * 1000).toLong
         val allMS   = (hours * 60 + minutes) * 60000 + millis
-        span.clip(millisToFrames(allMS))
+        span.clip(millisToFrames(allMS.toDouble))
       } catch {
         case _: NumberFormatException => throw new ParseException(s, 0)
       }
@@ -198,7 +198,7 @@ object TimeField {
 
     private def tryParse(s: String): Long =
       try {
-        val out = millisToFrames(s.toLong)
+        val out = millisToFrames(s.toLong.toDouble)
         span.clip(out)
       } catch {
         case _: NumberFormatException => throw new ParseException(s, 0)

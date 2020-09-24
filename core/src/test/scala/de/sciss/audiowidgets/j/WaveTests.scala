@@ -20,12 +20,12 @@ object WaveTests extends App with Runnable {
       val dl2     = dataLen * over
       val fullLen = dl2 * factor
       val halfLen = fullLen / 2
-      var a0      = math.random
+      var a0      = math.random()
       val full    = Array.tabulate(fullLen) { i =>
         val j = i - halfLen
         val k = j * freq * 4 / (factor * over)
         val s = math.sin(k) / k
-        val r = math.random
+        val r = math.random()
         a0    = a0 * 0.96 + r * 0.04
         (s * a0).toFloat
       }
