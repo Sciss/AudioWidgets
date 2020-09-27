@@ -38,18 +38,18 @@ class PeakMeter(orient: Int = SwingConstants.VERTICAL)
   protected var captionComp: PeakMeterCaption = _
 
   private[this] final var holdDurationVar	        = DefaultHoldDuration   // milliseconds peak hold
-	private[this] final var captionPositionVar	    = LEFT
-	private[this] final var captionAlign	          = RIGHT
-	private[this] final var captionVisibleVar	      = true
-	private[this] final var captionLabelsVar	      = true
-	private[this] final var numChannelsVar		      = 0
-	private[this] final var borderVisibleVar			  = false
+  private[this] final var captionPositionVar	    = LEFT
+  private[this] final var captionAlign	          = RIGHT
+  private[this] final var captionVisibleVar	      = true
+  private[this] final var captionLabelsVar	      = true
+  private[this] final var numChannelsVar		      = 0
+  private[this] final var borderVisibleVar			  = false
 
-	private[this] final var rmsPaintedVar		        = true
-	private[this] final var holdPaintedVar		      = true
+  private[this] final var rmsPaintedVar		        = true
+  private[this] final var holdPaintedVar		      = true
 
-	private[this] final var orientVar			          = VERTICAL
-	private[this] final var vertical		            = true
+  private[this] final var orientVar			          = VERTICAL
+  private[this] final var vertical		            = true
 
   private[this] final val ins                     = new Insets(0, 0, 0, 0)
   private[this] final var ticksVar		            = 101
@@ -300,17 +300,17 @@ class PeakMeter(orient: Int = SwingConstants.VERTICAL)
     }
     if (caption) {
       captionPositionVar match {
-			   case LEFT   => add(captionComp, 0)
-			   case RIGHT  => add(captionComp)
-			   case CENTER => add(captionComp, getComponentCount >> 1)
-			}
-		}
-		meters = newMeters
-		revalidate()
-		repaint()
-	}
+         case LEFT   => add(captionComp, 0)
+         case RIGHT  => add(captionComp)
+         case CENTER => add(captionComp, getComponentCount >> 1)
+      }
+    }
+    meters = newMeters
+    revalidate()
+    repaint()
+  }
 
-	private def updateBorders(): Unit = {
+  private def updateBorders(): Unit = {
     // top left bottom right
     val b0 = if (borderVisibleVar) {
       new RecessedBorder()

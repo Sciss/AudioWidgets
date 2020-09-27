@@ -210,14 +210,14 @@ class PeakMeterCaption(orient: Int = SwingConstants.VERTICAL) extends JComponent
       // ------------ recalculate ticks ------------
 
       val at		  = new AffineTransform()
-			val insets	= getInsets()
-			val wi		  = if (vertical) w - (insets.left + insets.right)
+      val insets	= getInsets()
+      val wi		  = if (vertical) w - (insets.left + insets.right)
                     else          h - (insets.top + insets.bottom)
-			val hi		  = if (vertical) h - (insets.top + insets.bottom + ascentVar + descentVar)
+      val hi		  = if (vertical) h - (insets.top + insets.bottom + ascentVar + descentVar)
                     else          w - (insets.left + insets.right + ascentVar + descentVar)
-			val him		  = hi - 1
-			val gpMajT	= new GeneralPath()
-			val gpMinT	= new GeneralPath()
+      val him		  = hi - 1
+      val gpMajT	= new GeneralPath()
+      val gpMinT	= new GeneralPath()
 
       if (vertical) {
         at.translate(insets.left, insets.top + ascentVar)
@@ -255,7 +255,7 @@ class PeakMeterCaption(orient: Int = SwingConstants.VERTICAL) extends JComponent
       shpMajorTicks = at.createTransformedShape(gpMajT)
       shpMinorTicks = at.createTransformedShape(gpMinT)
 
-			// ------------ recalculate labels ------------
+      // ------------ recalculate labels ------------
       if (paintLabelsVar) {
         val frc       = g2.getFontRenderContext
         val gp        = new GeneralPath()

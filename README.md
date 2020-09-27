@@ -16,7 +16,7 @@ a [Creative Commons CC BY-SA 3.0 license](https://git.iem.at/sciss/AudioWidgets/
 ## requirements / installation
 
 AudioWidgets currently compiles against Scala 2.13, 2.12 using sbt. The last version support Scala 2.11 was 1.14.3.
-There are three sub projects: `core`, `swing`
+There are three sub-projects: `core`, `swing`
 and `app`, where `swing` depends on `core` and `app` depends on `swing`.
 
  - The `core` project provides widgets based on plain Java Swing
@@ -49,7 +49,7 @@ The following components are available:
  - `Axis` -- A general horizontal or vertical axis component
  - `LCDPanel` -- A JPanel with bevel border and glossy background color
  - `PeakMeter` -- A dual peak and RMS meter suitable for audio signals
- - `Transport` -- A tool bar for transport controls
+ - `Transport` -- A tool-bar for transport controls
  - `WavePainter` -- A painter class for waveforms, along with sub types for multi resolution display
  - `DualRangeSlider` -- A QuickTime Player style slider combining single value and a range thumb
  - `RotaryKnob` -- A single value slider styled as a rotary knob
