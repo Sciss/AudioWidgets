@@ -2,7 +2,7 @@
  *  Transport.scala
  *  (AudioWidgets)
  *
- *  Copyright (c) 2011-2019 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2011-2020 Hanns Holger Rutz. All rights reserved.
  *
  *	This software is published under the GNU Lesser General Public License v2.1+
  *
@@ -107,7 +107,7 @@ trait TransportCompanion {
     def defaultXOffset: Float
     def defaultYOffset: Float
 
-    def shape(scale: Float = 1f, xoff: Float = defaultXOffset, yoff: Float = defaultYOffset): Shape
+    def shape(scale: Float = 1f, xOff: Float = defaultXOffset, yOff: Float = defaultYOffset): Shape
   }
 
   sealed trait ActionElement {
@@ -169,11 +169,11 @@ trait TransportCompanion {
     val defaultXOffset = 4f
     val defaultYOffset = 0f
 
-    def shape(scale: Float, xoff: Float, yoff: Float): Shape = {
+    def shape(scale: Float, xOff: Float, yOff: Float): Shape = {
       val gp = new GeneralPath()
-      gp.moveTo(xoff, yoff)
-      gp.lineTo(xoff + scale * 15f, yoff + scale * 10f)
-      gp.lineTo(xoff, yoff + scale * 20f)
+      gp.moveTo(xOff, yOff)
+      gp.lineTo(xOff + scale * 15f, yOff + scale * 10f)
+      gp.lineTo(xOff, yOff + scale * 20f)
       gp.closePath()
       gp
     }
@@ -183,17 +183,17 @@ trait TransportCompanion {
     val defaultXOffset = 3f
     val defaultYOffset = 2f
 
-    def shape(scale: Float, xoff: Float, yoff: Float): Shape =
-      new Rectangle2D.Float(xoff, yoff, scale * 16f, scale * 16f)
+    def shape(scale: Float, xOff: Float, yOff: Float): Shape =
+      new Rectangle2D.Float(xOff, yOff, scale * 16f, scale * 16f)
   }
 
   case object Pause extends Element {
     val defaultXOffset = 3f
     val defaultYOffset = 2f
 
-    def shape(scale: Float, xoff: Float, yoff: Float): Shape = {
-      val res = new Area(new Rectangle2D.Float(xoff, yoff, scale * 6f, scale * 16f))
-      res.add(new Area(new Rectangle2D.Float(xoff + scale * 10f, yoff, scale * 6f, scale * 16f)))
+    def shape(scale: Float, xOff: Float, yOff: Float): Shape = {
+      val res = new Area(new Rectangle2D.Float(xOff, yOff, scale * 6f, scale * 16f))
+      res.add(new Area(new Rectangle2D.Float(xOff + scale * 10f, yOff, scale * 6f, scale * 16f)))
       res
     }
   }
@@ -202,18 +202,18 @@ trait TransportCompanion {
     val defaultXOffset = 4f
     val defaultYOffset = 3f
 
-    def shape(scale: Float, xoff: Float, yoff: Float): Shape =
-      new Ellipse2D.Float(scale * xoff, scale * yoff, scale * 16f, scale * 16f)
+    def shape(scale: Float, xOff: Float, yOff: Float): Shape =
+      new Ellipse2D.Float(scale * xOff, scale * yOff, scale * 16f, scale * 16f)
   }
 
   case object GoToBegin extends Element {
     val defaultXOffset = 4f
     val defaultYOffset = 3f
 
-    def shape(scale: Float, xoff: Float, yoff: Float): Shape = {
-      val end = GoToEnd.shape(scale, xoff = 0f, yoff = yoff)
+    def shape(scale: Float, xOff: Float, yOff: Float): Shape = {
+      val end = GoToEnd.shape(scale, xOff = 0f, yOff = yOff)
       val at = AffineTransform.getScaleInstance(-1.0, 1.0)
-      at.translate(-(end.getBounds2D.getWidth + xoff), 0)
+      at.translate(-(end.getBounds2D.getWidth + xOff), 0)
       at.createTransformedShape(end)
     }
   }
@@ -222,10 +222,10 @@ trait TransportCompanion {
     val defaultXOffset = 4f
     val defaultYOffset = 3f
 
-    def shape(scale: Float, xoff: Float, yoff: Float): Shape = {
-      val play = Play.shape(scale * 0.7f, xoff = xoff, yoff = yoff)
+    def shape(scale: Float, xOff: Float, yOff: Float): Shape = {
+      val play = Play.shape(scale * 0.7f, xOff = xOff, yOff = yOff)
       val res = new Area(play)
-      val ba = new Rectangle2D.Float(scale * 11.5f + xoff, yoff, scale * 3f, scale * 14f)
+      val ba = new Rectangle2D.Float(scale * 11.5f + xOff, yOff, scale * 3f, scale * 14f)
       res.add(new Area(ba))
       res
     }
@@ -235,8 +235,8 @@ trait TransportCompanion {
     val defaultXOffset = 2f
     val defaultYOffset = 3f
 
-    def shape(scale: Float, xoff: Float, yoff: Float): Shape = {
-      val play = Play.shape(scale * 0.7f, xoff = xoff, yoff = yoff)
+    def shape(scale: Float, xOff: Float, yOff: Float): Shape = {
+      val play = Play.shape(scale * 0.7f, xOff = xOff, yOff = yOff)
       val p2 = AffineTransform.getTranslateInstance(scale * 10f, 0).createTransformedShape(play)
       val res = new Area(play)
       res.add(new Area(p2))
@@ -248,10 +248,10 @@ trait TransportCompanion {
     val defaultXOffset = 1.5f
     val defaultYOffset = 3f
 
-    def shape(scale: Float, xoff: Float, yoff: Float): Shape = {
-      val ffwd = FastForward.shape(scale, xoff = 0, yoff = yoff)
+    def shape(scale: Float, xOff: Float, yOff: Float): Shape = {
+      val ffwd = FastForward.shape(scale, xOff = 0, yOff = yOff)
       val at = AffineTransform.getScaleInstance(-1.0, 1.0)
-      at.translate(-ffwd.getBounds2D.getWidth - xoff, 0)
+      at.translate(-ffwd.getBounds2D.getWidth - xOff, 0)
       at.createTransformedShape(ffwd)
     }
   }
@@ -262,7 +262,7 @@ trait TransportCompanion {
     val defaultXOffset = 2f
     val defaultYOffset = 4f // if (doRotate) 3f else 1.5f
 
-    def shape(scale: Float = 1f, xoff: Float = defaultXOffset, yoff: Float = defaultYOffset): Shape = {
+    def shape(scale: Float = 1f, xOff: Float = defaultXOffset, yOff: Float = defaultYOffset): Shape = {
 
       val res = new Area(new RoundRectangle2D.Float(0f, scale * 4f, scale * 22f, scale * 14f, scale * 10f, scale * 10f))
       res.subtract(new Area(new RoundRectangle2D.Float(0f + scale * 3f, scale * 7f, scale * 16f, scale * 8f, scale * 8f, scale * 8f)))
@@ -276,7 +276,7 @@ trait TransportCompanion {
 
       gp.closePath()
       res.subtract(new Area(gp))
-      val play = Play.shape(scale * 0.5f, /* xoff + */ 8f, /* yoff - 2.5f */ 0.5f)
+      val play = Play.shape(scale * 0.5f, /* xOff + */ 8f, /* yOff - 2.5f */ 0.5f)
       res.add(new Area(play))
       val rot = AffineTransform.getRotateInstance(math.Pi, scale * 11f, scale * 12f).createTransformedShape(res)
       res.add(new Area(rot))
@@ -284,9 +284,9 @@ trait TransportCompanion {
       val at = AffineTransform.getScaleInstance(0.9f, 0.8f)
       // if (doRotate) {
         at.rotate(math.Pi * -0.2, scale * 11f, scale * 12f)
-        at.preConcatenate(AffineTransform.getTranslateInstance(xoff, yoff - 3f))
+        at.preConcatenate(AffineTransform.getTranslateInstance(xOff, yOff - 3f))
       // } else {
-      //  at.translate(xoff, yoff)
+      //  at.translate(xOff, yOff)
       // }
       at.createTransformedShape(res)
     }
