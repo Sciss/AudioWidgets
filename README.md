@@ -1,7 +1,7 @@
 # AudioWidgets
 
 [![Build Status](https://travis-ci.org/Sciss/AudioWidgets.svg?branch=main)](https://travis-ci.org/Sciss/AudioWidgets)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.sciss/audiowidgets-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.sciss/audiowidgets-core_2.12)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.sciss/audiowidgets-core_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.sciss/audiowidgets-core_2.13)
 
 ## statement
 
@@ -15,7 +15,7 @@ a [Creative Commons CC BY-SA 3.0 license](https://git.iem.at/sciss/AudioWidgets/
 
 ## requirements / installation
 
-AudioWidgets currently compiles against Scala 2.13, 2.12 using sbt. The last version support Scala 2.11 was 1.14.3.
+This projects builds with sbt against Scala 2.13, 2.12, Dotty. The last version support Scala 2.11 was 1.14.3.
 There are three sub-projects: `core`, `swing`
 and `app`, where `swing` depends on `core` and `app` depends on `swing`.
 
@@ -29,7 +29,7 @@ To use the library in your project:
     "de.sciss" %% "audiowidgets-swing" % v
     "de.sciss" %% "audiowidgets-app"   % v
 
-The current version `v` is `"2.0.0"`.
+The current version `v` is `"2.1.0"`.
 
 To view a demo of the widgets from the sbt console:
 

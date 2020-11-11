@@ -313,7 +313,7 @@ trait TransportCompanion {
 
     protected def addButtons(seq: Vec[AbstractButtonType]): Unit
 
-    private val (buttonSeq, buttonMap, elementMap) = {
+    private val buttonTup = {
       var bMap = Map.empty[Element, AbstractButtonType]
       var tMap = Map.empty[AbstractButtonType, Action]
       var sq = Vec.empty[AbstractButtonType]
@@ -336,6 +336,11 @@ trait TransportCompanion {
       }
       (sq, bMap, tMap)
     }
+
+    // work-around https://github.com/lampepfl/dotty/issues/10285
+    private def buttonSeq   = buttonTup._1
+    private def buttonMap   = buttonTup._2
+    private def elementMap  = buttonTup._3
 
     addButtons(buttonSeq)
 

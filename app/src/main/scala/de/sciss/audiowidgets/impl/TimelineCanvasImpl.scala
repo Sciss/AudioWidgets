@@ -36,7 +36,7 @@ object TimelineCanvasImpl {
   private final val colrPosition      = Color.white // new Color(0x00, 0x00, 0xFF, 0x7F)
 
   private val imgChecker = {
- 		val img = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB)
+    val img = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB)
     var x = 0
     while (x < 64) {
       var y = 0

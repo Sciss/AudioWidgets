@@ -165,32 +165,32 @@ object TimelineNavigation {
             }
           }
 
-          case SelectionStart =>
-            val selSpanStart = model.selection match {
-              case Span.HasStart(s) => s
-              case _                => model.position
-            }
-            val visSpan     = model.visible
-            val start0      = selSpanStart - (visSpan.length >> (if (visSpan.contains(selSpanStart)) 1 else 3))
-            val start       = max(minStart(model), start0)
-            val stop        = min(maxStop (model), start + visSpan.length)
-            val newVisSpan  = Span(start, stop)
-            model.setVisibleExtendVirtual(newVisSpan)
+        case SelectionStart =>
+          val selSpanStart = model.selection match {
+            case Span.HasStart(s) => s
+            case _                => model.position
+          }
+          val visSpan     = model.visible
+          val start0      = selSpanStart - (visSpan.length >> (if (visSpan.contains(selSpanStart)) 1 else 3))
+          val start       = max(minStart(model), start0)
+          val stop        = min(maxStop (model), start + visSpan.length)
+          val newVisSpan  = Span(start, stop)
+          model.setVisibleExtendVirtual(newVisSpan)
 
-          case SelectionStop =>
-            val selSpanStop = model.selection match {
-              case Span.HasStop(s)  => s
-              case _                => model.position
-            }
-            val visSpan     = model.visible
-            val stop0       = selSpanStop + (visSpan.length >> (if (visSpan.contains(selSpanStop)) 1 else 3))
-            val stop        = min(maxStop(model), stop0)
-            val start       = max(minStart(model), stop - visSpan.length)
-            val newVisSpan  = Span(start, stop)
-            model.setVisibleExtendVirtual(newVisSpan)
+        case SelectionStop =>
+          val selSpanStop = model.selection match {
+            case Span.HasStop(s)  => s
+            case _                => model.position
+          }
+          val visSpan     = model.visible
+          val stop0       = selSpanStop + (visSpan.length >> (if (visSpan.contains(selSpanStop)) 1 else 3))
+          val stop        = min(maxStop(model), stop0)
+          val start       = max(minStart(model), stop - visSpan.length)
+          val newVisSpan  = Span(start, stop)
+          model.setVisibleExtendVirtual(newVisSpan)
 
-          case FitToSelection => trySetSpan(model.selection)
-          case EntireBounds   => trySetSpan(model.bounds)
+        case FitToSelection => trySetSpan(model.selection)
+        case EntireBounds   => trySetSpan(model.bounds)
       }
     }
   }
@@ -204,46 +204,46 @@ object TimelineNavigation {
     case object FlipForward         extends Mode
    }
 
- final protected class ActionSelect(model: TimelineModel.Modifiable, mode: ActionSelect.Mode, stroke: KeyStroke = null)
-   extends Action("Select") {
+  final protected class ActionSelect(model: TimelineModel.Modifiable, mode: ActionSelect.Mode, stroke: KeyStroke = null)
+    extends Action("Select") {
 
-   accelerator = Option(stroke)
+    accelerator = Option(stroke)
 
-   import ActionSelect._
+    import ActionSelect._
 
-   def apply(): Unit = {
-     val pos      = model.position
-     val selSpan  = model.selection match {
-       case sp: Span => sp
-       case _        => Span(pos, pos)
-     }
+    def apply(): Unit = {
+      val pos = model.position
+      val selSpan = model.selection match {
+        case sp: Span => sp
+        case _        => Span(pos, pos)
+      }
 
-     val wholeSpan  = model.bounds
-     val newSpan    = mode match {
-       case ExtendToBoundsStart =>
-         wholeSpan.startOption.fold(selSpan)(start => Span(start, selSpan.stop))
-       
-       case ExtendToBoundsStop => 
-         wholeSpan.stopOption.fold(selSpan)(stop => Span(selSpan.start, stop))
-       
-       case All => wholeSpan match {
-         case sp: Span  => sp
-         case _         => selSpan
-       }
-         
-       case FlipBackward =>
-         val delta0 = -selSpan.length
-         val delta  = if (!model.clipStart) delta0 else 
-           wholeSpan.startOption.fold(delta0)(start => max(start - selSpan.start, delta0))
-         selSpan.shift(delta)
-       
-       case FlipForward =>
-         val delta0 = selSpan.length
-         val delta  = if (!model.clipStop) delta0 else
-           wholeSpan.stopOption.fold(delta0)(stop => min(stop - selSpan.stop, delta0))
-         selSpan.shift(delta)
-     }
-     if (newSpan != selSpan) model.selection = newSpan
-   }
- }
+      val wholeSpan = model.bounds
+      val newSpan = mode match {
+        case ExtendToBoundsStart =>
+          wholeSpan.startOption.fold(selSpan)(start => Span(start, selSpan.stop))
+
+        case ExtendToBoundsStop =>
+          wholeSpan.stopOption.fold(selSpan)(stop => Span(selSpan.start, stop))
+
+        case All => wholeSpan match {
+          case sp: Span => sp
+          case _        => selSpan
+        }
+
+        case FlipBackward =>
+          val delta0 = -selSpan.length
+          val delta = if (!model.clipStart) delta0 else
+            wholeSpan.startOption.fold(delta0)(start => max(start - selSpan.start, delta0))
+          selSpan.shift(delta)
+
+        case FlipForward =>
+          val delta0 = selSpan.length
+          val delta = if (!model.clipStop) delta0 else
+            wholeSpan.stopOption.fold(delta0)(stop => min(stop - selSpan.stop, delta0))
+          selSpan.shift(delta)
+      }
+      if (newSpan != selSpan) model.selection = newSpan
+    }
+  }
 }
