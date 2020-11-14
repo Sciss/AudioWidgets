@@ -13,7 +13,7 @@ object WaveTests extends App with Runnable {
   def run(): Unit = {
     val dataLen   = 128 // 64
     val freq      = 2 * math.Pi / (dataLen - 1)
-    val dataFull  = Array.tabulate(dataLen) { i => math.sin(i * freq).toFloat }
+    val dataFull  = Array.tabulate(dataLen) { i => math.sin(i * freq) }
 
     def sincDecim(over: Int) = {
       val factor  = 256 // 32 // 16
@@ -27,9 +27,9 @@ object WaveTests extends App with Runnable {
         val s = math.sin(k) / k
         val r = math.random()
         a0    = a0 * 0.96 + r * 0.04
-        (s * a0).toFloat
+        s * a0
       }
-      val res = new Array[Float](dl2 * 3)
+      val res = new Array[Double](dl2 * 3)
       WavePainter.Decimator.pcmToPeakRMS(factor).decimate(full, 0, res, 0, dl2)
       res
     }
@@ -39,7 +39,7 @@ object WaveTests extends App with Runnable {
       val factor = 256
       val first = sincDecim(factor)
       //         val fl      = first.length
-      val res = new Array[Float](first.length / factor)
+      val res = new Array[Double](first.length / factor)
       WavePainter.Decimator.peakRMS(factor).decimate(first, 0, res, 0, res.length / 3)
       res
     }
@@ -68,7 +68,7 @@ object WaveTests extends App with Runnable {
     }
 
     var pnt: WavePainter    = pntLin
-    var data: Array[Float]  = dataFull
+    var data: Array[Double] = dataFull
 
     abstract class SimpleView extends JComponent {
       setPreferredSize(new Dimension(260, 180))
@@ -124,7 +124,7 @@ object WaveTests extends App with Runnable {
       Array.tabulate(multiSize) { j =>
         val i = iter()
         a = a * 0.96 + i * 0.04
-        (a * math.cos(j * freq)).toFloat
+        (a * math.cos(j * freq))
       }
     }
     val mSrc = MultiResolution.Source.wrap(Array(fullData))

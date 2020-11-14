@@ -51,7 +51,7 @@ object WavePainter {
   private final class SHImpl extends OneLayerImpl {
     override def toString = s"WavePainter.sampleAndHold@${hashCode().toHexString}"
 
-    def paint(g: Graphics2D, data: Array[Float], dataOffset: Int, dataLength: Int): Unit = {
+    def paint(g: Graphics2D, data: Array[Double], dataOffset: Int, dataLength: Int): Unit = {
       val polySize  = dataLength << 1
       val polyX     = new Array[Int](polySize)
       val polyY     = new Array[Int](polySize)
@@ -82,7 +82,7 @@ object WavePainter {
   private final class LinearImpl extends OneLayerImpl {
     override def toString = s"WavePainter.linear@${hashCode().toHexString}"
 
-    def paint(g: Graphics2D, data: Array[Float], dataOffset: Int, dataLength: Int): Unit = {
+    def paint(g: Graphics2D, data: Array[Double], dataOffset: Int, dataLength: Int): Unit = {
       val polyX = new Array[Int](dataLength)
       val polyY = new Array[Int](dataLength)
 
@@ -104,7 +104,7 @@ object WavePainter {
     }
   }
 
-  private trait HasPeakRMSImpl {
+  private trait HasPeakRMSImpl extends HasPeakRMS {
     var peakColor: Paint = Color.gray
     var rmsColor : Paint = Color.black
   }
@@ -112,7 +112,7 @@ object WavePainter {
   private final class PeakRMSImpl extends HasScalingImpl with PeakRMS with HasPeakRMSImpl {
     def tupleSize = 3
 
-    def paint(g: Graphics2D, data: Array[Float], dataOffset: Int, dataLength: Int): Unit = {
+    def paint(g: Graphics2D, data: Array[Double], dataOffset: Int, dataLength: Int): Unit = {
       val polySize  = dataLength * 2 // / 3
       val peakPolyX = new Array[Int](polySize)
       val peakPolyY = new Array[Int](polySize)
@@ -132,9 +132,9 @@ object WavePainter {
         peakPolyY(i)  = (scaleY(peakP) * 16).toInt + 8 // 2
         peakPolyY(k)  = (scaleY(peakN) * 16).toInt - 8 // 2
         // peakC = (peakP + peakN) / 2
-        val rms       = math.sqrt(data(j)).toFloat
+        val rms       = math.sqrt(data(j))
         j += 1
-        rmsPolyY(i)   = (scaleY(math.min(peakP, rms)) * 16).toInt
+        rmsPolyY(i)   = (scaleY(math.min(peakP, +rms)) * 16).toInt
         rmsPolyY(k)   = (scaleY(math.max(peakN, -rms)) * 16).toInt
         i += 1
         k -= 1
@@ -216,7 +216,7 @@ object WavePainter {
     def tupleInSize  = 3
     def tupleOutSize = 3
 
-    def decimate(in: Array[Float], inOffset: Int, out: Array[Float], outOffset: Int, outLength: Int): Unit = {
+    def decimate(in: Array[Double], inOffset: Int, out: Array[Double], outOffset: Int, outLength: Int): Unit = {
       var j     = outOffset * 3
       val stop  = j + (outLength * 3)
       var k     = inOffset * 3
@@ -257,7 +257,7 @@ object WavePainter {
     def tupleInSize  = 1
     def tupleOutSize = 3
 
-    def decimate(in: Array[Float], inOffset: Int, out: Array[Float], outOffset: Int, outLength: Int): Unit = {
+    def decimate(in: Array[Double], inOffset: Int, out: Array[Double], outOffset: Int, outLength: Int): Unit = {
       var j     = outOffset * 3
       val stop  = j + (outLength * 3)
       var k     = inOffset
@@ -334,7 +334,7 @@ object WavePainter {
       val tupleInSize   = 1
       val tupleOutSize  = 1
 
-      def decimate(in: Array[Float], inOffset: Int, out: Array[Float], outOffset: Int, outLength: Int): Unit = ()
+      def decimate(in: Array[Double], inOffset: Int, out: Array[Double], outOffset: Int, outLength: Int): Unit = ()
     }
   }
 
@@ -343,7 +343,7 @@ object WavePainter {
     def tupleOutSize: Int
     def factor      : Int
 
-    def decimate(in: Array[Float], inOffset: Int, out: Array[Float], outOffset: Int, outLength: Int): Unit
+    def decimate(in: Array[Double], inOffset: Int, out: Array[Double], outOffset: Int, outLength: Int): Unit
   }
 
   object MultiResolution {
@@ -355,18 +355,18 @@ object WavePainter {
 
       def available(sourceOffset: Long, length: Int): Vec[Int]
 
-      def read(buf: Array[Array[Float]], bufOffset: Int, sourceOffset: Long, length: Int): Boolean
+      def read(buf: Array[Array[Double]], bufOffset: Int, sourceOffset: Long, length: Int): Boolean
     }
 
     object Source {
-      def wrap(data: Array[Array[Float]], numFrames: Int = -1): Source = {
+      def wrap(data: Array[Array[Double]], numFrames: Int = -1): Source = {
         val numCh = data.length
         val numF  = if (numFrames == -1) {
           if (numCh > 0) data(0).length else 0
         } else numFrames
 
         val decim   = Decimator.suggest(numF)
-        val tailBuf: Array[Float] = if (decim.nonEmpty) new Array(decim.map(_.factor).max * 3) else null
+        val tailBuf: Array[Double] = if (decim.nonEmpty) new Array(decim.map(_.factor).max * 3) else null
         var prevBuf = data
         var prevSz  = numF
         val fullR   = new ArrayReader(data, 1)
@@ -376,7 +376,7 @@ object WavePainter {
           fTot         *= f
           val decimSzF  = prevSz / f
           val decimSz   = (prevSz + f - 1) / f
-          val decimBuf  = Array.ofDim[Float](numCh, decimSz * d.tupleOutSize)
+          val decimBuf  = Array.ofDim[Double](numCh, decimSz * d.tupleOutSize)
           var ch = 0
           while (ch < numCh) {
             val pch = prevBuf(ch)
@@ -406,14 +406,14 @@ object WavePainter {
         new WrapImpl(data, numCh, numF.toLong, fullR +: decimR)
       }
 
-      private final class ArrayReader(data: Array[Array[Float]], val decimationFactor: Int)
+      private final class ArrayReader(data: Array[Array[Double]], val decimationFactor: Int)
         extends Reader {
 
         val tupleSize: Int = if (decimationFactor == 1) 1 else 3
 
         def available(srcOff: Long, len: Int): Vec[Int] = Vector(0, len)
 
-        def read(buf: Array[Array[Float]], bufOff: Int, srcOff: Long, len: Int): Boolean = {
+        def read(buf: Array[Array[Double]], bufOff: Int, srcOff: Long, len: Int): Boolean = {
           val bufOffT = bufOff * tupleSize
           val srcOffT = srcOff.toInt * tupleSize
           var ch = 0
@@ -434,7 +434,7 @@ object WavePainter {
         }
       }
 
-      private final class WrapImpl(data: Array[Array[Float]], val numChannels: Int, val numFrames: Long,
+      private final class WrapImpl(data: Array[Array[Double]], val numChannels: Int, val numFrames: Long,
                                    val readers: Vec[Reader])
         extends Source {
 
@@ -485,7 +485,7 @@ object WavePainter {
       val visiStop  = zoom.stopFrame
       val visiLen   = visiStop - visiStart
 
-      val (newStart, newStop) = if (factor == Float.PositiveInfinity) {
+      val (newStart, newStop) = if (factor == Double.PositiveInfinity) {
         // zoom all out
         (0L, display.numFrames)
       } else {
@@ -526,7 +526,7 @@ object WavePainter {
       }
     }
 
-    private def linexp(x: Double, srcLo: Double, srcHi: Double, dstLo: Double, dstHi: Double) =
+    private def linExp(x: Double, srcLo: Double, srcHi: Double, dstLo: Double, dstHi: Double) =
       math.pow(dstHi / dstLo, (x - srcLo) / (srcHi - srcLo)) * dstLo
 
     private final class ActionVerticalMax(zoom: HasZoom, display: Display, factor: Double)
@@ -549,7 +549,7 @@ object WavePainter {
 
         if (isZoom) {
           if (isHoriz) {
-            val factor = linexp(wheel, -1, 1, 2.0, 0.5)
+            val factor = linExp(wheel, -1, 1, 2.0, 0.5)
             display.channelDimension(chanDim)
             val numCh = display.numChannels
             var x     = -1
@@ -565,7 +565,7 @@ object WavePainter {
             hZoom(zoom, display, factor, math.max(0, x))
 
           } else {
-            val factor = linexp(wheel, -1, 1, 0.5, 2.0)
+            val factor = linExp(wheel, -1, 1, 0.5, 2.0)
             vMaxZoom(zoom, display, factor)
           }
         } else if (isHoriz && horizontalScroll) {
@@ -631,10 +631,10 @@ object WavePainter {
       val idHZoomAllOut = "synth.swing.HZoomAllOut"
       val ksHZoomAllOut1 = KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.ALT_MASK)
       val ksHZoomAllOut2 = KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, ctrlNoMenu)
-      val acHZoomAllOut1 = new ActionSpanWidth(zoom, display, Float.PositiveInfinity)
+      val acHZoomAllOut1 = new ActionSpanWidth(zoom, display, Double.PositiveInfinity)
       acHZoomAllOut1.putValue(Action.ACTION_COMMAND_KEY, idHZoomAllOut)
       acHZoomAllOut1.putValue(Action.ACCELERATOR_KEY, ksHZoomAllOut1)
-      val acHZoomAllOut2 = new ActionSpanWidth(zoom, display, Float.PositiveInfinity)
+      val acHZoomAllOut2 = new ActionSpanWidth(zoom, display, Double.PositiveInfinity)
       acHZoomAllOut2.putValue(Action.ACTION_COMMAND_KEY, idHZoomAllOut)
       acHZoomAllOut2.putValue(Action.ACCELERATOR_KEY, ksHZoomAllOut2)
 
@@ -849,7 +849,7 @@ object WavePainter {
       val clipOrig  = g.getClip
       val atOrig    = g.getTransform
       // val readFrames = decimFrames * decimInline.factor
-      val data      = Array.ofDim[Float](numCh, readFrames * decimTuples)
+      val data      = Array.ofDim[Double](numCh, readFrames * decimTuples)
       val success   = reader.read(data, 0, readStart, readFrames)
       if (!success) return // XXX TODO: paint busy rectangle
 
@@ -880,5 +880,5 @@ trait WavePainter {
 
   def tupleSize: Int
 
-  def paint(g: Graphics2D, data: Array[Float], dataOffset: Int, dataLength: Int): Unit
+  def paint(g: Graphics2D, data: Array[Double], dataOffset: Int, dataLength: Int): Unit
 }
