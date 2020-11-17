@@ -1,7 +1,7 @@
 lazy val baseName       = "AudioWidgets"
 lazy val baseNameL      = baseName.toLowerCase
 
-lazy val projectVersion = "2.2.0"
+lazy val projectVersion = "2.2.1-SNAPSHOT"
 lazy val mimaVersion    = "2.2.0" // used for migration-manager
 
 lazy val commonSettings = Seq(
@@ -43,7 +43,8 @@ lazy val root = project.withId(baseNameL).in(file("."))
   .dependsOn(core, swing, app)
   .settings(commonSettings)
   .settings(
-    packagedArtifacts := Map.empty           // prevent publishing anything!
+    packagedArtifacts    := Map.empty,          // prevent publishing anything!
+    mimaFailOnNoPrevious := false,
   )
 
 lazy val core = project.withId(s"$baseNameL-core").in(file("core"))

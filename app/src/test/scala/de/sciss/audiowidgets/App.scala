@@ -12,6 +12,9 @@ import de.sciss.swingplus.Implicits._
 import scala.swing.Component
 import scala.swing.Swing._
 
+/** Shows the `TimelineCanvas` with a virtual span of 20 to 60 seconds,
+  * and an object placed in the span 24 to 40 seconds.
+  */
 object App extends SwingApplicationImpl("AudioWidgets") {
   protected lazy val menuFactory = Menu.Root()
   type Document = Unit
@@ -30,7 +33,7 @@ object App extends SwingApplicationImpl("AudioWidgets") {
       val canvas: TimelineCanvas = new TimelineCanvasImpl {
         /** The underlying model */
         val timelineModel: TimelineModel = {
-          val span0 = Span(0, (sampleRate * 60).toLong)
+          val span0 = Span((sampleRate * 20).toLong, (sampleRate * 60).toLong)
           TimelineModel(bounds = span0, visible = span0, virtual = span0, sampleRate = sampleRate, clipStop = false)
         }
 
@@ -42,7 +45,7 @@ object App extends SwingApplicationImpl("AudioWidgets") {
           case TimelineModel.Bounds   (_, sp)  => println(s"bounds    = $sp")
         }
 
-        val objSpan = Span((sampleRate * 4).toLong, (sampleRate * 30).toLong)
+        val objSpan = Span((sampleRate * 24).toLong, (sampleRate * 40).toLong)
 
         /** The corresponding Swing component */
         lazy val canvasComponent: Component = new Component {

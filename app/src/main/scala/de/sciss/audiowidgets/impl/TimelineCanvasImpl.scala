@@ -145,6 +145,10 @@ trait TimelineCanvasImpl extends TimelineCanvas {
     unitIncrement = 4
   }
 
+  // XXX TODO: enable in next major version
+//  // set in updateFromModel, to avoid glitch if user touches bar
+//  private[this] var valueSync = -1
+
   final def framesToScreen(numFrames: Long): Double = {
     val vis = timelineModel.visible
     numFrames.toDouble / vis.length * canvasComponent.peer.getWidth
@@ -183,23 +187,51 @@ trait TimelineCanvasImpl extends TimelineCanvas {
     val total           = timelineModel.virtual
     val framesPerPixel  = max(1, ((total.length + (trackWidth >> 1)) / trackWidth).toInt)
     val _max            = min(0x3FFFFFFFL, total.length / framesPerPixel).toInt
-    val pos             = min(_max - 1, (vis.start - total.start) / framesPerPixel).toInt
-    val visAmt          = min(_max - pos, vis.length / framesPerPixel).toInt
+    val value           = min(_max - 1, (vis.start - total.start) / framesPerPixel).toInt
+    val visAmt          = min(_max - value, vis.length / framesPerPixel).toInt
     val blockInc        = max(1, visAmt * 4 / 5)
+
+    /*
+
+      val framesPerPixel  = max(1, ((total.length + (trackWidth >> 1)) / trackWidth).toInt)
+      value = (vis.start - total.start) / framesPerPixel
+      value * framesPerPixel = (vis.start - total.start)
+      vis.start = value * framesPerPixel + total.start
+
+     */
 
     scroll.maximum        = _max
     scroll.visibleAmount  = visAmt
-    scroll.value          = pos
+    scroll.value          = value
     scroll.blockIncrement = blockInc
+    // XXX TODO enable
+//    valueSync             = value
 
     if (l) scroll.reactions += scrollListener
   }
 
   private def updateFromScroll(model: TimelineModel.Modifiable): Unit = {
+    val value = scroll.value
+    // XXX TODO enable
+//    if (valueSync == value) return
+//    valueSync = value
+
     val total = model.virtual
     val vis   = model.visible
-    val pos   = min(total.stop - vis.length,
-      ((scroll.value.toDouble / scroll.maximum) * total.length + 0.5).toLong)
+
+    val trackWidth      = max(1, scroll.peer.getWidth - 32)  // TODO XXX stupid hard coded value. but how to read it?
+    val framesPerPixel  = max(1, ((total.length + (trackWidth >> 1)) / trackWidth).toInt)
+
+    // inverse of `updateFromModel`, to make sure there are no visual jumps
+    // when touching the scroll bar
+    val pos             = min(total.stop - vis.length, value.toLong * framesPerPixel + total.start)
+
+//    println(s"updateFromScroll. value $value, trackWidth $trackWidth, fpp $framesPerPixel, total $total, vis $vis, pos $pos")
+
+    // old formula:
+//    val pos   = min(total.stop - vis.length,
+//      ((value.toDouble / scroll.maximum) * total.length + 0.5).toLong + total.start)
+
     val l       = pane.isListeningP
     if (l) model.removeListener(timelineListener)
     val newVis  = Span(pos, pos + vis.length)
