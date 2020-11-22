@@ -47,7 +47,9 @@ object App extends SwingApplicationImpl("AudioWidgets") {
 
         val objSpan: Span = Span((sampleRate * 24).toLong, (sampleRate * 40).toLong)
 
-        protected def transportRunning: Boolean = false
+        protected def transportRunning  : Boolean = false
+        protected def transportPause  (): Unit    = ()
+        protected def transportResume (): Unit    = ()
 
         /** The corresponding Swing component */
         lazy val canvasComponent: Component = new Component {

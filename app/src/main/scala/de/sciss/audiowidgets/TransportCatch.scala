@@ -29,4 +29,9 @@ trait TransportCatch extends Model[Boolean] {
   def removeCatchBypass(token: Any): Unit
 
   var catchEnabled: Boolean
+
+  /** Checks the conditions for scroll catching the transport
+    * and activates the catch if necessary
+    */
+  def ensureCatch(): Unit
 }

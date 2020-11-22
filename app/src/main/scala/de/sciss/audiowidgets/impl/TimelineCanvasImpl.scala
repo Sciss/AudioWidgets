@@ -25,8 +25,8 @@ import java.awt.{Color, Graphics2D, Rectangle, TexturePaint}
 import scala.collection.mutable
 import scala.math.{max, min}
 import scala.swing.Swing._
-import scala.swing.event.{Key, MouseDragged, MousePressed, UIElementResized}
-import scala.swing.{BorderPanel, BoxPanel, Component, Orientation, ScrollBar}
+import scala.swing.event.{Key, MouseDragged, MousePressed, MouseReleased, UIElementResized}
+import scala.swing.{BorderPanel, BoxPanel, Component, Orientation, Point, ScrollBar}
 
 object TimelineCanvasImpl {
   private sealed trait      AxisMouseAction
@@ -65,11 +65,12 @@ trait TimelineCanvasImpl extends TimelineCanvas {
   private[this] final val r = new Rectangle
 
   private[this] final val colrSelection         = Util.colrSelection
-  private[this] final var catchBypassWasSynced  = false
-  private[this] final val catchBypass           = mutable.Set.empty[Any]
-  private[this] final var _catchEnabled         = true // false
 
   object transportCatch extends TransportCatch with ModelImpl[Boolean] {
+    private[this] final var catchBypassWasSynced  = false
+    private[this] final val catchBypass           = mutable.Set.empty[Any]
+    private[this] final var _catchEnabled         = true // false
+
     def catchEnabled: Boolean = _catchEnabled
 
     def catchEnabled_=(value: Boolean): Unit =
@@ -98,29 +99,31 @@ trait TimelineCanvasImpl extends TimelineCanvas {
         ensureCatch()
       }
     }
-  }
 
-  protected def transportRunning: Boolean
-
-  private def ensureCatch(): Unit = if (_catchEnabled && catchBypass.isEmpty) {
-    val m       = timelineModel
-    val pos     = m.position
-    val vis     = m.visible
-    val visLen  = vis.length
-    val tr      = transportRunning
-    val posC    = if (tr) pos + visLen/6 else pos
-    if (!vis.contains(posC)) {
-      val start0  = if (tr || posC > vis.start) pos - visLen/6 else pos - visLen/2
-      val total   = m.virtual
-      val stop    = min(total.stop, max(total.start, start0) + visLen)
-      val start   = max(total.start, stop - visLen)
-      if (stop > start) {
-        m.modifiableOption.foreach { mm =>
-          mm.visible = Span(start, stop)
+    def ensureCatch(): Unit = if (_catchEnabled && catchBypass.isEmpty) {
+      val m       = timelineModel
+      val pos     = m.position
+      val vis     = m.visible
+      val visLen  = vis.length
+      val tr      = transportRunning
+      val posC    = if (tr) pos + visLen/6 else pos
+      if (!vis.contains(posC)) {
+        val start0  = if (tr || posC > vis.start) pos - visLen/6 else pos - visLen/2
+        val total   = m.virtual
+        val stop    = min(total.stop, max(total.start, start0) + visLen)
+        val start   = max(total.start, stop - visLen)
+        if (stop > start) {
+          m.modifiableOption.foreach { mm =>
+            mm.visible = Span(start, stop)
+          }
         }
       }
     }
   }
+
+  protected def transportRunning  : Boolean
+  protected def transportPause () : Unit
+  protected def transportResume() : Unit
 
   protected def paintPosAndSelection(g: Graphics2D, h: Int): Unit = {
     val pos = frameToScreen(timelineModel.position).toInt
@@ -151,6 +154,11 @@ trait TimelineCanvasImpl extends TimelineCanvas {
 
   // lazy because of `timelineModel`
   private[this] final lazy val timeAxis: Axis = new Axis {
+    private[this] var resumeTransport = false
+
+    private def screenToPos(point: Point): Long =
+      timelineModel.virtual.clip(screenToFrame(point.x).toLong)
+
     override protected def paintComponent(g: Graphics2D): Unit = {
       super.paintComponent(g)
       paintPosAndSelection(g, peer.getHeight)
@@ -166,7 +174,7 @@ trait TimelineCanvasImpl extends TimelineCanvas {
       reactions += {
         case MousePressed(_, point, mod, _, _) =>
           // no mods: move position; shift: extend selection; alt: clear selection
-          val frame = clipVisible(screenToFrame(point.x))
+          val frame = screenToPos(point)
           if ((mod & Key.Modifier.Alt) != 0) {
             m.selection = Span.Void
           }
@@ -179,10 +187,17 @@ trait TimelineCanvasImpl extends TimelineCanvas {
           } else {
             axisMouseAction = AxisPosition
           }
+          transportCatch.addCatchBypass(timeAxis)
+          resumeTransport = transportRunning
+          if (resumeTransport) transportPause()
           processAxisMouse(m, frame)
 
+        case _: MouseReleased =>
+          transportCatch.removeCatchBypass(timeAxis)
+          if (resumeTransport) transportResume()
+
         case MouseDragged(_, point, _) =>
-          val frame = clipVisible(screenToFrame(point.x))
+          val frame = screenToPos(point)
           processAxisMouse(m, frame)
       }
     }
@@ -283,13 +298,13 @@ trait TimelineCanvasImpl extends TimelineCanvas {
     }
 
     val isAdjusting = e.getValueIsAdjusting // scroll.valueIsAdjusting
-    if (_catchEnabled && isAdjusting && !scrollWasAdjusting) {
+    if (transportCatch.catchEnabled && isAdjusting && !scrollWasAdjusting) {
       scrollAdjustBypass = true
 //      println("addCatchBypass")
       transportCatch.addCatchBypass(scroll)
 
     } else if (scrollWasAdjusting && !isAdjusting && scrollAdjustBypass) {
-      if (_catchEnabled && !newVis.contains(model.position)) { // we need to set prefCatch here even though laterInvocation will handle it,
+      if (transportCatch.catchEnabled && !newVis.contains(model.position)) { // we need to set prefCatch here even though laterInvocation will handle it,
         // because removeCatchBypass might look at it!
         transportCatch.catchEnabled = false
       }
@@ -355,7 +370,7 @@ trait TimelineCanvasImpl extends TimelineCanvas {
       repaint()  // XXX TODO: optimize dirty region / copy double buffer
 
     case TimelineModel.Position(_, Change(before, now)) =>
-      ensureCatch()
+      transportCatch.ensureCatch()
       val mn = min(before, now)
       val mx = max(before, now)
       val x0 = max(0                            , frameToScreen(mn).toInt - 1) // the `-1` is needed for shitty macOS retina display
