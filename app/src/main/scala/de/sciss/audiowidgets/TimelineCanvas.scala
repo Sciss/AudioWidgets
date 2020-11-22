@@ -40,4 +40,6 @@ trait TimelineCanvas {
 
   /** Clips a model frame to the visible span */
   def clipVisible(frame: Double): Long
+
+  def transportCatch: TransportCatch
 }

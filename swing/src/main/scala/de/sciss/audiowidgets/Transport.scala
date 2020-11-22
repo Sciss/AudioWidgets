@@ -36,13 +36,16 @@ object Transport extends TransportCompanion {
     protected def makeButton(pos: String, action: Action): AbstractButton = {
       val b = new Button(action)
       val (_, iconSelected, iconPressed, iconDisabled) = action.icons
-      b.peer.setSelectedIcon(iconSelected)
-      b.peer.setPressedIcon (iconPressed )
-      b.peer.setDisabledIcon(iconDisabled)
-      b.focusable = false
-      b.peer.putClientProperty("styleId", "icon-space")
-      b.peer.putClientProperty("JButton.buttonType", "segmentedCapsule") // "segmented" "segmentedRoundRect" "segmentedCapsule" "segmentedTextured" "segmentedGradient"
-      b.peer.putClientProperty("JButton.segmentPosition", pos)
+      b.selectedIcon  = iconSelected
+      b.pressedIcon   = iconPressed
+      b.disabledIcon  = iconDisabled
+      b.focusable     = false
+      val p = b.peer
+      p.putClientProperty("styleId", "icon-space")
+      p.putClientProperty("JButton.buttonType", "segmentedCapsule") // "segmented" "segmentedRoundRect" "segmentedCapsule" "segmentedTextured" "segmentedGradient"
+      p.putClientProperty("JButton.segmentPosition", pos)
+      val tt = action.element.tooltip
+      if (tt.nonEmpty) b.tooltip = tt
       b
     }
   }

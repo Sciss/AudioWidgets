@@ -14,18 +14,19 @@
 package de.sciss.audiowidgets
 package impl
 
-import java.awt.image.BufferedImage
-import java.awt.{Color, Graphics2D, Rectangle, TexturePaint}
-
 import de.sciss.desktop.impl.DynamicComponentImpl
 import de.sciss.model.Change
+import de.sciss.model.impl.ModelImpl
 import de.sciss.span.Span
-import de.sciss.swingplus.ScrollBar
 
+import java.awt.event.{AdjustmentEvent, AdjustmentListener}
+import java.awt.image.BufferedImage
+import java.awt.{Color, Graphics2D, Rectangle, TexturePaint}
+import scala.collection.mutable
 import scala.math.{max, min}
 import scala.swing.Swing._
-import scala.swing.event.{Key, MouseDragged, MousePressed, UIElementResized, ValueChanged}
-import scala.swing.{BorderPanel, BoxPanel, Component, Orientation, Reactions}
+import scala.swing.event.{Key, MouseDragged, MousePressed, UIElementResized}
+import scala.swing.{BorderPanel, BoxPanel, Component, Orientation, ScrollBar}
 
 object TimelineCanvasImpl {
   private sealed trait      AxisMouseAction
@@ -63,7 +64,63 @@ trait TimelineCanvasImpl extends TimelineCanvas {
   // by any method on the EDT
   private[this] final val r = new Rectangle
 
-  private[this] final val colrSelection = Util.colrSelection
+  private[this] final val colrSelection         = Util.colrSelection
+  private[this] final var catchBypassWasSynced  = false
+  private[this] final val catchBypass           = mutable.Set.empty[Any]
+  private[this] final var _catchEnabled         = true // false
+
+  object transportCatch extends TransportCatch with ModelImpl[Boolean] {
+    def catchEnabled: Boolean = _catchEnabled
+
+    def catchEnabled_=(value: Boolean): Unit =
+      if (_catchEnabled != value) {
+        _catchEnabled       = value
+        scrollAdjustBypass  = false
+        ensureCatch()
+        dispatch(value)
+      }
+
+    def addCatchBypass(token: Any): Unit = {
+      //    requireEDT()
+      val wasEmpty = catchBypass.isEmpty
+      catchBypass += token
+      if (wasEmpty) {
+        val m = timelineModel
+        catchBypassWasSynced = m.visible.contains(m.position)
+      }
+    }
+
+    def removeCatchBypass (token: Any): Unit = {
+      //    requireEDT()
+      val becameEmpty = catchBypass.remove(token) && catchBypass.isEmpty
+      if (becameEmpty && catchBypassWasSynced) {
+        catchBypassWasSynced = false
+        ensureCatch()
+      }
+    }
+  }
+
+  protected def transportRunning: Boolean
+
+  private def ensureCatch(): Unit = if (_catchEnabled && catchBypass.isEmpty) {
+    val m       = timelineModel
+    val pos     = m.position
+    val vis     = m.visible
+    val visLen  = vis.length
+    val tr      = transportRunning
+    val posC    = if (tr) pos + visLen/6 else pos
+    if (!vis.contains(posC)) {
+      val start0  = if (tr || posC > vis.start) pos - visLen/6 else pos - visLen/2
+      val total   = m.virtual
+      val stop    = min(total.stop, max(total.start, start0) + visLen)
+      val start   = max(total.start, stop - visLen)
+      if (stop > start) {
+        m.modifiableOption.foreach { mm =>
+          mm.visible = Span(start, stop)
+        }
+      }
+    }
+  }
 
   protected def paintPosAndSelection(g: Graphics2D, h: Int): Unit = {
     val pos = frameToScreen(timelineModel.position).toInt
@@ -82,7 +139,7 @@ trait TimelineCanvasImpl extends TimelineCanvas {
       case _ =>
     }
     if (r.x <= pos && rr > pos) {
-      g.setColor(colrPosition)
+      g.setColor  (colrPosition)
       g.setXORMode(colrPositionXor)
       g.drawLine(pos, 0, pos, h)
       g.setPaintMode()
@@ -138,16 +195,16 @@ trait TimelineCanvasImpl extends TimelineCanvas {
     timeAxis.maximum  = vis.stop  / sr
   }
 
-  // final def canvasComponent: Component
-
   private[this] final val scroll = new ScrollBar {
     orientation   = Orientation.Horizontal
     unitIncrement = 4
+    reactions += {
+      case UIElementResized(_) =>
+        updateFromModel()
+    }
   }
 
-  // XXX TODO: enable in next major version
-//  // set in updateFromModel, to avoid glitch if user touches bar
-//  private[this] var valueSync = -1
+  private[this] var scrollValueSync = -1
 
   final def framesToScreen(numFrames: Long): Double = {
     val vis = timelineModel.visible
@@ -181,8 +238,8 @@ trait TimelineCanvasImpl extends TimelineCanvas {
     // __DO NOT USE deafTo and listenTo__ there must be a bug in scala-swing,
     // because that quickly overloads the AWT event multi-caster with stack overflows.
     //    deafTo(scroll)
-    val l = pane.isListeningP
-    if (l) scroll.reactions -= scrollListener
+    val ls = pane.isListeningP
+    if (ls) scroll.peer.removeAdjustmentListener(scrollListener)
 
     val total           = timelineModel.virtual
     val framesPerPixel  = max(1, ((total.length + (trackWidth >> 1)) / trackWidth).toInt)
@@ -204,41 +261,58 @@ trait TimelineCanvasImpl extends TimelineCanvas {
     scroll.visibleAmount  = visAmt
     scroll.value          = value
     scroll.blockIncrement = blockInc
-    // XXX TODO enable
-//    valueSync             = value
+    scrollValueSync       = value
 
-    if (l) scroll.reactions += scrollListener
+    if (ls) scroll.peer.addAdjustmentListener(scrollListener)
   }
 
-  private def updateFromScroll(model: TimelineModel.Modifiable): Unit = {
-    val value = scroll.value
-    // XXX TODO enable
-//    if (valueSync == value) return
-//    valueSync = value
+  private[this] var scrollWasAdjusting = false
+  private[this] var scrollAdjustBypass = false
 
-    val total = model.virtual
-    val vis   = model.visible
+  private def updateFromScroll(model: TimelineModel.Modifiable, e: AdjustmentEvent): Unit = {
+    val value           = scroll.value
+    val vis             = model.visible
+    val newVis          = if (scrollValueSync == value) vis else {
+      val total           = model.virtual
+      val trackWidth      = max(1, scroll.peer.getWidth - 32)  // TODO XXX stupid hard coded value. but how to read it?
+      val framesPerPixel  = max(1, ((total.length + (trackWidth >> 1)) / trackWidth).toInt)
+      // inverse of `updateFromModel`, to make sure there are no visual jumps
+      // when touching the scroll bar
+      val newVisStart     = min(total.stop - vis.length, value.toLong * framesPerPixel + total.start)
+      Span(newVisStart, newVisStart + vis.length)
+    }
 
-    val trackWidth      = max(1, scroll.peer.getWidth - 32)  // TODO XXX stupid hard coded value. but how to read it?
-    val framesPerPixel  = max(1, ((total.length + (trackWidth >> 1)) / trackWidth).toInt)
+    val isAdjusting = e.getValueIsAdjusting // scroll.valueIsAdjusting
+    if (_catchEnabled && isAdjusting && !scrollWasAdjusting) {
+      scrollAdjustBypass = true
+//      println("addCatchBypass")
+      transportCatch.addCatchBypass(scroll)
 
-    // inverse of `updateFromModel`, to make sure there are no visual jumps
-    // when touching the scroll bar
-    val pos             = min(total.stop - vis.length, value.toLong * framesPerPixel + total.start)
+    } else if (scrollWasAdjusting && !isAdjusting && scrollAdjustBypass) {
+      if (_catchEnabled && !newVis.contains(model.position)) { // we need to set prefCatch here even though laterInvocation will handle it,
+        // because removeCatchBypass might look at it!
+        transportCatch.catchEnabled = false
+      }
+      scrollAdjustBypass = false
+//      println("removeCatchBypass")
+      transportCatch.removeCatchBypass(scroll)
+    }
 
-//    println(s"updateFromScroll. value $value, trackWidth $trackWidth, fpp $framesPerPixel, total $total, vis $vis, pos $pos")
+    scrollValueSync     = value
+    scrollWasAdjusting  = isAdjusting
 
     // old formula:
 //    val pos   = min(total.stop - vis.length,
 //      ((value.toDouble / scroll.maximum) * total.length + 0.5).toLong + total.start)
 
-    val l       = pane.isListeningP
-    if (l) model.removeListener(timelineListener)
-    val newVis  = Span(pos, pos + vis.length)
-    model.visible = newVis
-    updateAxis()
-    repaint()
-    if (l) model.addListener(timelineListener)
+    if (newVis != vis) {
+      val ls = pane.isListeningP
+      if (ls) model.removeListener(timelineListener)
+      model.visible = newVis
+      updateAxis()
+      repaint()
+      if (ls) model.addListener(timelineListener)
+    }
   }
 
   private[this] final lazy val timePane = new BoxPanel(Orientation.Horizontal) {
@@ -247,7 +321,6 @@ trait TimelineCanvasImpl extends TimelineCanvas {
   private[this] final val scrollPane = new BoxPanel(Orientation.Horizontal) {
     contents += scroll
     contents += HStrut(16)
-    listenTo(this)
   }
 
   protected def componentShown(): Unit = {
@@ -257,12 +330,10 @@ trait TimelineCanvasImpl extends TimelineCanvas {
   }
   protected def componentHidden(): Unit = {
     timelineModel.removeListener(timelineListener)
-    scroll.reactions -= scrollListener
+    scroll.peer.removeAdjustmentListener(scrollListener)
   }
 
   private[this] object pane extends BorderPanel with DynamicComponentImpl {
-
-//    def component = this
 
     def isListeningP: Boolean = isListening
 
@@ -284,6 +355,7 @@ trait TimelineCanvasImpl extends TimelineCanvas {
       repaint()  // XXX TODO: optimize dirty region / copy double buffer
 
     case TimelineModel.Position(_, Change(before, now)) =>
+      ensureCatch()
       val mn = min(before, now)
       val mx = max(before, now)
       val x0 = max(0                            , frameToScreen(mn).toInt - 1) // the `-1` is needed for shitty macOS retina display
@@ -305,12 +377,12 @@ trait TimelineCanvasImpl extends TimelineCanvas {
       repaint()
   }
 
-  private[this] final val scrollListener: Reactions.Reaction = {
-    case UIElementResized(_) =>
-      updateFromModel()
-
-    case ValueChanged(_) =>
-      timelineModel.modifiableOption.foreach(updateFromScroll)
+  // N.B.: We used `reactions` in scala-swing, but there seems to
+  // be a problem with temporarily removing them during dispatch,
+  // see https://github.com/scala/scala-swing/issues/141
+  private[this] val scrollListener = new AdjustmentListener {
+    def adjustmentValueChanged(e: AdjustmentEvent): Unit =
+      timelineModel.modifiableOption.foreach(updateFromScroll(_, e))
   }
 
   @inline final protected def repaint(): Unit = canvasComponent.repaint()

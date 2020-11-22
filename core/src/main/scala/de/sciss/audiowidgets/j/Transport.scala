@@ -13,13 +13,12 @@
 
 package de.sciss.audiowidgets.j
 
+import de.sciss.audiowidgets.{ShapeIcon, Util}
+
 import java.awt.event.ActionEvent
 import java.awt.geom.{AffineTransform, Area, Ellipse2D, GeneralPath, Rectangle2D, RoundRectangle2D}
 import java.awt.{BasicStroke, Color, Component, Graphics, Graphics2D, LinearGradientPaint, Paint, RenderingHints, Shape}
 import javax.swing.{AbstractAction, AbstractButton, Box, BoxLayout, Icon, JButton, JComponent}
-
-import de.sciss.audiowidgets.{ShapeIcon, Util}
-
 import scala.collection.immutable.{IndexedSeq => Vec}
 
 trait TransportCompanion {
@@ -79,7 +78,7 @@ trait TransportCompanion {
     }
   }
 
-  sealed trait Element {
+  trait Element {
     final def icon(scale: Float = 1f, colorScheme: ColorScheme = DarkScheme): Icon =
       new IconImpl(this, scale, colorScheme)
 
@@ -108,6 +107,8 @@ trait TransportCompanion {
     def defaultYOffset: Float
 
     def shape(scale: Float = 1f, xOff: Float = defaultXOffset, yOff: Float = defaultYOffset): Shape
+
+    def tooltip: String = ""
   }
 
   sealed trait ActionElement {
@@ -206,7 +207,7 @@ trait TransportCompanion {
       new Ellipse2D.Float(scale * xOff, scale * yOff, scale * 16f, scale * 16f)
   }
 
-  case object GoToBegin extends Element {
+  case object GoToBeginning extends Element {
     val defaultXOffset = 4f
     val defaultYOffset = 3f
 
@@ -216,6 +217,8 @@ trait TransportCompanion {
       at.translate(-(end.getBounds2D.getWidth + xOff), 0)
       at.createTransformedShape(end)
     }
+
+    override def tooltip: String = "Go To Beginning"
   }
 
   case object GoToEnd extends Element {
@@ -223,12 +226,14 @@ trait TransportCompanion {
     val defaultYOffset = 3f
 
     def shape(scale: Float, xOff: Float, yOff: Float): Shape = {
-      val play = Play.shape(scale * 0.7f, xOff = xOff, yOff = yOff)
-      val res = new Area(play)
-      val ba = new Rectangle2D.Float(scale * 11.5f + xOff, yOff, scale * 3f, scale * 14f)
+      val play  = Play.shape(scale * 0.7f, xOff = xOff, yOff = yOff)
+      val res   = new Area(play)
+      val ba    = new Rectangle2D.Float(scale * 11.5f + xOff, yOff, scale * 3f, scale * 14f)
       res.add(new Area(ba))
       res
     }
+
+    override def tooltip: String = "Go To End"
   }
 
   case object FastForward extends Element {
@@ -236,9 +241,9 @@ trait TransportCompanion {
     val defaultYOffset = 3f
 
     def shape(scale: Float, xOff: Float, yOff: Float): Shape = {
-      val play = Play.shape(scale * 0.7f, xOff = xOff, yOff = yOff)
-      val p2 = AffineTransform.getTranslateInstance(scale * 10f, 0).createTransformedShape(play)
-      val res = new Area(play)
+      val play  = Play.shape(scale * 0.7f, xOff = xOff, yOff = yOff)
+      val p2    = AffineTransform.getTranslateInstance(scale * 10f, 0).createTransformedShape(play)
+      val res   = new Area(play)
       res.add(new Area(p2))
       res
     }
@@ -249,8 +254,8 @@ trait TransportCompanion {
     val defaultYOffset = 3f
 
     def shape(scale: Float, xOff: Float, yOff: Float): Shape = {
-      val ffwd = FastForward.shape(scale, xOff = 0, yOff = yOff)
-      val at = AffineTransform.getScaleInstance(-1.0, 1.0)
+      val ffwd  = FastForward.shape(scale, xOff = 0, yOff = yOff)
+      val at    = AffineTransform.getScaleInstance(-1.0, 1.0)
       at.translate(-ffwd.getBounds2D.getWidth - xOff, 0)
       at.createTransformedShape(ffwd)
     }
@@ -290,6 +295,26 @@ trait TransportCompanion {
       // }
       at.createTransformedShape(res)
     }
+
+    override def tooltip: String = "Loop"
+  }
+
+  case object Catch extends Element {
+    val defaultXOffset = 0f
+    val defaultYOffset = 0f
+
+    def shape(scale: Float, xOff: Float, yOff: Float): Shape = {
+      val gp = new GeneralPath()
+      val s1 = scale * 0.75f
+      gp.moveTo(15.834f * s1 + xOff, 29.084f * s1 + yOff)
+      gp.lineTo(15.834f * s1 + xOff, 16.166f * s1 + yOff)
+      gp.lineTo( 2.917f * s1 + xOff, 16.166f * s1 + yOff)
+      gp.lineTo(29.083f * s1 + xOff, 2.9170f * s1 + yOff)
+      gp.lineTo(15.834f * s1 + xOff, 29.084f * s1 + yOff)
+      gp
+    }
+
+    override def tooltip: String = "Scroll With Transport"
   }
 
   private val segmentFirst  = "first"
@@ -314,24 +339,24 @@ trait TransportCompanion {
     protected def addButtons(seq: Vec[AbstractButtonType]): Unit
 
     private val buttonTup = {
-      var bMap = Map.empty[Element, AbstractButtonType]
-      var tMap = Map.empty[AbstractButtonType, Action]
-      var sq = Vec.empty[AbstractButtonType]
-      val it = actions.iterator
+      var bMap  = Map.empty[Element, AbstractButtonType]
+      var tMap  = Map.empty[AbstractButtonType, Action]
+      var sq    = Vec.empty[AbstractButtonType]
+      val it    = actions.iterator
       if (it.hasNext) {
-        val n1 = it.next()
-        val pos1 = if (it.hasNext) segmentFirst else segmentOnly
-        val b1 = makeButton(pos1, n1)
-        bMap += n1.element -> b1
-        tMap += b1 -> n1
-        sq :+= b1
+        val n1    = it.next()
+        val pos1  = if (it.hasNext) segmentFirst else segmentOnly
+        val b1    = makeButton(pos1, n1)
+        bMap     += n1.element -> b1
+        tMap     += b1 -> n1
+        sq      :+= b1
         while (it.hasNext) {
-          val n = it.next()
+          val n   = it.next()
           val pos = if (it.hasNext) segmentMiddle else segmentLast
-          val b = makeButton(pos, n)
-          bMap += n.element -> b
-          tMap += b -> n
-          sq :+= b
+          val b   = makeButton(pos, n)
+          bMap   += n.element -> b
+          tMap   += b -> n
+          sq    :+= b
         }
       }
       (sq, bMap, tMap)
@@ -377,6 +402,8 @@ object Transport extends TransportCompanion {
       b.putClientProperty("JButton.segmentPosition", pos)
       //         b.setMinimumSize( new Dimension( 10, 50 ))
       //         b.setPreferredSize( new Dimension( 50, 50 ))
+      val tt = action.element.tooltip
+      if (tt.nonEmpty) b.setToolTipText(tt)
       b
     }
   }

@@ -20,7 +20,7 @@ object TransportTests extends App with Runnable {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
         def gaga(scheme: ColorScheme, yOff: Int): Unit =
-          Seq(GoToBegin, Rewind, Stop, Pause, Play, FastForward, GoToEnd, Record, Loop).zipWithIndex.foreach {
+          Seq(GoToBeginning, Rewind, Stop, Pause, Play, FastForward, GoToEnd, Record, Loop).zipWithIndex.foreach {
             case (icn, idx) =>
               pnt(g2, icn, 10 + icn.defaultXOffset + (idx * 30), yOff + icn.defaultYOffset, 1f, scheme)
           }
@@ -30,7 +30,7 @@ object TransportTests extends App with Runnable {
       }
     }
 
-    val sq = IndexedSeq(Transport.GoToBegin, Transport.Rewind, Transport.Stop,
+    val sq = IndexedSeq(Transport.GoToBeginning, Transport.Rewind, Transport.Stop,
       Transport.Pause, Transport.Play, Transport.FastForward, Transport.GoToEnd, Transport.Record, Transport.Loop)
 
     val butP = new JPanel(new BorderLayout())

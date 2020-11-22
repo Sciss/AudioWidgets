@@ -174,8 +174,10 @@ object TimelineNavigation {
           val start0      = selSpanStart - (visSpan.length >> (if (visSpan.contains(selSpanStart)) 1 else 3))
           val start       = max(minStart(model), start0)
           val stop        = min(maxStop (model), start + visSpan.length)
-          val newVisSpan  = Span(start, stop)
-          model.setVisibleExtendVirtual(newVisSpan)
+          if (start < stop) {
+            val newVisSpan  = Span(start, stop)
+            model.setVisibleExtendVirtual(newVisSpan)
+          }
 
         case SelectionStop =>
           val selSpanStop = model.selection match {
@@ -186,8 +188,10 @@ object TimelineNavigation {
           val stop0       = selSpanStop + (visSpan.length >> (if (visSpan.contains(selSpanStop)) 1 else 3))
           val stop        = min(maxStop(model), stop0)
           val start       = max(minStart(model), stop - visSpan.length)
-          val newVisSpan  = Span(start, stop)
-          model.setVisibleExtendVirtual(newVisSpan)
+          if (start < stop) {
+            val newVisSpan  = Span(start, stop)
+            model.setVisibleExtendVirtual(newVisSpan)
+          }
 
         case FitToSelection => trySetSpan(model.selection)
         case EntireBounds   => trySetSpan(model.bounds)

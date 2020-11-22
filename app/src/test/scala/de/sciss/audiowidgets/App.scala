@@ -16,7 +16,7 @@ import scala.swing.Swing._
   * and an object placed in the span 24 to 40 seconds.
   */
 object App extends SwingApplicationImpl("AudioWidgets") {
-  protected lazy val menuFactory = Menu.Root()
+  protected lazy val menuFactory: Menu.Root = Menu.Root()
   type Document = Unit
 
   def sampleRate = 44100
@@ -45,7 +45,9 @@ object App extends SwingApplicationImpl("AudioWidgets") {
           case TimelineModel.Bounds   (_, sp)  => println(s"bounds    = $sp")
         }
 
-        val objSpan = Span((sampleRate * 24).toLong, (sampleRate * 40).toLong)
+        val objSpan: Span = Span((sampleRate * 24).toLong, (sampleRate * 40).toLong)
+
+        protected def transportRunning: Boolean = false
 
         /** The corresponding Swing component */
         lazy val canvasComponent: Component = new Component {

@@ -90,7 +90,7 @@ object Demo extends App with Runnable {
     axis.maximum = 34.56
 
     lazy val trnspActions = Seq(
-      Transport.GoToBegin, Transport.Play, Transport.Stop, Transport.GoToEnd, Transport.Loop).map {
+      Transport.GoToBeginning, Transport.Play, Transport.Stop, Transport.GoToEnd, Transport.Loop).map {
       case l: Transport.Loop.type => l.apply {
         trnsp.button(l).foreach(b => b.setSelected(!b.isSelected))
       }

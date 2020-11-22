@@ -89,7 +89,7 @@ object Demo extends SimpleSwingApplication {
     }
 
     lazy val trnspActions: Seq[Transport.ActionElement] = Seq(
-      Transport.GoToBegin, Transport.Rewind     , Transport.Stop   , Transport.Pause, Transport.Play,
+      Transport.GoToBeginning, Transport.Rewind     , Transport.Stop   , Transport.Pause, Transport.Play,
       Transport.Record   , Transport.FastForward, Transport.GoToEnd, Transport.Loop).map {
 
       case l: Transport.Loop.type => l.apply {
