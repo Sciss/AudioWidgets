@@ -1,12 +1,12 @@
 # AudioWidgets
 
-[![Build Status](https://travis-ci.org/Sciss/AudioWidgets.svg?branch=main)](https://travis-ci.org/Sciss/AudioWidgets)
+[![Build Status](https://github.com/Sciss/AudioWidgets/workflows/Scala%20CI/badge.svg?branch=main)](https://github.com/Sciss/AudioWidgets/actions?query=workflow%3A%22Scala+CI%22)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.sciss/audiowidgets-core_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.sciss/audiowidgets-core_2.13)
 
 ## statement
 
 AudioWidgets is a library providing specialized widgets for audio applications. It is Swing based and written in the 
-Scala programming language. (C)opyright 2011&ndash;2020 by Hanns Holger Rutz. All rights reserved. It is released 
+Scala programming language. (C)opyright 2011&ndash;2021 by Hanns Holger Rutz. All rights reserved. It is released 
 under the [GNU Lesser General Public License](https://git.iem.at/sciss/AudioWidgets/raw/main/LICENSE) v2.1+
 and comes with absolutely no warranties. To contact the author, send an e-mail to `contact at sciss.de`.
 
@@ -29,7 +29,7 @@ To use the library in your project:
     "de.sciss" %% "audiowidgets-swing" % v
     "de.sciss" %% "audiowidgets-app"   % v
 
-The current version `v` is `"2.3.1"`.
+The current version `v` is `"2.3.2"`.
 
 To view a demo of the widgets from the sbt console:
 
