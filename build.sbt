@@ -15,7 +15,7 @@ lazy val commonSettings = Seq(
   homepage            := Some(url(s"https://git.iem.at/sciss/$baseName")),
   licenses            := Seq("LGPL v2.1+" -> url("http://www.gnu.org/licenses/lgpl-2.1.txt")),
   scalaVersion        := "2.13.4",
-  crossScalaVersions  := Seq("3.0.0-RC1", "2.13.4", "2.12.13"),
+  crossScalaVersions  := Seq("3.0.0", "2.13.4", "2.12.13"),
   scalacOptions      ++= Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xlint", "-Xsource:2.13"),
   initialCommands in console := """
     |import de.sciss.audiowidgets._""".stripMargin
